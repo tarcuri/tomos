@@ -3,6 +3,7 @@
 
 #include  "support.h"
 
+
 unsigned int scroll_min_x;
 unsigned int scroll_min_y;
 unsigned int scroll_max_x;
@@ -14,6 +15,9 @@ unsigned int max_y;
 
 unsigned int curr_x;
 unsigned int curr_y;
+
+
+// input
 
 void cio_init( void ){
         /*
@@ -257,8 +261,62 @@ static void _cio_putchar_at( unsigned int x, unsigned int y, unsigned int c )
   }
 }
 
+// input
+
+unsigned char *_cio_next_char = _cio_input_buf;
+unsigned char *_cio_next_space = _cio_input_buf;
+
+unsigned char _cio_getchar()
+{
+  // ok, now what
+  unsigned char c;
+
+  while (_cio_next_char == _cio_next_space) {
+    // waiting for a character
+    //cio_printf("ut\n");
+  }
+
+  c = *_cio_next_char;
+  _cio_next_char = _cio_input_buf + (((_cio_next_char - _cio_input_buf)+1) % CIO_IN_BUFSIZE);
+  return c;
+}
+
+static void _cio_proc_scancode(unsigned char code)
+{
+  static unsigned char shift = 0;
+  static unsigned char ctrl_mask = 0xff;
+
+  switch (code) {
+  case 0x2a:
+  case 0x36:	/* shift */
+    shift = 1;
+    break;
+
+  case 0xaa:
+  case 0xb6:
+    shift = 0;
+    break;
+
+  case 0x1d:
+    ctrl_mask = 0x1f;
+    break;
+
+  default:
+    if ((code & 0x80) == 0) { 	// explain this...(whats with the high order bits?)
+      code = _cio_scan_code[shift][(int)code];
+      if (code != '\377') {
+        *_cio_next_space = code & ctrl_mask;
+        _cio_next_space = _cio_input_buf + (((_cio_next_space - _cio_input_buf)+1) % CIO_IN_BUFSIZE);
+      }
+    }
+  }
+}
+
 void _cio_keyboard_isr(int vector, int code)
 {
-  cio_printf("KEYBOARD ISR CALLED %x (%d)\n", vector, code);
+  //cio_printf("KEYBOARD ISR CALLED %x (%d)\n", vector, code);
+
+  // process the character
+  _cio_proc_scancode( __inb(KEYBOARD_DATA) );
   __outb( PIC_MASTER_CMD_PORT, PIC_EOI );
 }

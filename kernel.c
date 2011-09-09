@@ -20,6 +20,7 @@ struct dt_register idtr_register;
 
 
 // functions
+void main_loop(void);
 void grub_mmap(void *mbd);
 
 void _timer_isr(int vector, int code)
@@ -35,9 +36,7 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
 {
   // initialize IDT, interrupts
   extern void (*_isr_stubs[256])(void);
-
   init_interrupts();
-
 
   // initial the console IO
   cio_init();
@@ -69,12 +68,26 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
 
   cio_printf("\nenabling processor interrupts\n");
 
-  asm volatile ("sti;int $0x21");
-//  asm volatile ("int $0x80");
+  asm ("sti");
+
+  main_loop();
 
   // system modules
   cio_printf("\n\nModules:");
 }
+
+void main_loop()
+{
+  cio_printf("main_loop\n");
+  while (1)
+  {
+
+    // for now try to block on input
+    unsigned char c = _cio_getchar();
+    cio_putchar(c);
+  }
+}
+
 
 /* print the GRUB memory map */
 void grub_mmap(void *mbd)

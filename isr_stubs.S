@@ -30,9 +30,14 @@ _isr_##vector:					; \
 	push	%eax				; \
 	movl	_isr_table(,%eax,4), %ebx 	; \
 	call	*%ebx				; \
-	add	$8, %esp			; \
+	addl	$8, %esp			; \
+        popl	%ss				; \
+        popl	%gs				; \
+        popl	%fs				; \
+        popl	%es				; \
+        popl	%ds				; \
 	popa					; \
-	add	$8, %esp			; \
+	addl	$8, %esp			; \
 	iret
 
 #define ERR_ISR(vector)     \
@@ -46,14 +51,14 @@ _isr_##vector:                                  ; \
         push    %eax                            ; \
         movl    _isr_table(,%eax,4), %ebx       ; \
         call    *%ebx                           ; \
-        add     $8, %esp                        ; \
+        addl    $8, %esp                        ; \
         popl	%ss				; \
         popl	%gs				; \
         popl	%fs				; \
         popl	%es				; \
         popl	%ds				; \
         popa                                   ; \
-        add     $8, %esp                        ; \
+        addl    $8, %esp                        ; \
         iret
 
 # the actual stubs
