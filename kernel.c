@@ -1,6 +1,8 @@
 #include "multiboot.h"
 #include "cio.h"
 #include "intr.h"
+#include "x86.h"
+#include "support.h"
 
 // TODO: implement simple console input and test interrupts
 
@@ -11,14 +13,20 @@
 // global data
 struct global_desc_table *gdt;
 
+unsigned long long _timer_ticks;
+
 struct dt_register gdtr_register;
 struct dt_register idtr_register;
 
-// ISR table 
-void (*_isr_table[256])(int vector, int code);
 
 // functions
 void grub_mmap(void *mbd);
+
+void _timer_isr(int vector, int code)
+{
+  _timer_ticks++;
+  __outb( PIC_MASTER_CMD_PORT, PIC_EOI );
+}
 
 /*
 ** main kernel entry point
@@ -26,23 +34,29 @@ void grub_mmap(void *mbd);
 void kernel( void* mbd, unsigned int magic, unsigned int other)
 {
   // initialize IDT, interrupts
+  extern void (*_isr_stubs[256])(void);
+
   init_interrupts();
+
 
   // initial the console IO
   cio_init();
+  cio_printf("kernel: %xh\n\n", kernel); 
+
+  _install_isr(INT_VEC_TIMER, _timer_isr);
+
+  //_isr_table[0x21](0x21, 5);
+
+  // reference to the GDT
+  asm("sgdt %0" : "=m"(gdtr_register): :"memory");
+  cio_printf("gdtr:   base: %xh, limit: %xh\n", gdtr_register.base, gdtr_register.limit);
 
   // get it back
   struct dt_register my_idtr;
   asm("sidt %0" : "=m"(my_idtr): :"memory");
   cio_printf("idtr:   base: %xh, limit: %xh\n", my_idtr.base, my_idtr.limit);
 
-  // reference to the GDT
-  asm("sgdt %0" : "=m"(gdtr_register): :"memory");
-  cio_printf("gdtr:   base: %xh, limit: %xh\n", gdtr_register.base, gdtr_register.limit);
-  cio_printf("kernel: %xh\n\n", kernel); 
-
   // GDT should be all set by now
-
   if (magic != GRUB_MAGIC_NUMBER) {
     cio_printf("invalid GRUB magic number 0x%x\n", magic);
     return;
@@ -51,23 +65,12 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
   // GRUB multiboot mmap
   //grub_mmap(mbd);
 
-  cio_printf("enabling processor interrupts\n");
+  // is the IDT properly aligned?
 
-  //struct idt_entry *gate = (struct idt_entry *) my_idtr.base + 16; 
-  //unsigned int temp = 0;
-  //void (*routine)(int vector, int code) = 0;
+  cio_printf("\nenabling processor interrupts\n");
 
-  //temp = gate->offset_31_16;
-  //routine = (void *) ((temp << 16) | ((unsigned int)gate->offset_15_0));
-
-  //cio_printf("routine: %x\n", routine);
-  //routine(0x20, 0xbeef);
-
-  //asm("sti");
-  for (;;)
-	;
-
-  asm("int $0x80");
+  asm volatile ("sti;int $0x21");
+//  asm volatile ("int $0x80");
 
   // system modules
   cio_printf("\n\nModules:");

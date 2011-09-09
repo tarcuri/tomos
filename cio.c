@@ -1,4 +1,5 @@
 #include "cio.h"
+#include "x86.h"
 
 #include  "support.h"
 
@@ -43,7 +44,7 @@ void cio_init( void ){
         /*
         ** Set up the interrupt handler for the keyboard
         */
-        //_install_isr( INT_VEC_KEYBOARD, __c_keyboard_isr );
+        _install_isr(INT_VEC_KEYBOARD, _cio_keyboard_isr);
 }
 
 void cio_clearscreen( void )
@@ -256,3 +257,8 @@ static void _cio_putchar_at( unsigned int x, unsigned int y, unsigned int c )
   }
 }
 
+void _cio_keyboard_isr(int vector, int code)
+{
+  cio_printf("KEYBOARD ISR CALLED %x (%d)\n", vector, code);
+  __outb( PIC_MASTER_CMD_PORT, PIC_EOI );
+}

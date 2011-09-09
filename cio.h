@@ -24,6 +24,8 @@ unsigned int cio_print_str(const char *s);	// print null-terminated string to cu
 
 // static private functions
 
+void _cio_keyboard_isr(int vector, int code);
+
 static unsigned int _cio_strlen(const char *s);
 static void _cio_setcursor(void);
 static void _cio_putchar_at(unsigned int x, unsigned int y, unsigned int c);

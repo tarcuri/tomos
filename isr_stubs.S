@@ -9,8 +9,10 @@
 	*/ 
 	.text
 
+/*
+** _isr_table holds 32-bit pointers, so use 4 as a scale
+*/
 	.globl	_isr_table
-
 #define ISR(vector)				  \
 	.globl _isr_##vector			; \
 _isr_##vector:					; \
@@ -26,7 +28,7 @@ _isr_##vector:					; \
 	movl	56(%esp), %ebx  		; \
 	push	%ebx				; \
 	push	%eax				; \
-	movl	_isr_table(,%eax,8), %ebx 	; \
+	movl	_isr_table(,%eax,4), %ebx 	; \
 	call	*%ebx				; \
 	add	$8, %esp			; \
 	popa					; \
@@ -42,7 +44,7 @@ _isr_##vector:                                  ; \
         movl    56(%esp), %ebx                  ; \
         push    %ebx                            ; \
         push    %eax                            ; \
-        movl    _isr_table(,%eax,8), %ebx       ; \
+        movl    _isr_table(,%eax,4), %ebx       ; \
         call    *%ebx                           ; \
         add     $8, %esp                        ; \
         popl	%ss				; \

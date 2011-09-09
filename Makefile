@@ -1,6 +1,8 @@
-CC = ./tools/cross/bin/i586-elf-gcc
-AS = ./tools/cross/bin/i586-elf-as
-LD = ./tools/cross/bin/i586-elf-ld
+TOOLS=./tools/cross/bin
+
+CC = ${TOOLS}/i586-elf-gcc
+AS = ${TOOLS}/i586-elf-as
+LD = ${TOOLS}/i586-elf-ld
 
 CFLAGS = -nostdlib -nostartfiles -nodefaultlibs
 AFLAGS =
@@ -21,6 +23,7 @@ tromos: loader.S kernel.c libs
 floppy:	tromos
 	cat stage1 stage2 pad kernel.bin > floppy.img
 	dd if=floppy.img of=fd.img conv=notrunc
+	rm floppy.img
 
 clean:
 	rm *.o *.bin

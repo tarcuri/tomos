@@ -38,14 +38,17 @@ struct idt_entry {
 // the IDT itself - 8 bytes x 256 entires - 2048 bytes (0x800)
 struct idt_entry _idt[256];
 
+// ISR table 
+void (*_isr_table[256])(int vector, int code);
+
 void init_interrupts(void);
 static void init_pic(void);
 static void init_idt(void);
 
 void set_idt_entry(int entry, void (*handler)(void));
 
-static void du_handler( int vector, int code);
-static void de_handler( int vector, int code);
+void du_handler( int vector, int code);
+void de_handler( int vector, int code);
 
 void (*_install_isr(int vector, void (*old)(int vector, int code)))(int vector, int code);
 
