@@ -13,6 +13,7 @@
 .long FLAGS
 .long CHECKSUM
 
+	.data
 /*
 ** GDT
 */
@@ -50,22 +51,22 @@ gdt_len = gdt_end - gdt_start
 /*
 ** Next, the GDTR and IDTR contents.
 */
+	.global	gdt_48
 gdt_48:
-	.word	gdt_len
-	.int	gdt_start
-
-#idt_48:
-#        .word   0x0800          /* 256 interrupts */
-#        .quad   IDT_ADDRESS
-
+	.word   0
+	.word	0,0
 
 # reserve initial kernel stack space
 	.set	STACKSIZE, 0x4000          # that is, 16k.
+	.globl	stack_start
+stack_start:
 	.comm	stack, STACKSIZE, 32      # reserve 16k stack on a quadword boundary
+
+	.text
 
 loader:
 	mov	$(stack + STACKSIZE), %esp 	# set up the stack
-	mov	$gdt_start, %ecx
+	mov	$gdt_48, %ecx
 	push	%ecx
 	push	%eax                       	# Multiboot magic number
 	push	%ebx                   		# Multiboot data structure
@@ -74,9 +75,15 @@ loader:
 	# + cr0: VM, IF are cleared
 	# + eflags: PG cleared, PE set (protected mode)
 
-	# now we need to setup the GDT
+	# now we need to setup the GDTR
+	movl	$gdt_start, %eax
+	movl	$gdt_48, %ebx
+ 	movl	%eax, 2(%ebx)
+	movw	$(gdt_end - gdt_start), %ax
+	movw	%ax, (%ebx)
         lgdt	gdt_48
 
+# Do we need to reset CS?
 #        .byte   0x66, 0xEA      /* 32-bit mode, jmp */
 #        .long   reload_cs	/* target address */
 #        .word   0x0008          /* descriptor #1, GDT, RPL=0 */
@@ -89,7 +96,7 @@ loader:
 	mov	$0x18, %eax
 	mov	%eax, %ss
 
-	call	kmain				# call kernel proper
+	call	kernel				# call kernel proper
 
 	cli
 

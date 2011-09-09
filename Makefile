@@ -1,17 +1,26 @@
-CFLAGS = -m32 -nostdlib -nostartfiles -nodefaultlibs
-AFLAGS = --32
+CC = ./tools/cross/bin/i586-elf-gcc
+AS = ./tools/cross/bin/i586-elf-as
+LD = ./tools/cross/bin/i586-elf-ld
+
+CFLAGS = -nostdlib -nostartfiles -nodefaultlibs
+AFLAGS =
 
 all: tromos
 
 libs:	cio.c
-	gcc ${CFLAGS} -o support.o -c support.S
-	gcc ${CFLAGS} -o cio.o -c cio.c 
+	${CC} ${CFLAGS} -o support.o -c support.c
+	${CC} ${CFLAGS} -o intr.o -c intr.c
+	${CC} ${CFLAGS} -o cio.o -c cio.c 
 
-tromos: loader.S kmain.c libs
-	gcc ${CFLAGS} -o loader.o -c loader.S
-	gcc ${CFLAGS} -o kmain.o -c kmain.c
-	ld -m elf_i386 -T linker.ld -o kmain.bin loader.o kmain.o support.o cio.o
+tromos: loader.S kernel.c libs
+	${CC} ${CFLAGS} -o loader.o -c loader.S
+	${CC} ${CFLAGS} -o kernel.o -c kernel.c
+	${CC} ${CFLAGS} -o isr_stubs.o -c isr_stubs.S
+	${LD} -T linker.ld -o kernel.bin loader.o kernel.o support.o cio.o intr.o isr_stubs.o
 
 floppy:	tromos
-	cat stage1 stage2 pad kmain.bin > floppy.img
+	cat stage1 stage2 pad kernel.bin > floppy.img
 	dd if=floppy.img of=fd.img conv=notrunc
+
+clean:
+	rm *.o *.bin

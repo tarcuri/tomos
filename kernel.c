@@ -11,16 +11,11 @@
 // global data
 struct global_desc_table *gdt;
 
-// IDT - stores 8 byte interrupt 'gates'
-unsigned int _idt[512];		// 8 bytes * 256 entries = 2048 bytes
-void *idt = (void *) _idt;	// these need better names...
+struct dt_register gdtr_register;
+struct dt_register idtr_register;
 
 // ISR table 
 void (*_isr_table[256])(int vector, int code);
-
-// DT registerss
-struct gdt_register *gdtr = &gdtr_register;
-struct idt_register *idtr = &idtr_register;
 
 // functions
 void grub_mmap(void *mbd);
@@ -31,40 +26,48 @@ void grub_mmap(void *mbd);
 void kernel( void* mbd, unsigned int magic, unsigned int other)
 {
   // initialize IDT, interrupts
-  idtr->limit = 0x800;
-  idtr->address = (unsigned int) idt; 
-
   init_interrupts();
 
   // initial the console IO
   cio_init();
 
-  cio_printf("other: 0x%x\n", other);
-  cio_printf("idt:   0x%x\n", idt);
+  // get it back
+  struct dt_register my_idtr;
+  asm("sidt %0" : "=m"(my_idtr): :"memory");
+  cio_printf("idtr:   base: %xh, limit: %xh\n", my_idtr.base, my_idtr.limit);
 
-  if (magic != GRUB_MAGIC_NUMBER)
-  {
-    /* Something went not according to specs. Print an error */
-    /* message and halt, but do *not* rely on the multiboot */
-    /* data structure. */
+  // reference to the GDT
+  asm("sgdt %0" : "=m"(gdtr_register): :"memory");
+  cio_printf("gdtr:   base: %xh, limit: %xh\n", gdtr_register.base, gdtr_register.limit);
+  cio_printf("kernel: %xh\n\n", kernel); 
+
+  // GDT should be all set by now
+
+  if (magic != GRUB_MAGIC_NUMBER) {
     cio_printf("invalid GRUB magic number 0x%x\n", magic);
     return;
   }
   
   // GRUB multiboot mmap
-  grub_mmap(mbd);
-
-  // reference to the GDT
-  asm("sgdt %0" : "=m"(gdtr));
-  gdt = (struct global_desc_table *) gdtr->address;
-
-  // now initialize the IDT and interrupts
-  cio_printf("gdtr:  0x%x [0x%x]\n", gdtr->address, gdtr->limit);
-  cio_printf("idtr:  0x%x [0x%x]\n", idtr->address, idtr->limit);
-  cio_printf("kernel: 0x%x\n", kernel); 
+  //grub_mmap(mbd);
 
   cio_printf("enabling processor interrupts\n");
+
+  //struct idt_entry *gate = (struct idt_entry *) my_idtr.base + 16; 
+  //unsigned int temp = 0;
+  //void (*routine)(int vector, int code) = 0;
+
+  //temp = gate->offset_31_16;
+  //routine = (void *) ((temp << 16) | ((unsigned int)gate->offset_15_0));
+
+  //cio_printf("routine: %x\n", routine);
+  //routine(0x20, 0xbeef);
+
   //asm("sti");
+  for (;;)
+	;
+
+  asm("int $0x80");
 
   // system modules
   cio_printf("\n\nModules:");

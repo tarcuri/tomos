@@ -21,23 +21,22 @@ struct global_desc_table {
 } __attribute__ ((__packed__));
 
 // gdtr/idtr register
-struct gdt_register {
+struct dt_register {
   unsigned short limit;
-  unsigned int address;
-} __attribute__ ((__packed__)) gdtr_register;
+  unsigned int   base;
+} __attribute__ ((__packed__));
 
-struct idt_register {
-  unsigned short limit;
-  unsigned int address;
-} __attribute__((__packed__)) idtr_register;
-
-// idt entry
+// idt entry gate
 struct idt_entry {
   unsigned short offset_15_0;
   unsigned short selector;
   unsigned short type_attr;
   unsigned short offset_31_16;
 } __attribute__ ((__packed__));
+
+
+// the IDT itself - 8 bytes x 256 entires - 2048 bytes (0x800)
+struct idt_entry _idt[256];
 
 void init_interrupts(void);
 static void init_pic(void);

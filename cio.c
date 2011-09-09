@@ -222,10 +222,10 @@ static void _cio_setcursor( void )
 
         addr = (unsigned)( y * SCREEN_X_SIZE + curr_x );
 
-        sp_outb( 0x3d4, 0xe );
-        sp_outb( 0x3d5, ( addr >> 8 ) & 0xff );
-        sp_outb( 0x3d4, 0xf );
-        sp_outb( 0x3d5, addr & 0xff );
+        __outb( 0x3d4, 0xe );
+        __outb( 0x3d5, ( addr >> 8 ) & 0xff );
+        __outb( 0x3d4, 0xf );
+        __outb( 0x3d5, addr & 0xff );
 }
 
 

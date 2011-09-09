@@ -1,9 +1,8 @@
 #include "intr.h"
 #include "x86.h"
 
-
-extern void *idt;	
-extern struct dt_register *idtr;
+// IDT register
+struct dt_register idtr;
 
 /*
 **  IDT stuff
@@ -11,6 +10,9 @@ extern struct dt_register *idtr;
 
 void init_interrupts()
 {
+  idtr.base  = (unsigned int) _idt;
+  idtr.limit = 0x800;
+
   // now load the IDTR
   asm("lidt (%0)" : : "m"(idtr));
 
@@ -69,20 +71,20 @@ static void init_pic(void){
 
 void set_idt_entry(int entry, void (*handler)(void))
 {
-  struct idt_entry *g = (struct idt_entry *)idt + entry;
+  struct idt_entry g = _idt[entry]; 
 
-  g->offset_15_0 = (int)handler & 0xffff;
-  g->selector = 0x0010;
-  g->type_attr = IDT_PRESENT | IDT_DPL_0 | IDT_INT32_GATE;
-  g->offset_31_16 = (int)handler >> 16 & 0xffff;
+  g.offset_15_0 = (unsigned int)handler & 0xffff;
+  g.selector = 0x0008;	// no more linear seg, code seg is first!
+  g.type_attr = IDT_PRESENT | IDT_DPL_0 | IDT_INT32_GATE;
+  g.offset_31_16 = (unsigned int)handler >> 16 & 0xffff;
 }
 
 
 /* default, unexpected handler */
 static void du_handler( int vector, int code)
 {
-        cio_printf( "\nVector=0x%x, code=%d\n", vector, code );
-        panic( "Unhandled interrupt" );
+  cio_printf( "\nVector=0x%x, code=%d\n", vector, code );
+  panic( "Unhandled interrupt" );
 }
 
 /* default, expected handler */
@@ -98,10 +100,10 @@ static void de_handler(int vector, int code)
 }
 
 
-void (*_install_isr(int vector, void (*old)(int vector, int code)))(int vector, int code)
+void (*_install_isr(int vector, void (*new)(int vector, int code)))(int vector, int code)
 {
   extern void (*_isr_table[256])(int vector, int code);
-  void (*new)(int vector, int code);
+  void (*old)(int vector, int code);
 
   old = _isr_table[vector];
   _isr_table[vector] = new;
