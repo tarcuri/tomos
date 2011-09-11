@@ -45,6 +45,11 @@ _isr_##vector:					; \
 _isr_##vector:                                  ; \
         push    $vector                         ; \
         pusha                                  ; \
+        pushl   %ds				; \
+        pushl   %es				; \
+        pushl   %fs				; \
+        pushl   %gs				; \
+        pushl   %ss				; \
         movl    52(%esp), %eax                  ; \
         movl    56(%esp), %ebx                  ; \
         push    %ebx                            ; \

@@ -1,6 +1,10 @@
 #ifndef X86_H
 #define X86_H
 
+
+// cr0
+#define X86_CR0_PAGING		0x80000000
+
 /*
 ** IDT Descriptors
 ** 

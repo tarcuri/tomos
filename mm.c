@@ -2,11 +2,6 @@
 #include "cio.h"
 #include "support.h"
 
-unsigned char *mm_bit_map;		// tracks allocated frames
-unsigned int mm_bit_map_length;		// bitmap should be mm_total_frames/8 bytes long
-
-unsigned int mm_allocated_frames;
-
 
 void mm_init()
 {
@@ -18,10 +13,10 @@ void mm_init()
   mm_kernel_size = &kernel_end - &kernel_start;
   cio_printf("[mm]      kernel_size: %d bytes [end: 0x%x]\n", mm_kernel_size, mm_kernel_end);
 
-  // set the base so that we leave room more more static kernel data 
-  mm_high_mem_base      = mm_kernel_end_aligned + 0x100000;	// start allocable memory 1MB past kernel
+  // align the memory base on a 4KB boundary
+  // start allocable memory 1MB past kernel
+  mm_high_mem_base      = ((mm_kernel_end & 0xFFFFFF000) + MM_FRAME_SIZE) + 0x100000;	
   mm_high_mem_limit     = _memory_ceiling - mm_high_mem_base;
-
   mm_total_frames	= mm_high_mem_limit / 4096;
 
   // configure the bitmap
@@ -69,12 +64,20 @@ static unsigned int mm_get_free_frame()
 void *mm_alloc_frame()
 {
   // grab the next free page index
-  unsigned int frame_index = mm_get_free_frame();
+  unsigned int idx = mm_get_free_frame();
 
   // mark the frame as used
-  mm_bit_map[ (frame_index+1)/8 ] |= (1 << (frame_index % 8));
+  MM_FRAME_ENABLE_BM(idx);
   mm_allocated_frames++;
 
   // now return the address of the page
-  return (void *) MM_FRAME_ADDRESS(frame_index); 
+  return (void *) MM_FRAME_ADDRESS(idx);;
+}
+
+void mm_free_frame(void *frame)
+{
+  // just clear the bit index
+  unsigned int idx = ((unsigned int)frame - mm_high_mem_base) / MM_FRAME_SIZE;
+
+  MM_FRAME_DISABLE_BM(idx);
 }
