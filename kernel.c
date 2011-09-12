@@ -71,12 +71,6 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
   mm_init();
   pg_init();
 
-  unsigned int val = 10;
-  cio_printf("value at 0x%x\n", &val);
-
-  unsigned int *v = (unsigned int *)(0xF00FF00F);
-  cio_printf("mem: %x\n", *v);
-
   asm ("sti");
   main_loop();
 }
@@ -90,12 +84,6 @@ void main_loop()
     // for now try to block on input
     unsigned char c = _cio_getchar();
     cio_putchar(c);
-
-    cio_printf("char addr 0x%x\n", &c);
-
-    void *page = mm_alloc_frame();
-
-    cio_printf("\npage at 0x%x allocated\n", page);
   }
 }
 

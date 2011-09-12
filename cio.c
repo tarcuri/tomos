@@ -4,21 +4,9 @@
 #include  "support.h"
 
 
-unsigned int scroll_min_x;
-unsigned int scroll_min_y;
-unsigned int scroll_max_x;
-unsigned int scroll_max_y;
-unsigned int min_x;
-unsigned int min_y;
-unsigned int max_x;
-unsigned int max_y;
-
-unsigned int curr_x;
-unsigned int curr_y;
 
 
 // input
-
 void cio_init( void ){
         /*
         ** Screen dimensions
@@ -49,6 +37,35 @@ void cio_init( void ){
         ** Set up the interrupt handler for the keyboard
         */
         _install_isr(INT_VEC_KEYBOARD, _cio_keyboard_isr);
+}
+void c_setscroll( unsigned int s_min_x, unsigned int s_min_y, unsigned int s_max_x, unsigned int s_max_y ){
+	scroll_min_x = bound( min_x, s_min_x, max_x );
+	scroll_min_y = bound( min_y, s_min_y, max_y );
+	scroll_max_x = bound( scroll_min_x, s_max_x, max_x );
+	scroll_max_y = bound( scroll_min_y, s_max_y, max_y );
+	curr_x = scroll_min_x;
+	curr_y = scroll_min_y;
+	_cio_setcursor();
+}
+
+void c_moveto( unsigned int x, unsigned int y ){
+	curr_x = bound( scroll_min_x, x + scroll_min_x, scroll_max_x );
+	curr_y = bound( scroll_min_y, y + scroll_min_y, scroll_max_y );
+	_cio_setcursor();
+}
+
+void c_clearscroll( void ){
+	unsigned int	nchars = scroll_max_x - scroll_min_x + 1;
+	unsigned int	l;
+	unsigned int	c;
+
+	for( l = scroll_min_y; l <= scroll_max_y; l += 1 ){
+		unsigned short *to = VIDEO_ADDR( scroll_min_x, l );
+
+		for( c = 0; c < nchars; c += 1 ){
+			*to++ = ' ' | 0x0700;
+		}
+	}
 }
 
 void cio_clearscreen( void )
@@ -95,48 +112,6 @@ unsigned int cio_strlen(const char *s)
   return _cio_strlen(s);
 }
 
-static void
-itoa (char *buf, int base, int d)
-{
-  char *p = buf;
-  char *p1, *p2;
-  unsigned long ud = d;
-  int divisor = 10;
-
-  /* If %d is specified and D is minus, put `-' in the head. */
-  if (base == 'd' && d < 0)
-    {
-      *p++ = '-';
-      buf++;
-      ud = -d;
-    }
-  else if (base == 'x')
-    divisor = 16;
-
-  /* Divide UD by DIVISOR until UD == 0. */
-  do
-    {
-      int remainder = ud % divisor;
-
-      *p++ = (remainder < 10) ? remainder + '0' : remainder + 'a' - 10;
-    }
-  while (ud /= divisor);
-
-  /* Terminate BUF. */
-  *p = 0;
-
-  /* Reverse BUF. */
-  p1 = buf;
-  p2 = p - 1;
-  while (p1 < p2)
-    {
-      char tmp = *p1;
-      *p1 = *p2;
-      *p2 = tmp;
-      p1++;
-      p2--;
-    }
-}
 
 void cio_printf(const char *format, ...)
 {
@@ -195,6 +170,10 @@ unsigned int cio_print_str(const char *s)
 void cio_putchar(const char c)
 {
   cio_putchar_at(curr_x, curr_y, (unsigned int) c);
+	if( curr_y > scroll_max_y ){
+		c_scroll( curr_y - scroll_max_y );
+		curr_y = scroll_max_y;
+	}
 
   // now increment the position
   if (c == '\n') {
@@ -214,9 +193,58 @@ void cio_putchar(const char c)
 //
 // static private functions
 //
+void itoa (char *buf, int base, int d)
+{
+  char *p = buf;
+  char *p1, *p2;
+  unsigned long ud = d;
+  int divisor = 10;
+
+  /* If %d is specified and D is minus, put `-' in the head. */
+  if (base == 'd' && d < 0)
+    {
+      *p++ = '-';
+      buf++;
+      ud = -d;
+    }
+  else if (base == 'x')
+    divisor = 16;
+
+  /* Divide UD by DIVISOR until UD == 0. */
+  do
+    {
+      int remainder = ud % divisor;
+
+      *p++ = (remainder < 10) ? remainder + '0' : remainder + 'a' - 10;
+    }
+  while (ud /= divisor);
+
+  /* Terminate BUF. */
+  *p = 0;
+
+  /* Reverse BUF. */
+  p1 = buf;
+  p2 = p - 1;
+  while (p1 < p2)
+    {
+      char tmp = *p1;
+      *p1 = *p2;
+      *p2 = tmp;
+      p1++;
+      p2--;
+    }
+}
+
+unsigned int bound( unsigned int min, unsigned int value, unsigned int max ){
+	if( value < min )
+		value = min;
+	if( value > max )
+		value = max;
+	return value;
+}
 
 
-static void _cio_setcursor( void )
+void _cio_setcursor( void )
 {
         unsigned addr;
         unsigned int    y = curr_y;
@@ -234,7 +262,7 @@ static void _cio_setcursor( void )
 }
 
 
-static unsigned int _cio_strlen(const char *s)
+unsigned int _cio_strlen(const char *s)
 {
   unsigned int len = 0;
 
@@ -245,8 +273,12 @@ static unsigned int _cio_strlen(const char *s)
   return len;
 }
 
-static void _cio_putchar_at( unsigned int x, unsigned int y, unsigned int c )
+void _cio_putchar_at( unsigned int x, unsigned int y, unsigned int c )
 {
+	if( curr_y > scroll_max_y ){
+		c_scroll( curr_y - scroll_max_y );
+		curr_y = scroll_max_y;
+	}
   /* If x or y is too big or small, don't do any output. */
   if( x <= max_x && y <= max_y ){
     unsigned short *addr = VIDEO_ADDR( x, y );
@@ -280,8 +312,43 @@ unsigned char _cio_getchar()
   _cio_next_char = _cio_input_buf + (((_cio_next_char - _cio_input_buf)+1) % CIO_IN_BUFSIZE);
   return c;
 }
+void c_scroll( unsigned int lines ){
+	unsigned short *from;
+	unsigned short *to;
+	int	nchars = scroll_max_x - scroll_min_x + 1;
+	int	line, c;
 
-static void _cio_proc_scancode(unsigned char code)
+	/*
+	** If # of lines is the whole scrolling region or more, just clear.
+	*/
+	if( lines > scroll_max_y - scroll_min_y ){
+		c_clearscroll();
+		curr_x = scroll_min_x;
+		curr_y = scroll_min_y;
+		_cio_setcursor();
+		return;
+	}
+
+	/*
+	** Must copy it line by line.
+	*/
+	for( line = scroll_min_y; line <= scroll_max_y - lines; line += 1 ){
+		from = VIDEO_ADDR( scroll_min_x, line + lines );
+		to = VIDEO_ADDR( scroll_min_x, line );
+		for( c = 0; c < nchars; c += 1 ){
+			*to++ = *from++;
+		}
+	}
+
+	for( ; line <= scroll_max_y; line += 1 ){
+		to = VIDEO_ADDR( scroll_min_x, line );
+		for( c = 0; c < nchars; c += 1 ){
+			*to++ = ' ' | 0x0700;
+		}
+	}
+}
+
+void _cio_proc_scancode(unsigned char code)
 {
   static unsigned char shift = 0;
   static unsigned char ctrl_mask = 0xff;

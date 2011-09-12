@@ -4,8 +4,6 @@
 
 #include "cio.h"
 
-
-// TODO: need to do identity mapping
 // need a memory manager to allocate 4KB frames
 
 void pg_init()
@@ -46,7 +44,7 @@ void pg_init()
   cio_printf("[pg]      CPU paging initialized\n");
 }
 
-// initialize cr3
+// initialize cr3, enable page bit in cr0
 void pg_init_proc()
 {
   asm volatile ("mov %0, %%cr3"     :: "r"(pg_k_pdir_base));
@@ -62,7 +60,7 @@ void pg_page_fault(int error)
   unsigned int fault_addr;
   asm volatile("mov %%cr2, %0" : "=r"(fault_addr));
 
-  cio_printf("\n[pg]      PAGE FAULT 0x%x\n", fault_addr);
+  cio_printf("\n[pg]      PAGE FAULT: 0x%x\n", fault_addr);
 
   if ((error & PTE_PRESENT)) {
     cio_printf("    present in memory\n");
@@ -73,8 +71,8 @@ void pg_page_fault(int error)
   if (error & PTE_WRITABLE)
     cio_printf("    writable\n");
 
-  if (error & PTE_SUPERVISOR)
-    cio_printf("    supervisor mode\n");
+  if (error & PTE_USER_MODE)
+    cio_printf("    user mode\n");
 
   if (error & PTE_RESERVED)
     cio_printf("    reserved\n");

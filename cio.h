@@ -11,7 +11,25 @@
 #define SCREEN_MAX_X    ( SCREEN_X_SIZE - 1 )
 #define SCREEN_MAX_Y    ( SCREEN_Y_SIZE - 1 )
 
+unsigned int scroll_min_x;
+unsigned int scroll_min_y;
+unsigned int scroll_max_x;
+unsigned int scroll_max_y;
+unsigned int min_x;
+unsigned int min_y;
+unsigned int max_x;
+unsigned int max_y;
+
+unsigned int curr_x;
+unsigned int curr_y;
+
 // functions
+
+void c_setscroll( unsigned int s_min_x, unsigned int s_min_y, unsigned int s_max_x, unsigned int s_max_y );
+
+void c_moveto( unsigned int x, unsigned int y );
+
+void c_clearscroll( void );
 
 void cio_init(void);
 void cio_clearscreen(void);
@@ -23,9 +41,11 @@ unsigned int cio_strlen(const char *s);
 unsigned int cio_print_str(const char *s);	// print null-terminated string to current position
 
 // input
-
-
 #define CIO_IN_BUFSIZE	1024
+#define KEYBOARD_DATA   0x60
+#define KEYBOARD_STATUS 0x64
+#define READY           0x1
+#define EOT             '\04'
 
 static unsigned char _cio_scan_code[ 2 ][ 128 ] = {
         {
@@ -67,25 +87,20 @@ static unsigned char _cio_scan_code[ 2 ][ 128 ] = {
         }
 };
 
-#define KEYBOARD_DATA   0x60
-#define KEYBOARD_STATUS 0x64
-#define READY           0x1
-#define EOT             '\04'
-
 
 unsigned char _cio_input_buf[CIO_IN_BUFSIZE];
 
-unsigned char _cio_getchar(void);
-
-static void _cio_proc_scancode(unsigned char);
+void c_scroll( unsigned int lines );
 
 
 // static private functions
-
+void itoa(char *, int, int);
+unsigned char _cio_getchar(void);
+void _cio_proc_scancode(unsigned char);
 void _cio_keyboard_isr(int vector, int code);
-
-static unsigned int _cio_strlen(const char *s);
-static void _cio_setcursor(void);
-static void _cio_putchar_at(unsigned int x, unsigned int y, unsigned int c);
+unsigned int _cio_strlen(const char *s);
+void _cio_setcursor(void);
+void _cio_putchar_at(unsigned int x, unsigned int y, unsigned int c);
+unsigned int bound( unsigned int min, unsigned int value, unsigned int max );
 
 #endif
