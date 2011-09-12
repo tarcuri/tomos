@@ -5,6 +5,8 @@
 
 #define CHECK_FLAG(flags,bit)   ((flags) & (1 << (bit)))
 
+// kernel allocation routines
+
 void mm_init()
 {
   extern unsigned int kernel_start;	// defined in linker script

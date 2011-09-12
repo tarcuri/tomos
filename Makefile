@@ -7,28 +7,39 @@ LD = ${TOOLS}/i586-elf-ld
 CFLAGS = -nostdlib -nostartfiles -nodefaultlibs
 AFLAGS =
 
+LIB_SRC = support.c intr.c mm.c pg.c
+LIB_OBJ = support.o intr.o mm.o pg.o
+
+DRV_SRC = ./dev/keyboard.c ./dev/console.c ./dev/clock.c ./dec/pci.c
+DRV_OBJ = keyboard.o console.o clock.o pci.o
+
+# TODO: generate depfiles
+
 all: tomos
 
-libs:	
+# general libs
+libs: ${LIB_OBJ} 
 	${CC} ${CFLAGS} -o support.o -c support.c
 	${CC} ${CFLAGS} -o intr.o -c intr.c
 	${CC} ${CFLAGS} -o mm.o -c mm.c
 	${CC} ${CFLAGS} -o pg.o -c pg.c
+
+# devices
+drivers: ${DRV_OBJ} 
+	${CC} ${CFLAGS} -I. -o clock.o -c ./dev/clock.c 
 	${CC} ${CFLAGS}	-I. -o keyboard.o -c ./dev/keyboard.c
 	${CC} ${CFLAGS} -I. -o console.o -c ./dev/console.c 
-	${CC} ${CFLAGS} -I. -o clock.o -c ./dev/clock.c 
+	${CC} ${CFLAGS} -I. -o pci.o -c ./dev/pci.c
 
-tomos: loader.S kernel.c libs
+# tomos
+tomos: libs drivers
 	${CC} ${CFLAGS} -o loader.o -c loader.S
 	${CC} ${CFLAGS} -o kernel.o -c kernel.c
 	${CC} ${CFLAGS} -o isr_stubs.o -c isr_stubs.S
-	${LD} -T linker.ld -o tomos.bin loader.o kernel.o support.o intr.o mm.o isr_stubs.o pg.o \
-			      console.o keyboard.o clock.o
-
-floppy:	tomos
-	cat stage1 stage2 pad tomos.bin > floppy.img
-	dd if=floppy.img of=fd.img conv=notrunc
-	rm floppy.img
+	${LD} -T linker.ld -o tomos.bin loader.o kernel.o isr_stubs.o \
+			     ${LIB_OBJ} ${DRV_OBJ} 
+	cat stage1 stage2 pad tomos.bin > tomos.img
+	dd if=tomos.img of=disk.img conv=notrunc
 
 clean:
-	rm *.o *.bin
+	rm *.o *.bin *.img

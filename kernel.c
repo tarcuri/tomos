@@ -7,6 +7,7 @@
 #include "dev/keyboard.h"
 #include "dev/console.h"
 #include "dev/clock.h"
+#include "dev/pci.h"
 
 #include "x86.h"
 
@@ -34,7 +35,6 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
 
   // initial the console IO
   c_init();
-  c_printf("kernel: %xh\n\n", kernel); 
 
   // reference to the GDT
   asm("sgdt %0" : "=m"(gdtr_register): :"memory");
@@ -57,8 +57,9 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
 
   mm_init();
   pg_init();
-
   kb_init();
+
+  pci_init();
 
   asm ("sti");
   main_loop();

@@ -3,9 +3,9 @@
 #romimage: file=/usr/share/bochs/BIOS-bochs-latest, address=0xf0000
 megs: 32
 #vgaromimage: file=/usr/share/vgabios/vgabios.bin
-floppya: image="fd.img", status=inserted
+#floppya: image="fd.img", status=inserted
 #floppya: 1_44=/dev/fd0, status=inserted
-#ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
+ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
 #ata1: enabled=0, ioaddr1=0x170, ioaddr2=0x370, irq=15
 #ata2: enabled=0, ioaddr1=0x1e8, ioaddr2=0x3e0, irq=11
 #ata3: enabled=0, ioaddr1=0x168, ioaddr2=0x360, irq=9
@@ -13,7 +13,7 @@ floppya: image="fd.img", status=inserted
 ata0-master: type=disk, path="disk.img", mode=flat, cylinders=20, heads=16, spt=63
 #ata0-slave: type=cdrom, path="/dev/cdrom", status=inserted
 
-boot: floppy, disk 
+boot: disk
 
 #ips: 1000000
 #floppy_bootsig_check: disabled=0
