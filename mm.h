@@ -29,6 +29,8 @@ void *mm_alloc_frame(void);
 
 void mm_free_frame(void *);
 
+void mm_grub_multiboot(void *mbd, int print);
+
 // private static functions
 static unsigned int mm_get_free_frame(void);
 

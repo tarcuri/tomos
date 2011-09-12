@@ -73,7 +73,7 @@ void set_idt_entry(int entry, void (*handler)(void))
 /* default, unexpected handler */
 void du_handler( int vector, int code)
 {
-  cio_printf( "\nVector=0x%x, code=%d\n", vector, code );
+  c_printf( "\nVector=0x%x, code=%d\n", vector, code );
   panic( "Unhandled interrupt" );
 }
 

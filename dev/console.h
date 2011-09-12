@@ -1,5 +1,5 @@
-#ifndef C_IO_H
-#define C_IO_H
+#ifndef CONSOLE_H
+#define CONSOLE_H
 
 #define	VIDEO_BASE_ADDR		0xB8000
 #define VIDEO_ADDR(x,y)		(unsigned short *)(VIDEO_BASE_ADDR + 2 * ((y) * SCREEN_X_SIZE + (x)))
@@ -24,30 +24,30 @@ unsigned int curr_x;
 unsigned int curr_y;
 
 // functions
+void		c_init(void);
 
-void c_setscroll( unsigned int s_min_x, unsigned int s_min_y, unsigned int s_max_x, unsigned int s_max_y );
+unsigned int	c_strlen(const char *s);
+void		c_putchar(const char c);
 
-void c_moveto( unsigned int x, unsigned int y );
+void		c_putchar_at(unsigned int x, unsigned int y, unsigned int c);
+unsigned int	c_print_str(const char *s);
+void		c_scroll( unsigned int lines );
+void		itoa(char *, int, int);
+unsigned char	c_getchar(void);
+void		c_setcursor(void);
+void		c_setscroll( unsigned int min_x, unsigned int min_y, unsigned int max_x, unsigned int max_y );
+void		c_moveto( unsigned int x, unsigned int y );
+void		c_clearscroll( void );
+void		c_clearscreen(void);
+unsigned int	c_bound( unsigned int min, unsigned int value, unsigned int max );
 
-void c_clearscroll( void );
-
-void cio_init(void);
-void cio_clearscreen(void);
-
-void cio_putchar(const char c);
-void cio_putchar_at(unsigned int x, unsigned int y, unsigned int c);
-
-unsigned int cio_strlen(const char *s);
-unsigned int cio_print_str(const char *s);	// print null-terminated string to current position
 
 // input
 #define CIO_IN_BUFSIZE	1024
-#define KEYBOARD_DATA   0x60
-#define KEYBOARD_STATUS 0x64
 #define READY           0x1
 #define EOT             '\04'
 
-static unsigned char _cio_scan_code[ 2 ][ 128 ] = {
+static unsigned char c_scan_code[ 2 ][ 128 ] = {
         {
 /* 00-07 */     '\377', '\033', '1',    '2',    '3',    '4',    '5',    '6',
 /* 08-0f */     '7',    '8',    '9',    '0',    '-',    '=',    '\b',   '\t',
@@ -87,20 +87,5 @@ static unsigned char _cio_scan_code[ 2 ][ 128 ] = {
         }
 };
 
-
-unsigned char _cio_input_buf[CIO_IN_BUFSIZE];
-
-void c_scroll( unsigned int lines );
-
-
-// static private functions
-void itoa(char *, int, int);
-unsigned char _cio_getchar(void);
-void _cio_proc_scancode(unsigned char);
-void _cio_keyboard_isr(int vector, int code);
-unsigned int _cio_strlen(const char *s);
-void _cio_setcursor(void);
-void _cio_putchar_at(unsigned int x, unsigned int y, unsigned int c);
-unsigned int bound( unsigned int min, unsigned int value, unsigned int max );
 
 #endif

@@ -2,7 +2,7 @@
 
 void panic(char *reason){
   asm( "cli" );
-  cio_printf("\nPANIC: %s\nHalting...", reason);
+  c_printf("\nPANIC: %s\nHalting...", reason);
   for(;;)
     ;
 }

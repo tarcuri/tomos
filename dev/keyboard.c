@@ -2,7 +2,7 @@
 #include "support.h"
 #include "x86.h"
 
-#include "cio.h"
+#include "dev/console.h"
 
 
 // eventually, this will know the pid of the current process, and its state
@@ -17,7 +17,7 @@ void kb_init()
 
   _install_isr(INT_VEC_KEYBOARD, kb_handler);
 
-  cio_printf("[kb]      keyboard driver initialized\n");
+  c_printf("[kb]      keyboard driver initialized\n");
 }
 
 int kb_read(unsigned char *buf, int n)
