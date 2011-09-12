@@ -6,9 +6,9 @@
 #include "mm.h"
 #include "pg.h"
 
-#include "x86.h"
+#include "dev/keyboard.h"
 
-// TODO: implement simple console input and test interrupts
+#include "x86.h"
 
 #define GRUB_MAGIC_NUMBER	0x2BADB002
 
@@ -71,6 +71,8 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
   mm_init();
   pg_init();
 
+  kb_init();
+
   asm ("sti");
   main_loop();
 }
@@ -78,12 +80,12 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
 void main_loop()
 {
   cio_printf("Welcome to tomos!\n");
-  cio_printf("Press any key to allocate a new page\n");
   while (1)
   {
     // for now try to block on input
     unsigned char c = _cio_getchar();
-    cio_putchar(c);
+    if (c)
+      cio_putchar(c);
   }
 }
 

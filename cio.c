@@ -1,6 +1,8 @@
 #include "cio.h"
 #include "x86.h"
 
+#include "dev/keyboard.h"
+
 #include  "support.h"
 
 
@@ -36,7 +38,6 @@ void cio_init( void ){
         /*
         ** Set up the interrupt handler for the keyboard
         */
-        _install_isr(INT_VEC_KEYBOARD, _cio_keyboard_isr);
 }
 void c_setscroll( unsigned int s_min_x, unsigned int s_min_y, unsigned int s_max_x, unsigned int s_max_y ){
 	scroll_min_x = bound( min_x, s_min_x, max_x );
@@ -300,16 +301,37 @@ unsigned char *_cio_next_space = _cio_input_buf;
 
 unsigned char _cio_getchar()
 {
-  // ok, now what
   unsigned char c;
 
-  while (_cio_next_char == _cio_next_space) {
-    // waiting for a character
-    //cio_printf("ut\n");
+  while ((c = kb_get_code()) == 0)
+	;
+
+  switch (c){
+  case 0x1B:	// escape
+    c = 0;
+    break;
+
+  case 0x08:	// escape
+    //clear the last character
+    if (curr_x == 0) {
+      curr_x = max_x;
+      curr_y -= 1;
+    } else {
+      curr_x -= 1;
+    }
+
+    unsigned short *last = VIDEO_ADDR(curr_x, curr_y);
+    *last = ' ' | 0x0700;
+
+    _cio_setcursor();
+    c = 0;
+    break;
+
+  default:
+    break;
   }
 
-  c = *_cio_next_char;
-  _cio_next_char = _cio_input_buf + (((_cio_next_char - _cio_input_buf)+1) % CIO_IN_BUFSIZE);
+  // still need to deal with escape, ctrl, etc...
   return c;
 }
 void c_scroll( unsigned int lines ){
@@ -378,6 +400,7 @@ void _cio_proc_scancode(unsigned char code)
     }
   }
 }
+
 
 void _cio_keyboard_isr(int vector, int code)
 {
