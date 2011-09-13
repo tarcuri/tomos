@@ -52,15 +52,19 @@
 #define INT_VEC_MACHINE_CHECK           0x12
 #define INT_VEC_SIMD_FP_EXCEPTION       0x13
 
-#define INT_VEC_TIMER                   0x20
+#define INT_VEC_TIMER                   0x20		// IRQ0
 #define INT_VEC_KEYBOARD                0x21
 
 #define INT_VEC_SERIAL_PORT_2           0x23
 #define INT_VEC_SERIAL_PORT_1           0x24
 #define INT_VEC_PARALLEL_PORT           0x25
 #define INT_VEC_FLOPPY_DISK             0x26
-#define INT_VEC_MYSTERY                 0x27
-#define INT_VEC_MOUSE                   0x2c
+#define INT_VEC_MYSTERY                 0x27		// IRQ7
+
+#define INT_VEC_PRI_IDE			0x2E		// IRQ14
+#define INT_VEC_SEC_IDE			0x2F
+
+#define INT_VEC_MOUSE                   0x2C
 
 
 /*
