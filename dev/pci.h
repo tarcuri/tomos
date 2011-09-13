@@ -8,9 +8,9 @@
 #define PCI_CONFIG_DATA			0xCFC
 
 #define IDE_BAR_0			0x1F0		// primary control channel i/o space
-#define IDE_BAR_1			0x3F4		// pri. control channel port
+#define IDE_BAR_1			0x3F4		// device control register
 #define IDE_BAR_2			0x170		// sec. control channel i/o space
-#define IDE_BAR_3			0x374
+#define IDE_BAR_3			0x374		// alt. status register
 #define IDE_BAR_4					// bus master IDE
 
 /**
@@ -34,6 +34,7 @@ void pci_detect_devices(void);
 
 pci_dev_t pci_find_device(unsigned short vendor, unsigned short device);
 
+unsigned int pci_read_config_dword_dev(pci_dev_t d, int);
 unsigned int pci_read_config_dword(unsigned short bus, unsigned short slot,
                                     unsigned short func, unsigned char offset);
 unsigned short pci_read_config_word(unsigned short bus, unsigned short slot,

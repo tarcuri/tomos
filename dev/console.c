@@ -257,7 +257,7 @@ unsigned char c_getchar()
     c = 0;
     break;
 
-  case 0x08:	// escape
+  case 0x08:	// newline
     //clear the last character
     if (curr_x == 0) {
       curr_x = max_x;

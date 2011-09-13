@@ -1,6 +1,70 @@
 #ifndef ATA_H
 #define ATA_H
 
+// command block registers
+#define ATA_PRI_CMD_REGISTER		0x01F0
+#define ATA_SEC_CMD_REGISTER		0x0170
+
+#define	ATA_CTRL_ALT_STATUS			0x06
+#define ATA_CTRL_DEV_CONTROL			0x06
+
+#define IDE_CTRL_BLK_REG_DEVICE_CONTROL		0x0006
+#define IDE_CTRL_BLK_REG_ALT_STATUS		0x0006
+
+// control block register addresses
+#define ATA_PRI_CTRL_REGISTER		0x03f4
+#define ATA_SEC_CTRL_REGISTER 		0x0374
+// device status
+#define ATA_DEVICE_READY                0x01
+#define ATA_DEVICE_BUSY                 0x02
+#define ATA_DEVICE_UNAVAILABLE          0x03
+
+// command block register offsets
+#define ATA_CMD_BR_DATA			0x00	// data (r/w)
+#define ATA_CMD_BR_ERROR		0x01	// error status (ro)
+#define ATA_CMD_BR_FEATURES		0x01	// features (wo)
+#define ATA_CMD_BR_SEC_COUNT		0x02	// sector count (r/w)
+#define ATA_CMD_BR_CYL_LOW		0x03	// cylinder low (r/w)
+#define ATA_CMD_BR_CYL_MID		0x04	// cylinder mid (r/w)
+#define ATA_CMD_BR_CYL_HIGH		0x05	// cylinder high (r/w)
+#define ATA_CMD_BR_DRIVE_SELECT		0x06	// drive select (r/w)
+#define ATA_CMD_BR_STATUS		0x07	// status (ro)
+#define ATA_CMD_BR_COMMAND		0x07	// command (wo)
+
+#define ATA_CMD_DATA			0x00	// data (r/w)
+#define ATA_CMD_ERROR			0x01	// error status (ro)
+#define ATA_CMD_FEATURES		0x01	// features (wo)
+#define ATA_CMD_SEC_COUNT		0x02	// sector count (r/w)
+#define ATA_CMD_CYL_LOW			0x03	// cylinder low (r/w)
+#define ATA_CMD_CYL_MID			0x04	// cylinder mid (r/w)
+#define ATA_CMD_CYL_HIGH		0x05	// cylinder high (r/w)
+#define ATA_CMD_DRIVE_SELECT		0x06	// drive select (r/w)
+#define ATA_CMD_STATUS			0x07	// status (ro)
+#define ATA_CMD_COMMAND			0x07	// command (wo)
+
+// IDE status register bits
+#define ATA_CMD_BR_R_STS_BUSY  		0x80 	// bit 7 - busy
+#define ATA_CMD_BR_R_STS_DRDY		0x40	// bit 6 - device ready
+#define ATA_CMD_BR_R_STS_DWF		0x20	// bit 5 -
+#define ATA_CMD_BR_R_STS_DSC		0x10	// bit 4 -
+#define ATA_CMD_BR_R_STS_DRQ		0x08	// bit 3 - device request
+#define ATA_CMD_BR_R_STS_CORR		0x04	// bit 2 - 
+#define ATA_CMD_BR_R_STS_IDX		0x02	// bit 1 - 
+#define ATA_CMD_BR_R_STS_ERR		0x01	// bit 0 - error
+
+// the 5th bit of the device register selects the IDE drive (set to select drive 1)
+#define ATA_DEV_REG_SELECT_LBA		0x40
+#define ATA_DEV_REG_SELECT_1		0x10
+
+// ATA commands
+#define ATA_DEVICE_RESET		0x08
+#define ATA_READ_SECTORS		0x20
+#define ATA_WRITE_SECTORS		0x30
+#define ATA_DEVICE_CONFIG_IDENTIFY     	0xb1
+#define ATA_DEVICE_CONFIG_ID_FEATURES  	0xc2
+#define ATA_IDENTIFY_DEVICE		0xec
+#define ATA_FLUSH_CACHE                	0xe7
+
 // ATA IO ports
 #define ATA_DATA_IO_PORT		0x1F0		// r/w PIO data bytes here
 #define ATA_FEAT_ERR_PORT		0x1F1		// used for ATAPI
@@ -45,43 +109,7 @@
 #define ATA_PACKET			0xA0
 #define ATA_IDENTIFY_PACKET_DEVICE	0xA1
 
-/**
- * Error register (RO)
- */
-#define ATA_ERROR_CMD_ABORTED		(1 << 2)
-
-/**
- * Data register (R/W) 16-bit word
- *
- * "This register shall be accessed for host PIO data transfer only when DRQ is set to one
- *  and DMACK- is not asserted."
- */
-
-
-/**
- * Device register (R/W) (also parameters when Command register is written)
- *
- * "This register shall be written only when both BSY and DRQ are cleared to zero
- *  and DMACK- is not asserted."
- */
-#define ATA_DEVICE_DEV_BIT		(1 << 4)
-
-
-#define    ATA_IDENT_DEVICETYPE   0
-#define    ATA_IDENT_CYLINDERS   2
-#define    ATA_IDENT_HEADS      6
-#define    ATA_IDENT_SECTORS      12
-#define    ATA_IDENT_SERIAL   20
-#define    ATA_IDENT_MODEL      54
-#define    ATA_IDENT_CAPABILITIES   98
-#define    ATA_IDENT_FIELDVALID   106
-#define    ATA_IDENT_MAX_LBA   120
-#define   ATA_IDENT_COMMANDSETS   164
-#define    ATA_IDENT_MAX_LBA_EXT   200
-
-
 // ATA commands
-void ata_read_sectors();
-void ata_write_sectors();
+void ata_init(void);
 
 #endif

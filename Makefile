@@ -10,26 +10,27 @@ AFLAGS =
 LIB_SRC = support.c intr.c mm.c pg.c
 LIB_OBJ = support.o intr.o mm.o pg.o
 
-DRV_SRC = ./dev/keyboard.c ./dev/console.c ./dev/clock.c ./dec/pci.c
-DRV_OBJ = keyboard.o console.o clock.o pci.o
+DRV_SRC = ./dev/keyboard.c ./dev/console.c ./dev/clock.c ./dev/pci.c ./dev/ata.c
+DRV_OBJ = keyboard.o console.o clock.o pci.o ata.o
 
 # TODO: generate depfiles
 
 all: tomos
 
 # general libs
-libs: ${LIB_OBJ} 
+libs: ${LIB_SRC} 
 	${CC} ${CFLAGS} -o support.o -c support.c
 	${CC} ${CFLAGS} -o intr.o -c intr.c
 	${CC} ${CFLAGS} -o mm.o -c mm.c
 	${CC} ${CFLAGS} -o pg.o -c pg.c
 
 # devices
-drivers: ${DRV_OBJ} 
-	${CC} ${CFLAGS} -I. -o clock.o -c ./dev/clock.c 
+drivers: ${DRV_SRC} 
+	${CC} ${CFLAGS} -I. -o clock.o -c ./dev/clock.c
+	${CC} ${CFLAGS} -I. -o console.o -c ./dev/console.c
 	${CC} ${CFLAGS}	-I. -o keyboard.o -c ./dev/keyboard.c
-	${CC} ${CFLAGS} -I. -o console.o -c ./dev/console.c 
 	${CC} ${CFLAGS} -I. -o pci.o -c ./dev/pci.c
+	${CC} ${CFLAGS} -I. -o ata.o -c ./dev/ata.c
 
 # tomos
 tomos: libs drivers

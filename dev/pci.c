@@ -15,16 +15,6 @@ pci_init()
 
   c_printf("[pci]     probing IDE controller [%x:%x:%x]\n",
            ide_controller.bus, ide_controller.slot, ide_controller.function);
-
-  // now get the BARs
-  unsigned int bar0 = pci_read_config_dword(ide_controller.bus, ide_controller.slot,
-                                           ide_controller.function, 0x10);
-  unsigned short class = pci_read_config_word(ide_controller.bus, ide_controller.slot,
-                                           ide_controller.function, 0x3C);
-
-  c_printf("CLASS:    0x%x\n", class & 0xFF00);
-  c_printf("SUBCLASS: 0x%x\n", class & 0x00FF);
-  c_printf("BAR0: 0x%x\n", bar0);
 }
 
 unsigned int
@@ -34,6 +24,25 @@ pci_read_config_dword(unsigned short bus, unsigned short slot, unsigned short fu
   unsigned int lbus = (unsigned int) bus;
   unsigned int lslot = (unsigned int) slot;
   unsigned int lfunc = (unsigned int) func;
+
+
+  // create configuration addresss
+  address = (unsigned int)((lbus << 16) | (lslot << 11) | (lfunc << 8) | 
+                           (offset & PCI_CONFIG_ADDR_REGISTER) |
+                           (PCI_CONFIG_ADDR_ENABLE));
+
+  // write it to the CONFIG_ADDRESS port
+  __outl(PCI_CONFIG_ADDRESS, address);
+
+  return __inl(PCI_CONFIG_DATA);
+}
+
+unsigned int pci_read_config_dword_dev(pci_dev_t d, int offset)
+{
+  unsigned int address;
+  unsigned int lbus = (unsigned int) d.bus;
+  unsigned int lslot = (unsigned int) d.slot;
+  unsigned int lfunc = (unsigned int) d.function;
 
 
   // create configuration addresss
@@ -83,11 +92,12 @@ pci_detect_devices()
 
         if (vend_id != 0xFFFF) {
           if ((vend_id == PCI_VENDOR_INTEL) && (dev_id == PCI_INTEL_IDE_CTRL)) {
-            //c_printf("[pci]     IDE controller found [%x:%x:%x]\n", bus, slot, func);
+            c_printf("[pci]     IDE controller found [%x:%x:%x]\n", bus, slot, func);
             ide_controller.bus = bus;
             ide_controller.slot = slot;
             ide_controller.function = func;
-            return;
+          } else {
+            c_printf("[pci]     vendor: %x, device %x [%x:%x:%x]\n", vend_id, dev_id, bus, slot, func);
           }
         } else {
           break;

@@ -8,6 +8,7 @@
 #include "dev/console.h"
 #include "dev/clock.h"
 #include "dev/pci.h"
+#include "dev/ata.h"
 
 #include "x86.h"
 
@@ -59,7 +60,8 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
   pg_init();
   kb_init();
 
-  pci_init();
+  //pci_init();
+  ata_init();
 
   asm ("sti");
   main_loop();
