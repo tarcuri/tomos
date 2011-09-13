@@ -53,7 +53,7 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
   }
 
   clock_init();
-  
+ 
   mm_grub_multiboot(mbd, 0);
 
   mm_init();

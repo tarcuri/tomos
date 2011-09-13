@@ -12,9 +12,6 @@ pci_init()
 
   // TODO: detect/verify class codes
   pci_detect_devices();
-
-  c_printf("[pci]     probing IDE controller [%x:%x:%x]\n",
-           ide_controller.bus, ide_controller.slot, ide_controller.function);
 }
 
 unsigned int
