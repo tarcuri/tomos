@@ -23,6 +23,10 @@ unsigned int mm_last_allocated_frame;	// index of the most recently allocated fr
 unsigned int mm_total_frames;		// total number of frames available
 
 // management functions
+void memset(void *dst, unsigned char value, unsigned int size);
+
+#define ASSERT(cond)		{if (!(cond)) { panic("ASSERTION ERROR\n"); } }
+
 void mm_init(void);
 
 void *mm_alloc_frame(void);
@@ -30,6 +34,8 @@ void *mm_alloc_frame(void);
 void mm_free_frame(void *);
 
 void mm_grub_multiboot(void *mbd, int print);
+
+unsigned int *kmalloc(unsigned int size);
 
 // private static functions
 static unsigned int mm_get_free_frame(void);

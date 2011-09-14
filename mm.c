@@ -34,6 +34,21 @@ void mm_init()
   mm_allocated_frames = 0;
 }
 
+unsigned int *kmalloc(unsigned int size)
+{
+  return 0;
+}
+
+void memset(void *dst, unsigned char value, unsigned int size)
+{
+  unsigned int i;
+  unsigned char *p = dst;
+
+  for (i = 0; i < size; ++i)
+    *p++ = value;
+}
+
+
 // TODO: keep a pointer to the last allocated bit
 static unsigned int mm_get_free_frame()
 {

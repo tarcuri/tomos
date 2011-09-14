@@ -33,8 +33,8 @@ void ata_init()
 
   //ata_identify_device();
   //ata_do_pio_data();
-  unsigned char buffer[512];
-  ata_read_sector(0, buffer);
+  //unsigned char buffer[512];
+  //ata_read_sector(0, buffer);
 }
 
 
@@ -60,17 +60,15 @@ void ata_isr(int vector, int code)
 
     if (status & ATA_STATUS_DRQ) {
       // ready to transfer data
-      unsigned char sector[512];
+      unsigned short sector[256];
 
       c_printf("reading sector");
       int i;
-      for (i = 0; status & ATA_STATUS_DRQ; i += 2) {
+      for (i = 0; i < 256, status & ATA_STATUS_DRQ; ++i) {
         sector[i] = __inw(ata_cmd_reg | ATA_CMD_R_DATA);
         c_printf("%x", sector[i]);
 
         status = ata_alt_status();
-        if (i >= 512)
-          break;
       }
       c_printf("DONE\n");
     } else {

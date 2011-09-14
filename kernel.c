@@ -3,6 +3,7 @@
 #include "intr.h"
 #include "mm.h"
 #include "pg.h"
+#include "kheap.h"
 
 #include "dev/keyboard.h"
 #include "dev/console.h"
@@ -58,6 +59,9 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
 
   mm_init();
   pg_init();
+
+  kheap_init();
+
   kb_init();
 
   //pci_init();
@@ -72,6 +76,23 @@ void main_loop()
   c_printf("Welcome to tomos!\n");
   while (1)
   {
+    unsigned char *buffer = (unsigned char *) kh_alloc(20, 0, &kernel_heap);
+
+    if (buffer) {
+      c_printf("buffer allocated 0x%x\n", buffer);
+
+      char c = 'a';
+      int i;
+      for (i = 0; i < 19; ++i) {
+        buffer[i] = c;
+        c++;
+      }
+      buffer[19] = '\0';
+    }
+    c_printf("mem string: %s\n\n", buffer);
+
+    heap_dump_words(&kernel_heap, 12);
+
     // for now try to block on input
     unsigned char c = c_getchar();
     if (c)

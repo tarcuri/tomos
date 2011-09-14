@@ -7,8 +7,8 @@ LD = ${TOOLS}/i586-elf-ld
 CFLAGS = -nostdlib -nostartfiles -nodefaultlibs -fno-builtin-memcpy
 AFLAGS =
 
-LIB_SRC = support.c intr.c mm.c pg.c
-LIB_OBJ = support.o intr.o mm.o pg.o
+LIB_SRC = support.c intr.c mm.c pg.c kheap.c ordered_map.c
+LIB_OBJ = support.o intr.o mm.o pg.o kheap.o ordered_map.o
 
 DRV_SRC = ./dev/keyboard.c ./dev/console.c ./dev/clock.c ./dev/pci.c ./dev/ata.c
 DRV_OBJ = keyboard.o console.o clock.o pci.o ata.o
@@ -23,6 +23,8 @@ libs: ${LIB_SRC}
 	${CC} ${CFLAGS} -o intr.o -c intr.c
 	${CC} ${CFLAGS} -o mm.o -c mm.c
 	${CC} ${CFLAGS} -o pg.o -c pg.c
+	${CC} ${CFLAGS} -o ordered_map.o -c ordered_map.c
+	${CC} ${CFLAGS} -o kheap.o -c kheap.c
 
 # devices
 drivers: ${DRV_SRC} 
