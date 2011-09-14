@@ -57,6 +57,7 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
  
   mm_grub_multiboot(mbd, 0);
 
+  // merge all memory init into the mm module
   mm_init();
   pg_init();
 
