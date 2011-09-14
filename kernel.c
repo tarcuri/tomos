@@ -74,24 +74,31 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
 void main_loop()
 {
   c_printf("Welcome to tomos!\n");
+
+  char *buffer = 0;
+    heap_t * const keep = &kernel_heap;
   while (1)
   {
-    unsigned char *buffer = (unsigned char *) kh_alloc(20, 0, &kernel_heap);
-
+    int i;
+    for (i = 0; i < 10; ++i) {
+      c_printf("allocated: 0x%x\n", (char *) kh_alloc(20, 0, keep));
+    }
+/*
     if (buffer) {
       c_printf("buffer allocated 0x%x\n", buffer);
 
-      char c = 'a';
       int i;
       for (i = 0; i < 19; ++i) {
-        buffer[i] = c;
-        c++;
+        buffer[i] = c_getchar();
+        c_putchar(buffer[i]);
       }
       buffer[19] = '\0';
     }
-    c_printf("mem string: %s\n\n", buffer);
+*/
+    //*buffer = 0xff;
+    //c_printf("\nmem string: %s\n", buffer);
 
-    heap_dump_words(&kernel_heap, 12);
+    //heap_dump_words(&kernel_heap, 8);
 
     // for now try to block on input
     unsigned char c = c_getchar();

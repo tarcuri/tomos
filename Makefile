@@ -4,7 +4,7 @@ CC = ${TOOLS}/i586-elf-gcc
 AS = ${TOOLS}/i586-elf-as
 LD = ${TOOLS}/i586-elf-ld
 
-CFLAGS = -nostdlib -nostartfiles -nodefaultlibs -fno-builtin-memcpy
+CFLAGS = -nostdlib -nostartfiles -nodefaultlibs -fno-builtin-memcpy -fno-builtin-memset
 AFLAGS =
 
 LIB_SRC = support.c intr.c mm.c pg.c kheap.c ordered_map.c
