@@ -10,6 +10,8 @@ void kb_init()
 {
   // allocate space for the kernels input buffer
   // other processes will get their own
+
+  // duh, using the same frame as the heap
   kb_active_buffer = (unsigned char *) mm_alloc_frame();
 
   kb_write_idx = 0;
