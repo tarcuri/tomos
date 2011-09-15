@@ -79,28 +79,26 @@ void main_loop()
   unsigned int last;
   while (1)
   {
-    dump_heap_index(k_heap);
-
     unsigned char c = c_getchar();
     if (c)
       c_putchar(c);
 
-/*
     switch(c){
     case '4':
-      last = (unsigned int) h_alloc(4, 0, &kernel_heap);
+      last = (unsigned int) kmalloc(4, 0, k_heap);
       break;
     case '8':
-      last = (unsigned int) h_alloc(8, 0, &kernel_heap);
+      last = (unsigned int) kmalloc(8, 0, k_heap);
       break;
     case '1':
-      last = (unsigned int) h_alloc(16, 0, &kernel_heap);
+      last = (unsigned int) kmalloc(16, 0, k_heap);
       break;
     case 'f':
-      h_free(last, &kernel_heap);
+      kfree((void *) last, k_heap);
       break;
+    case 'd':
+      dump_heap_index(k_heap);
     };
-*/
   }
 }
 

@@ -84,6 +84,7 @@ void *kmalloc(unsigned int size, int align, heap_t *heap)
     header = (heap_header_t *) memmove((void *) offset, (void *) header, sizeof(heap_header_t));
   } else {
     address = ((unsigned int)header) + sizeof(heap_header_t);
+    header->mem_size = size;
   }
 
   // create the newly allocated blocks footer
@@ -104,11 +105,20 @@ void *kmalloc(unsigned int size, int align, heap_t *heap)
     insert_into_index(new_header, heap);
   }
 
-  c_printf("    allocated %d bytes at 0x%x\n", size, address);
-
   return (void *) address;
 }
 
+void kfree(void *p, heap_t *heap)
+{
+  heap_header_t *header = (heap_header_t *) ((unsigned int)p - sizeof(heap_header_t));
+
+  // make sure this memory isn't already free, then free it
+  ASSERT((header->tag_hole & 0x1) == 0);
+  header->tag_hole = HEAP_MAGIC_TAG_31 | 0x1;
+  insert_into_index(header, heap);
+}
+
+// private static functions
 static int find_smallest_hole(unsigned int size, int align, heap_t *heap)
 {
   // does not care about overhead
