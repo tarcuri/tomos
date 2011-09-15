@@ -16,7 +16,6 @@ unsigned int ata_state;
 
 
 // TODO: clean up the mess and figure out whats going on here
-
 void ata_init()
 {
   _install_isr(INT_VEC_PRI_IDE, ata_isr);
@@ -42,10 +41,8 @@ void ata_isr(int vector, int code)
 {
   asm("cli");
 
-  c_printf("ATA INTERRUPT\n");
   if (ata_state == ATA_INTRQ_WAIT) {
     // expected this interrupt as per PIO protocol
-    c_printf("expected interrupt received\n");
 
     // now in PIO Check_Status state
     ata_state = ATA_CHECK_STATUS;

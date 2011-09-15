@@ -69,6 +69,7 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
   ata_init();
 
   asm ("sti");
+
   main_loop();
 }
 
