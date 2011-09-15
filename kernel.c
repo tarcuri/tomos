@@ -3,7 +3,7 @@
 #include "intr.h"
 #include "mm.h"
 #include "pg.h"
-#include "kheap.h"
+#include "heap.h"
 
 #include "dev/keyboard.h"
 #include "dev/console.h"
@@ -61,7 +61,7 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
   mm_init();
   pg_init();
 
-  kheap_init();
+  heap_init();
 
   kb_init();
 
@@ -76,35 +76,31 @@ void main_loop()
 {
   c_printf("Welcome to tomos!\n");
 
-  char *buffer = 0;
-    heap_t * const keep = &kernel_heap;
+  unsigned int last;
   while (1)
   {
-    int i;
-    for (i = 0; i < 10; ++i) {
-      c_printf("allocated: 0x%x\n", (char *) kh_alloc(20, 0, keep));
-    }
-/*
-    if (buffer) {
-      c_printf("buffer allocated 0x%x\n", buffer);
+    dump_heap_index(k_heap);
 
-      int i;
-      for (i = 0; i < 19; ++i) {
-        buffer[i] = c_getchar();
-        c_putchar(buffer[i]);
-      }
-      buffer[19] = '\0';
-    }
-*/
-    //*buffer = 0xff;
-    //c_printf("\nmem string: %s\n", buffer);
-
-    //heap_dump_words(&kernel_heap, 8);
-
-    // for now try to block on input
     unsigned char c = c_getchar();
     if (c)
       c_putchar(c);
+
+/*
+    switch(c){
+    case '4':
+      last = (unsigned int) h_alloc(4, 0, &kernel_heap);
+      break;
+    case '8':
+      last = (unsigned int) h_alloc(8, 0, &kernel_heap);
+      break;
+    case '1':
+      last = (unsigned int) h_alloc(16, 0, &kernel_heap);
+      break;
+    case 'f':
+      h_free(last, &kernel_heap);
+      break;
+    };
+*/
   }
 }
 

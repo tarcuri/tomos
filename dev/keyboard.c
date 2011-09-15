@@ -3,7 +3,7 @@
 #include "x86.h"
 
 #include "dev/console.h"
-#include "kheap.h"
+#include "heap.h"
 
 // eventually, this will know the pid of the current process, and its state
 void kb_init()
@@ -12,7 +12,7 @@ void kb_init()
   // other processes will get their own
 
   // duh, using the same frame as the heap
-  kb_active_buffer = (unsigned char *) kmalloc(KEYBOARD_BUFSIZE, 0, &kernel_heap);
+  kb_active_buffer = (unsigned char *) kmalloc(KEYBOARD_BUFSIZE, 0, k_heap);
 
   //kb_active_buffer = (unsigned char *) mm_alloc_frame();
 

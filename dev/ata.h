@@ -52,7 +52,6 @@ void ata_isr(int, int);
 void ata_read_sectors(unsigned int lba, void *buf);
 
 void ata_do_pio_data(void);
-void memcpy(void *dst, void *src, unsigned int n);
 unsigned char ata_alt_status(void);
 void ata_identify_device(void);
 void ata_print_device_info(unsigned short *);

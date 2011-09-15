@@ -34,18 +34,40 @@ void mm_init()
   mm_allocated_frames = 0;
 }
 
-unsigned int *kmalloc(unsigned int size)
-{
-  return 0;
-}
-
-void memset(void *dst, unsigned char value, unsigned int size)
+void memset(void *dst, unsigned char value, unsigned int n)
 {
   unsigned int i;
   unsigned char *p = dst;
 
-  for (i = 0; i < size; ++i)
+  for (i = 0; i < n; ++i)
     *p++ = value;
+}
+
+// memory areas should not overlap, else use memmove
+void memcpy(void *dst, void *src, unsigned int n)
+{
+  unsigned char *d = (unsigned char *) dst;
+  unsigned char *s = (unsigned char *) src;
+
+  int i;
+  for (i = 0; i < n; ++i)
+    *d++ = *s++;
+}
+
+void *memmove(void *dst, void *src, unsigned int n)
+{
+  unsigned char buf[n];
+  unsigned char *d = (unsigned char *) dst;
+  unsigned char *s = (unsigned char *) src;
+
+  // copy src to buf, then buf to dst
+  int i;
+  for (i = 0; i < n; ++i) {
+    buf[i] = s[i];
+    d[i] = buf[i];
+  }
+
+  return dst;
 }
 
 

@@ -226,15 +226,6 @@ void ata_identify_device()
   asm( "sti" );
 }
 
-void memcpy(void *dst, void *src, unsigned int n)
-{
-  unsigned char *d = (unsigned char *) dst;
-  unsigned char *s = (unsigned char *) src;
-  int i;
-  for (i = 0; i < n; ++i)
-    *d++ = *s++;
-}
-
 void ata_print_device_info( unsigned short *dev_data )
 {
   // check for NULL pointers...
