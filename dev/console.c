@@ -23,47 +23,10 @@ void c_init( void ){
 
   c_clearscreen();
 }
-void c_setscroll( unsigned int s_min_x, unsigned int s_min_y, unsigned int s_max_x, unsigned int s_max_y ){
-  scroll_min_x = c_bound( min_x, s_min_x, max_x );
-  scroll_min_y = c_bound( min_y, s_min_y, max_y );
-  scroll_max_x = c_bound( scroll_min_x, s_max_x, max_x );
-  scroll_max_y = c_bound( scroll_min_y, s_max_y, max_y );
-  curr_x = scroll_min_x;
-  curr_y = scroll_min_y;
-  c_setcursor();
-}
 
-void c_moveto( unsigned int x, unsigned int y ){
-  curr_x = c_bound( scroll_min_x, x + scroll_min_x, scroll_max_x );
-  curr_y = c_bound( scroll_min_y, y + scroll_min_y, scroll_max_y );
-  c_setcursor();
-}
-
-void c_clearscroll( void ){
-  unsigned int	nchars = scroll_max_x - scroll_min_x + 1;
-  unsigned int	l;
-  unsigned int	c;
-
-  for( l = scroll_min_y; l <= scroll_max_y; l += 1 ){
-    unsigned short *to = VIDEO_ADDR( scroll_min_x, l );
-
-    for( c = 0; c < nchars; c += 1 ){
-      *to++ = ' ' | 0x0700;
-    }
-  }
-}
-
-void c_clearscreen( void )
-{
-   unsigned short *to = VIDEO_ADDR( min_x, min_y );
-   unsigned int    nchars = ( max_y - min_y + 1 ) * ( max_x - min_x + 1 );
-
-   while( nchars > 0 ){
-     *to++ = ' ' | 0x0700;
-     nchars -= 1;
-   }
-}
-
+//
+// i/o functions: to be replaced with libc
+//
 void c_printf(const char *format, ...)
 {
   char **arg = (char **) &format;
@@ -104,21 +67,6 @@ void c_printf(const char *format, ...)
       }
     }
 }
-
-unsigned int c_print_str(const char *s)
-{
-  const char *c = s;
-  unsigned int x = curr_x, y = curr_y;
-
-  while (*c) {
-    c_putchar(*c);
-    c++;
-  }
-
-  return (unsigned int) c - (unsigned int) s;
-}
-
-
 
 void itoa (char *buf, int base, int d)
 {
@@ -162,14 +110,140 @@ void itoa (char *buf, int base, int d)
     }
 }
 
-unsigned int c_bound( unsigned int min, unsigned int value, unsigned int max ){
-  if( value < min )
+unsigned int c_strlen(const char *s)
+{
+  unsigned int len = 0;
+
+  const char *p = s;
+  while (*p++ != '\0')
+    len++;
+
+  return len;
+}
+
+char *c_getstr(char *s, unsigned int n)
+{
+  char c;
+  int i;
+
+  for (i = 0; i < n; ++i) {
+    c = c_getcode();
+    if (c) {
+      s[i] = c;
+    } else {
+      s[i] = '\0';
+      break;
+    }
+  }
+
+  return s;
+}
+
+char *c_getline(char *s, unsigned int n)
+{
+  char c;
+  int i;
+
+  for (i = 0; i < n; ++i) {
+    c = c_getcode();
+      
+    if (!c || (c == '\n')) {
+      s[i] = '\0';
+      break;
+    }
+
+    s[i] = c;
+  }
+
+  return s;
+}
+
+//
+// Console functions
+//
+void c_moveto(unsigned int x, unsigned int y)
+{
+  curr_x = c_bound( scroll_min_x, x + scroll_min_x, scroll_max_x );
+  curr_y = c_bound( scroll_min_y, y + scroll_min_y, scroll_max_y );
+  c_setcursor();
+}
+
+void c_scroll(unsigned int lines)
+{
+  unsigned short *from;
+  unsigned short *to;
+  int	nchars = scroll_max_x - scroll_min_x + 1;
+  int	line, c;
+
+  // If # of lines is the whole scrolling region or more, just clear.
+  if( lines > scroll_max_y - scroll_min_y ){
+    c_clearscroll();
+    curr_x = scroll_min_x;
+    curr_y = scroll_min_y;
+    c_setcursor();
+    return;
+  }
+
+  // Must copy it line by line.
+  for( line = scroll_min_y; line <= scroll_max_y - lines; line += 1 ){
+    from = VIDEO_ADDR( scroll_min_x, line + lines );
+    to = VIDEO_ADDR( scroll_min_x, line );
+    for(c = 0; c < nchars; c += 1)
+      *to++ = *from++;
+  }
+
+  for( ; line <= scroll_max_y; line += 1){
+    to = VIDEO_ADDR(scroll_min_x, line);
+    for(c = 0; c < nchars; c += 1)
+      *to++ = ' ' | 0x0700;
+  }
+}
+
+void c_setscroll(unsigned int s_min_x, unsigned int s_min_y, unsigned int s_max_x, unsigned int s_max_y)
+{
+  scroll_min_x = c_bound( min_x, s_min_x, max_x );
+  scroll_min_y = c_bound( min_y, s_min_y, max_y );
+  scroll_max_x = c_bound( scroll_min_x, s_max_x, max_x );
+  scroll_max_y = c_bound( scroll_min_y, s_max_y, max_y );
+  curr_x = scroll_min_x;
+  curr_y = scroll_min_y;
+  c_setcursor();
+}
+
+void c_clearscreen(void)
+{
+   unsigned short *to = VIDEO_ADDR( min_x, min_y );
+   unsigned int    nchars = (max_y - min_y + 1) * (max_x - min_x + 1);
+
+   while( nchars > 0 ){
+     *to++ = ' ' | 0x0700;
+     nchars -= 1;
+   }
+}
+
+void c_clearscroll(void)
+{
+  unsigned int	nchars = scroll_max_x - scroll_min_x + 1;
+  unsigned int	l;
+  unsigned int	c;
+
+  for(l = scroll_min_y; l <= scroll_max_y; l += 1){
+    unsigned short *to = VIDEO_ADDR(scroll_min_x, l);
+
+    for(c = 0; c < nchars; c += 1)
+      *to++ = ' ' | 0x0700;
+  }
+}
+
+// this should be a macro
+unsigned int c_bound(unsigned int min, unsigned int value, unsigned int max)
+{
+  if(value < min)
   	value = min;
-  if( value > max )
+  if(value > max)
   	value = max;
   return value;
 }
-
 
 void c_setcursor( void )
 {
@@ -188,34 +262,35 @@ void c_setcursor( void )
   __outb( 0x3d5, addr & 0xff );
 }
 
-
-unsigned int c_strlen(const char *s)
-{
-  unsigned int len = 0;
-
-  const char *p = s;
-  while (*p++ != '\0')
-    len++;
-
-  return len;
-}
-
 void c_putchar(const char c)
 {
   c_putchar_at(curr_x, curr_y, (unsigned int) c);
 }
 
-void c_putchar_at(unsigned int x, unsigned int y, unsigned int c )
+void c_putchar_at(unsigned int x, unsigned int y, unsigned int c)
 {
   int echo = 1;
 
-  if (c == '\n') {
+  switch (c) {
+  case '\n':
     curr_y++;
     curr_x = 0;
 
     echo = 0;
     c_setcursor();
-  }
+    break;
+  case '\b':
+    // erase the previous character
+    if (x) {
+      curr_x = x - 2;
+      curr_y = y;
+      c_setcursor();
+      c_putchar_at(x - 1, y, ' ');
+      return;
+    } else {
+      // need to backspace to previous line
+    }
+  };
 
   if( curr_y > scroll_max_y ){
     c_scroll( curr_y - scroll_max_y );
@@ -243,75 +318,10 @@ void c_putchar_at(unsigned int x, unsigned int y, unsigned int c )
   }
 }
 
-// input
-unsigned char c_getchar()
+// this is all we need by design, let the shell handle the characters
+unsigned char c_getcode()
 {
-  unsigned char c;
-
-  // kb returns 0 while waiting for input
-  while ((c = kb_get_code()) == 0)
-   ;
-
-  switch (c){
-  case 0x1B:	// escape
-    c = 0;
-    break;
-
-  case 0x08:	// newline
-    //clear the last character
-    if (curr_x == 0) {
-      curr_x = max_x;
-      curr_y -= 1;
-    } else {
-      curr_x -= 1;
-    }
-
-    unsigned short *last = VIDEO_ADDR(curr_x, curr_y);
-    *last = ' ' | 0x0700;
-
-    c_setcursor();
-    c = 0;
-    break;
-
-  default:
-    break;
-  }
-
-  // still need to deal with escape, ctrl, etc...
-  return c;
+  return kb_wait_code();
 }
-void c_scroll( unsigned int lines ){
-  unsigned short *from;
-  unsigned short *to;
-  int	nchars = scroll_max_x - scroll_min_x + 1;
-  int	line, c;
 
-  /*
-  ** If # of lines is the whole scrolling region or more, just clear.
-  */
-  if( lines > scroll_max_y - scroll_min_y ){
-    c_clearscroll();
-    curr_x = scroll_min_x;
-    curr_y = scroll_min_y;
-    c_setcursor();
-    return;
-  }
 
-  /*
-  ** Must copy it line by line.
-  */
-  for( line = scroll_min_y; line <= scroll_max_y - lines; line += 1 ){
-    from = VIDEO_ADDR( scroll_min_x, line + lines );
-    to = VIDEO_ADDR( scroll_min_x, line );
-    for( c = 0; c < nchars; c += 1 ){
-      *to++ = *from++;
-    }
-  }
-
-  for( ; line <= scroll_max_y; line += 1 ){
-    to = VIDEO_ADDR( scroll_min_x, line );
-    for( c = 0; c < nchars; c += 1 ){
-      *to++ = ' ' | 0x0700;
-    }
-  }
-}

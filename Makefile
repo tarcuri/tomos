@@ -4,11 +4,11 @@ CC = ${TOOLS}/i586-elf-gcc
 AS = ${TOOLS}/i586-elf-as
 LD = ${TOOLS}/i586-elf-ld
 
-CFLAGS = -nostdlib -nostartfiles -nodefaultlibs -fno-builtin-memcpy -fno-builtin-memset -fno-builtin-memmove
+CFLAGS = -nostdlib -nostartfiles -nodefaultlibs -fno-builtin-memcpy -fno-builtin-memset -fno-builtin-memmove -fno-builtin-strcpy
 AFLAGS =
 
-LIB_SRC = support.c intr.c mm.c pg.c heap.c
-LIB_OBJ = support.o intr.o mm.o pg.o heap.o
+LIB_SRC = support.c intr.c mm.c pg.c heap.c tomsh.c
+LIB_OBJ = support.o intr.o mm.o pg.o heap.o tomsh.o
 
 DRV_SRC = ./dev/keyboard.c ./dev/console.c ./dev/clock.c ./dev/pci.c ./dev/ata.c
 DRV_OBJ = keyboard.o console.o clock.o pci.o ata.o
@@ -24,6 +24,7 @@ libs: ${LIB_SRC}
 	${CC} ${CFLAGS} -o mm.o -c mm.c
 	${CC} ${CFLAGS} -o pg.o -c pg.c
 	${CC} ${CFLAGS} -o heap.o -c heap.c
+	${CC} ${CFLAGS} -o tomsh.o -c tomsh.c
 
 # devices
 drivers: ${DRV_SRC} 

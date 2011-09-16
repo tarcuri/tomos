@@ -1,3 +1,4 @@
+#include "x86.h"
 #include "support.h"
 
 #include "intr.h"
@@ -11,7 +12,7 @@
 #include "dev/pci.h"
 #include "dev/ata.h"
 
-#include "x86.h"
+#include "tomsh.h"
 
 #define GRUB_MAGIC_NUMBER	0x2BADB002
 
@@ -70,38 +71,7 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
 
   asm ("sti");
 
-  main_loop();
+  c_printf("\n");
+
+  command_loop();
 }
-
-void main_loop()
-{
-  c_printf("Welcome to tomos!\n");
-
-  unsigned int last;
-  while (1)
-  {
-    unsigned char c = c_getchar();
-    if (c)
-      c_putchar(c);
-
-    switch(c){
-    case '4':
-      last = (unsigned int) kmalloc(4, 0, k_heap);
-      break;
-    case '8':
-      last = (unsigned int) kmalloc(8, 0, k_heap);
-      break;
-    case '1':
-      last = (unsigned int) kmalloc(16, 0, k_heap);
-      break;
-    case 'f':
-      kfree((void *) last, k_heap);
-      break;
-    case 'd':
-      dump_heap_index(k_heap);
-    };
-  }
-}
-
-
-

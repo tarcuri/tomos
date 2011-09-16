@@ -27,20 +27,24 @@ unsigned int curr_y;
 void		c_init(void);
 
 unsigned int	c_strlen(const char *s);
-void		c_putchar(const char c);
-
-void		c_putchar_at(unsigned int x, unsigned int y, unsigned int c);
 unsigned int	c_print_str(const char *s);
-void		c_scroll( unsigned int lines );
 void		itoa(char *, int, int);
-unsigned char	c_getchar(void);
-void		c_setcursor(void);
-void		c_setscroll( unsigned int min_x, unsigned int min_y, unsigned int max_x, unsigned int max_y );
-void		c_moveto( unsigned int x, unsigned int y );
-void		c_clearscroll( void );
-void		c_clearscreen(void);
-unsigned int	c_bound( unsigned int min, unsigned int value, unsigned int max );
+char *		c_getstr(char *s, unsigned int n);
+char *		c_getline(char *s, unsigned int n);
 
+void		c_moveto(unsigned int x, unsigned int y);
+void		c_scroll( unsigned int lines );
+void		c_setscroll( unsigned int min_x, unsigned int min_y, unsigned int max_x, unsigned int max_y );
+void		c_clearscreen(void);
+void		c_clearscroll( void );
+
+unsigned int	c_bound( unsigned int min, unsigned int value, unsigned int max );
+void		c_setcursor(void);
+
+void		c_putchar(const char c);
+void		c_putchar_at(unsigned int x, unsigned int y, unsigned int c);
+
+unsigned char	c_getcode(void);
 
 // input
 #define CIO_IN_BUFSIZE	1024

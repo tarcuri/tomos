@@ -12,7 +12,7 @@ void kb_init()
   // other processes will get their own
 
   // duh, using the same frame as the heap
-  kb_active_buffer = (unsigned char *) kmalloc(KEYBOARD_BUFSIZE, 0, k_heap);
+  kb_active_buffer = (unsigned char *) kmalloc(KEYBOARD_BUFSIZE, 0);
 
   //kb_active_buffer = (unsigned char *) mm_alloc_frame();
 
@@ -33,6 +33,21 @@ int kb_read(unsigned char *buf, int n)
     *buf++ = kb_get_code();
 
   return n;
+}
+
+unsigned char kb_wait_code()
+{
+  unsigned char c = 0;
+
+  // always assume we haven't overflowed
+  while (kb_read_idx == kb_write_idx)
+	;
+
+  c = kb_active_buffer[kb_read_idx++];
+  kb_read_idx %= KEYBOARD_BUFSIZE;
+
+  return c;
+
 }
 
 unsigned char kb_get_code()

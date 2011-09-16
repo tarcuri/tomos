@@ -66,6 +66,7 @@ static unsigned char kb_scancode_table[ 2 ][ 128 ] = {
         }
 };
 
+unsigned char kb_wait_code();
 unsigned char kb_get_code();
 
 static void kb_insert_code(unsigned char code);

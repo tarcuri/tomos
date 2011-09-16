@@ -70,6 +70,22 @@ void *memmove(void *dst, void *src, unsigned int n)
   return dst;
 }
 
+char *strcpy(char *dst, const char *src, unsigned int n)
+{
+  char *p = dst;
+
+  int i;
+  for (i = 0; i < n; ++i) {
+    if (*src == '\0') {
+      *p = '\0';
+      break;
+    } else {
+      *p++ = *src++;
+    }
+  }
+
+  return dst;
+}
 
 // TODO: keep a pointer to the last allocated bit
 static unsigned int mm_get_free_frame()

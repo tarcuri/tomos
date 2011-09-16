@@ -27,6 +27,8 @@ void memset(void *dst, unsigned char value, unsigned int n);
 void memcpy(void *dst, void *src, unsigned int n);
 void *memmove(void *dst, void *src, unsigned int n);
 
+char *strcpy(char *dst, const char *src, unsigned int n);
+
 #define ASSERT(cond)		{if (!(cond)) { panic("ASSERTION ERROR\n"); } }
 
 void mm_init(void);

@@ -54,8 +54,10 @@ void dump_heap_index(heap_t *heap)
   }
 }
 
-void *kmalloc(unsigned int size, int align, heap_t *heap)
+void *kmalloc(unsigned int size, int align)
 {
+  heap_t *heap = k_heap;
+
   int hole_index = find_smallest_hole(size, align, heap);
 
   // claim this header
