@@ -28,6 +28,7 @@ void memcpy(void *dst, void *src, unsigned int n);
 void *memmove(void *dst, void *src, unsigned int n);
 
 char *strcpy(char *dst, const char *src, unsigned int n);
+int strncmp (const char * const s1, const char * const s2, const unsigned int num);
 
 #define ASSERT(cond)		{if (!(cond)) { panic("ASSERTION ERROR\n"); } }
 

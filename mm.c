@@ -1,4 +1,5 @@
 #include "mm.h"
+#include "heap.h"
 #include "dev/console.h"
 #include "multiboot.h"
 #include "support.h"
@@ -85,6 +86,25 @@ char *strcpy(char *dst, const char *src, unsigned int n)
   }
 
   return dst;
+}
+
+int strncmp (const char * const s1, const char * const s2, const unsigned int num)
+{
+  const unsigned char * const us1 = (const unsigned char *) s1;
+  const unsigned char * const us2 = (const unsigned char *) s2;
+ 
+  int i;
+  for(i = 0; i < num; ++i)
+  {
+    if(us1[i] < us2[i])
+      return -1;
+    else if(us1[i] > us2[i])
+      return 1;
+    else if(! us1[i]) /* null byte -- end of string */
+      return 0;
+  }
+ 
+  return 0;
 }
 
 // TODO: keep a pointer to the last allocated bit
