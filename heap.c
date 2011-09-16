@@ -110,14 +110,14 @@ void *kmalloc(unsigned int size, int align)
   return (void *) address;
 }
 
-void kfree(void *p, heap_t *heap)
+void kfree(void *p)
 {
   heap_header_t *header = (heap_header_t *) ((unsigned int)p - sizeof(heap_header_t));
 
   // make sure this memory isn't already free, then free it
   ASSERT((header->tag_hole & 0x1) == 0);
   header->tag_hole = HEAP_MAGIC_TAG_31 | 0x1;
-  insert_into_index(header, heap);
+  insert_into_index(header, k_heap);
 }
 
 // private static functions
