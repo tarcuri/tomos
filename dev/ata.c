@@ -1,8 +1,10 @@
 #include "dev/ata.h"
 #include "dev/console.h"
+#include "dev/disk.h"
 
 #include "x86.h"
 #include "intr.h"
+
 
 unsigned int ata_cmd_reg  = ATA_PRI_COMMAND_REG;
 unsigned int ata_ctrl_reg = ATA_PRI_CONTROL_REG;
@@ -23,56 +25,91 @@ void ata_init()
   // select device 0, LBA
   __outb(ata_cmd_reg | ATA_CMD_R_DEVICE, ATA_DEV_LBA_BIT | ATA_PRI_CHANNEL);
 
+  // set the sector multiple
+  __outb(ata_ctrl_reg | ATA_CTRL_R_DEVICE, ATA_DEV_CONTROL_nIEN);
+  __outb(ata_cmd_reg | ATA_CMD_R_SECTOR_COUNT, 1);
+  __outb(ata_cmd_reg | ATA_CMD_R_COMMAND, ATA_SET_MULTIPLE);
+  while (ata_alt_status(5) & ATA_STATUS_BUSY)
+    ;
+
+  if (ata_alt_status(0) & ATA_STATUS_ERROR)
+    c_printf("ERROR: ATA SET MULTIPLE\n");
+
   // clear nIEN
   __outb(ata_ctrl_reg | ATA_CTRL_R_DEVICE, 0x0);
 
-  c_printf("ata_alt_status: 0x%x\n", ata_alt_status());
-
   ata_state = ATA_INIT;
-
-  //ata_identify_device();
-  //ata_do_pio_data();
-  //unsigned char buffer[512];
-  //ata_read_sector(0, buffer);
 }
 
+static inline void insw(unsigned short port, void *addr, unsigned int cnt)
+{
+   asm volatile("rep; insw"
+       : "+D" (addr), "+c" (cnt)
+       : "d" (port)
+       : "memory");
+}
 
 void ata_isr(int vector, int code)
 {
   asm("cli");
 
-  if (ata_state == ATA_INTRQ_WAIT) {
-    // expected this interrupt as per PIO protocol
+  //__outb(ata_ctrl_reg | ATA_CTRL_R_DEVICE, ATA_DEV_CONTROL_nIEN);
+  c_printf("ATA_ISR\n");
 
-    // now in PIO Check_Status state
-    ata_state = ATA_CHECK_STATUS;
+  if (ata_state != ATA_INTRQ_WAIT) {
+    c_printf("UNEXPECTED ATA INTERRRUPT\n");
+  }
 
-    // wait 400ns before reading STATUS register (if interrupts were off)
+  // now in PIO Check_Status state
+  ata_state = ATA_CHECK_STATUS;
 
-    // i don't think we need to here since nIEN is clear...
-    unsigned char status = ata_alt_status();
+  unsigned int status;
 
-    while (status & ATA_STATUS_BUSY)
-      status = ata_alt_status();
+  if (!current_disk_request) {
+    // NON-DATA command interrupt
+    c_printf("NON-DATA command interrupt\n");
+    while (ata_alt_status(0) & ATA_STATUS_BUSY)
+      ;
+  } else {
+    switch (current_disk_request->cmd) {
+    case DISK_CMD_READ:
+      status = ata_alt_status(0);
+      while (status & ATA_STATUS_BUSY)
+        status = ata_alt_status(5);
+  
+      if (status & ATA_STATUS_DRQ) {
+        unsigned short *buf = (unsigned short *) ((unsigned int)current_disk_request->buffer
+                               + (current_disk_request->blocks_complete * DISK_BLOCK_SIZE));
+  
+        int i;
+        for (i = 0; i <  DISK_BLOCK_SIZE/2; ++i) {
+          *buf++ = __inw(ata_cmd_reg | ATA_CMD_R_DATA);
+          //c_printf("%x", *(buf - 1));
+        }
+        //insw(ata_cmd_reg | ATA_CMD_R_DATA, buf, DISK_BLOCK_SIZE * 2);
+        c_printf("read a sector:\n");
 
-    if (status & ATA_STATUS_DRQ) {
-      // ready to transfer data
-      unsigned short sector[256];
-
-      c_printf("reading sector");
-      int i;
-      for (i = 0; i < 256, status & ATA_STATUS_DRQ; ++i) {
-        sector[i] = __inw(ata_cmd_reg | ATA_CMD_R_DATA);
-        c_printf("%x", sector[i]);
-
-        status = ata_alt_status();
+        current_disk_request->blocks_complete += 1;
+        ata_state = ATA_INTRQ_WAIT;
+  
+        if (current_disk_request->blocks_complete == current_disk_request->num_blocks)
+          current_disk_request->status = DISK_STATUS_IO_SUCCESS;
+      } else {
+        current_disk_request->status = DISK_STATUS_IO_ERROR;
+        panic("ATA IO error!\n");
       }
-      c_printf("DONE\n");
-    } else {
-      // BSY and DRQ are clear, command completed with error
-      c_printf("ATA command completed with error!\n");
+  
+      break;
+    case DISK_CMD_WRITE:
+    case DISK_CMD_REQUEST:
+    default:
+      c_printf("NOT YET IMPLEMENTED\n");
+      break;
     }
   }
+  
+  c_printf("LEAVING\n");
+  __outb(ata_ctrl_reg | ATA_CTRL_R_DEVICE, 0x00 );
 
   __outb(PIC_MASTER_CMD_PORT, PIC_EOI);
   __outb(PIC_SLAVE_CMD_PORT, PIC_EOI);
@@ -80,12 +117,12 @@ void ata_isr(int vector, int code)
   asm("sti");
 }
 
-unsigned char ata_alt_status()
+unsigned char ata_alt_status(unsigned int poll)
 {
   unsigned char status = __inb(ata_ctrl_reg | ATA_CTRL_R_ALT_STATUS);
 
   int i;
-  for (i = 0; i < 5; ++i) {
+  for (i = 0; i < poll; ++i) {
     status = __inb(ata_ctrl_reg | ATA_CTRL_R_ALT_STATUS);
   }
   return status;
@@ -93,80 +130,45 @@ unsigned char ata_alt_status()
 
 /**
  * ATA: READ SECTOR (S)
- *
+ * PIT data-in protocol
  */
-void ata_read_sector(unsigned int lba, void *buf)
+void ata_read_sectors(disk_request_t *dr)
 {
+  ata_state = ATA_INIT;
+
   // PIO protocol
-  unsigned char status = ata_alt_status();
+  unsigned char status = ata_alt_status(0);
   while ((status & ATA_STATUS_BUSY) || !(status & ATA_STATUS_READY))
-    status = ata_alt_status();
+    status = ata_alt_status(0);
+
+  c_printf("issuing read (%d:%d)\n", dr->num_blocks, __inb(ata_cmd_reg | ATA_CMD_R_SECTOR_COUNT) & 0xff);
 
   // inputs
-  __outb(ata_cmd_reg | ATA_CMD_R_DEVICE, ATA_DEV_LBA_BIT | ATA_PRI_CHANNEL | ((lba >> 24) & 0xFF));
+  __outb(ata_cmd_reg | ATA_CMD_R_DEVICE, ATA_DEV_LBA_BIT | ATA_PRI_CHANNEL
+                     | ((dr->lba >> 24) & 0xFF));
 
-  __outb(ata_cmd_reg | ATA_CMD_R_SECTOR_COUNT, 1);
-  __outb(ata_cmd_reg | ATA_CMD_R_LBA_LOW, lba & 0xFF);
-  __outb(ata_cmd_reg | ATA_CMD_R_LBA_MID, (lba >> 8) & 0xFF);
-  __outb(ata_cmd_reg | ATA_CMD_R_LBA_HIGH, (lba >> 16) & 0xFF);
+  __outb(ata_cmd_reg | ATA_CMD_R_SECTOR_COUNT, dr->num_blocks);
+  c_printf("issuing read (%d:%d)\n", dr->num_blocks, __inb(ata_cmd_reg | ATA_CMD_R_SECTOR_COUNT) & 0xff);
+  __outb(ata_cmd_reg | ATA_CMD_R_LBA_LOW, dr->lba & 0xFF);
+  __outb(ata_cmd_reg | ATA_CMD_R_LBA_MID, (dr->lba >> 8) & 0xFF);
+  __outb(ata_cmd_reg | ATA_CMD_R_LBA_HIGH, (dr->lba >> 16) & 0xFF);
+
+  current_disk_request = dr;
 
   // issue command, enter INTRQ_wait state
-  ata_state = ATA_INTRQ_WAIT;
-  __outb(ata_cmd_reg | ATA_CMD_R_COMMAND, ATA_READ_SECTORS);
-}
 
-void ata_do_pio_data()
-{
-        /*
-  LBA partitioning:
-  1st 8 bits: ATA_CMD_BR_CYL_LOW
-  2nd 8 bits: ATA_CMD_BR_CYL_MID
-  3rd 8 bits: ATA_CMD_BR_CYL_HIGH
-	  last 4 bits: ATA_CMD_BR_DRIVE_SELECT
-*/
-  c_printf("ATA: PIO data command\n");
-  
-  unsigned char status = ata_alt_status();
-  while ((status & ATA_STATUS_BUSY) || !(status & ATA_STATUS_READY)) {
-    status = ata_alt_status();
+  // while we have data blocks to transfer
+  while (dr->blocks_complete < dr->num_blocks) {
+    if (ata_state == ATA_INIT) {
+      ata_state = ATA_INTRQ_WAIT;
+      //__outb(ata_cmd_reg | ATA_CMD_R_COMMAND, ATA_READ_SECTORS);
+      __outb(ata_cmd_reg | ATA_CMD_R_COMMAND, ATA_READ_MULTIPLE);
+    }
+
+    if (ata_alt_status(0) & ATA_STATUS_ERROR)
+      c_printf(">");
   }
-
-  unsigned int lba = 0;
-
-  c_printf("ATA: request: initiating transfer command [ 0x%x ]\n", ata_alt_status());
-  unsigned char lba_low  = (unsigned char) lba;
-  unsigned char lba_mid  = (unsigned char) lba >> 8;
-  unsigned char lba_high = (unsigned char) lba >> 16;
-
-  // set the device register, handle highest 4 bits of LBA
-  __outb(ata_cmd_reg | ATA_CMD_R_DEVICE, 0x40 | ((lba >> 24) & 0x0f) | ATA_PRI_CHANNEL);
-
-  __outb(ata_cmd_reg | ATA_CMD_R_LBA_LOW, lba_low );
-  __outb(ata_cmd_reg | ATA_CMD_R_LBA_MID, lba_mid );
-  __outb(ata_cmd_reg | ATA_CMD_R_LBA_HIGH, lba_high );
-  __outb(ata_cmd_reg | ATA_CMD_R_SECTOR_COUNT, 0x01 );
-
-  // now write READ SECTOR(S) to the command register
-  __outb(ata_cmd_reg | ATA_CMD_R_COMMAND, ATA_READ_SECTORS);
-
-  // NOTE: interrupts are ON!!!
-
-  // now we need to wait for an IRQ to proceed....
-  // OR we can poll ;)
-
-  unsigned int res = ata_alt_status();
-
-  if (res & ATA_STATUS_BUSY)
-    c_printf("BUSY AFTER READ_SECTORS\n");
-
-  if (res & ATA_STATUS_DEVICE_FAULT)
-    panic("ATA DEVICE FAULT\n");
-  if (res & ATA_STATUS_DRQ)
-    c_printf("DRQ is set!\n");
-  if (res & ATA_STATUS_ERROR)
-    panic("ATA READ_SECTORS error!!\n");
 }
-
 
 void ata_identify_device()
 {
@@ -177,16 +179,16 @@ void ata_identify_device()
   __outb(ata_ctrl_reg | ATA_CTRL_R_DEVICE, ATA_DEV_CONTROL_nIEN);
 
   // we need to wait for DRDY
-  unsigned char status = ata_alt_status();
+  unsigned char status = ata_alt_status(0);
 
-  c_printf("ATA: identify device: waiting for DRDY...\n");
+  //c_printf("ATA: identify device: waiting for DRDY...\n");
   while ( !(status & ATA_STATUS_READY) ) {
-    status = ata_alt_status();
+    status = ata_alt_status(0);
     //c_printf("s: %x\n");
   }
 
   // write the IDENTIFY DEVICE command
-  c_printf("ATA: identify device: sending command byte\n");
+  //c_printf("ATA: identify device: sending command byte\n");
   __outb(ata_cmd_reg | ATA_CMD_R_COMMAND, ATA_IDENTIFY_DEVICE);
   
   // now transfer 256 words of data
@@ -198,23 +200,20 @@ void ata_identify_device()
   ** ii) transfer a word, if more remain, repeat
   */	
   // now transfer a word
-  c_printf("ATA: identify device: reading coniguration data");
+  //c_printf("ATA: identify device: reading coniguration data");
   for (word_i = 0; word_i < 256; ++word_i) {
     // wait for DRQ
     while ((status & ATA_STATUS_BUSY) || !(status & ATA_STATUS_DRQ))
-      status = ata_alt_status();
+      status = ata_alt_status(0);
 
     // read from Data register
     ata_id_device_data[ word_i ] = __inw(ata_cmd_reg | ATA_CMD_R_DATA);
 
-    c_printf(".");
   }
-  c_printf("\n");
-  
   // read status
-  status = ata_alt_status();
+  status = ata_alt_status(0);
 
-  ata_print_device_info( (unsigned short *) &ata_id_device_data[0] );
+  ata_print_device_info(ata_id_device_data);
 
   // clear nIEN so we get interrupts again
   __outb(ata_ctrl_reg | ATA_CTRL_R_DEVICE, 0x00 );
@@ -226,9 +225,9 @@ void ata_identify_device()
 void ata_print_device_info( unsigned short *dev_data )
 {
   // check for NULL pointers...
-  c_printf("ATA IDENTIFY DEVICE:\n\n");
 
   // see Table 16 of ATA/ATAPI-7 Volume 1
+  c_printf("SECTORS PER INTERRUPT: %x\n", dev_data[59] );
 
   // words 27-46: model number (40 ASCII characters)
   char model_num[ 41 ];
@@ -279,26 +278,4 @@ void ata_print_device_info( unsigned short *dev_data )
   }
 
   // word 64: supported PIO modes (1st byte only)
-
-  // word 88: Ultra DMA modes
-  unsigned short ultra_dma_modes = dev_data[ 88 ];
-
-  c_printf("Ultra DMA modes 0x%x\n", ultra_dma_modes );
-
-  if ( ultra_dma_modes & 0x0030 ) {
-  	c_printf("Ultra DMA mode 6 and below are supported\n");
-  } else if ( ultra_dma_modes & 0x0020 ) {
-  	c_printf("Ultra DMA mode 5 and below are supported\n");
-  } else if ( ultra_dma_modes & 0x0010 ) {
-  	c_printf("Ultra DMA mode 4 and below are supported\n");
-  } else if ( ultra_dma_modes & 0x0008 ) {
-  	c_printf("Ultra DMA mode 3 and below are supported\n");
-  } else if ( ultra_dma_modes & 0x0004 ) {
-  	c_printf("Ultra DMA mode 2 and below are supported\n");
-  } else if ( ultra_dma_modes & 0x0002 ) {
-  	c_printf("Ultra DMA mode 1 and below are supported\n");
-  } else if ( ultra_dma_modes & 0x0001 ) {
-  	c_printf("Ultra DMA mode 0 is supported\n");
-  }
-  
 }

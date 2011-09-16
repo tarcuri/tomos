@@ -1,5 +1,14 @@
 #include "disk.h"
 
-// as with the keyboard, eventually create a notion of the 'active' process
+#include "dev/console.h"
 
+int disk_insert_request(disk_request_t *req)
+{
 
+  return 0;
+}
+
+void disk_print_requests()
+{
+
+}

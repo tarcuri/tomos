@@ -1,6 +1,8 @@
 #ifndef ATA_H
 #define ATA_H
 
+#include "disk.h"
+
 #define ATA_PRI_CHANNEL		0x00
 #define ATA_SEC_CHANNEL		0x10
 
@@ -43,16 +45,18 @@
 #define ATA_WRITE_SECTORS		0x30
 #define ATA_DEVICE_CONFIG_IDENTIFY	0xB1
 #define ATA_DEVICE_CONFIG_ID_FEATURES	0xC2
+#define ATA_READ_MULTIPLE		0xC4
+#define ATA_SET_MULTIPLE		0xC6
 #define ATA_IDENTIFY_DEVICE		0xEC
 #define ATA_FLUSH_CACHE			0xE7
 
 void ata_init(void);
 void ata_isr(int, int);
 
-void ata_read_sectors(unsigned int lba, void *buf);
+// ATA commands
+void ata_read_sectors(disk_request_t *);
 
-void ata_do_pio_data(void);
-unsigned char ata_alt_status(void);
+unsigned char ata_alt_status(unsigned int);
 void ata_identify_device(void);
 void ata_print_device_info(unsigned short *);
 

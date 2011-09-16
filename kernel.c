@@ -11,6 +11,7 @@
 #include "dev/clock.h"
 #include "dev/pci.h"
 #include "dev/ata.h"
+#include "dev/disk.h"
 
 #include "tomsh.h"
 
@@ -73,5 +74,28 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
 
   c_printf("\n");
 
+  disk_request_t dr;
+  dr.cmd = DISK_CMD_READ;
+  dr.status = DISK_STATUS_READ_PENDING;
+  dr.lba = 0;
+  dr.num_blocks = 4;
+  dr.blocks_complete = 0;
+
+  dr.buffer = (void *) kmalloc(DISK_BLOCK_SIZE * 16, 0);
+
+  //ata_identify_device();
+  ata_read_sectors(&dr);
+
+  c_printf("DONE\n");
+
+/*
+  int i;
+  char *buf = (char *) dr.buffer;
+  for (i = 0; i < DISK_BLOCK_SIZE; ++i) {
+    c_printf("%x", buf[i]);
+    if (i && (i % 20 == 0))
+      c_printf("\n");
+  }
+*/
   command_loop();
 }
