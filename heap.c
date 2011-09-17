@@ -20,7 +20,6 @@ void heap_init()
   k_heap->write = 1;
 
   c_printf("[heap]    kernel heap initialized:\n");
-  c_printf("  allocable base: 0x%x, end: 0x%x\n", k_heap->base, k_heap->end);
 
   // create the initial hole
   heap_header_t *header = (heap_header_t *) k_heap->base;
@@ -40,8 +39,6 @@ void heap_init()
   // make the first insertion manual, index is assumed to be populated from here
   k_heap->index[0] = header;
   k_heap->index_size = 1;
-
-  dump_heap_index(k_heap);
 }
 
 void dump_heap_index(heap_t *heap)

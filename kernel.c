@@ -56,6 +56,8 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
   }
 
   clock_init();
+
+  _install_isr(0x27, de_handler);
  
   mm_grub_multiboot(mbd, 0);
 
@@ -67,10 +69,27 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
 
   kb_init();
 
-  //pci_init();
-  ata_init();
+  pci_init();
+  //ata_init();
 
   asm ("sti");
+
+  pci_dev_t ich6_ide;
+  ich6_ide.bus = 0;
+  ich6_ide.slot = 31;
+  ich6_ide.func = 1;
+  pci_probe_device_config(&ich6_ide, 1);
+  c_getcode();
+
+  pci_dev_t *dev= pci_list_head;
+  while (dev) {
+    pci_probe_device_config(dev, 1);
+    c_printf("%d s\n", (unsigned int)clock_ticks/TIMER_DEFAULT_TICKS_PER_SECOND);
+    c_getcode();
+
+    dev = dev->next;
+  }
+
 
   c_printf("\n");
 
@@ -83,7 +102,8 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
 
   dr.buffer = (void *) kmalloc(DISK_BLOCK_SIZE * 16, 0);
 
-  //ata_identify_device();
+  ata_identify_device();
+  c_printf("reading sectors...\n");
   ata_read_sectors(&dr);
 
   c_printf("DONE\n");

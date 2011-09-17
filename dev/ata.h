@@ -21,6 +21,8 @@
 
 #define ATA_DEV_LBA_BIT			0x40
 
+// Intel ICH6 (for VirtualBox)
+
 // ATA control block registers
 #define ATA_PRI_CONTROL_REG		0x03F6
 #define ATA_CTRL_R_DEVICE		0x0000

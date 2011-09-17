@@ -43,6 +43,7 @@ tomos: libs drivers
 			     ${LIB_OBJ} ${DRV_OBJ} 
 	cat stage1 stage2 pad tomos.bin > tomos.img
 	dd if=tomos.img of=disk.img conv=notrunc
+	dd if=tomos.img of=disk-flat.vmdk conv=notrunc
 
 clean:
 	rm *.o *.bin *.img

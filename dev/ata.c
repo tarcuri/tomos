@@ -16,8 +16,6 @@ unsigned int ata_ctrl_reg = ATA_PRI_CONTROL_REG;
 
 unsigned int ata_state;
 
-
-// TODO: clean up the mess and figure out whats going on here
 void ata_init()
 {
   _install_isr(INT_VEC_PRI_IDE, ata_isr);
@@ -41,13 +39,6 @@ void ata_init()
   ata_state = ATA_INIT;
 }
 
-static inline void insw(unsigned short port, void *addr, unsigned int cnt)
-{
-   asm volatile("rep; insw"
-       : "+D" (addr), "+c" (cnt)
-       : "d" (port)
-       : "memory");
-}
 
 void ata_isr(int vector, int code)
 {
@@ -70,6 +61,8 @@ void ata_isr(int vector, int code)
     c_printf("NON-DATA command interrupt\n");
     while (ata_alt_status(0) & ATA_STATUS_BUSY)
       ;
+
+    c_printf("STATUS: %x\n", ata_alt_status(0));
   } else {
     switch (current_disk_request->cmd) {
     case DISK_CMD_READ:
@@ -83,13 +76,14 @@ void ata_isr(int vector, int code)
   
         int i;
         for (i = 0; i <  DISK_BLOCK_SIZE/2; ++i) {
+        //while (ata_alt_status(0) & ATA_STATUS_DRQ) {
           *buf++ = __inw(ata_cmd_reg | ATA_CMD_R_DATA);
+          i++;
           //c_printf("%x", *(buf - 1));
         }
-        //insw(ata_cmd_reg | ATA_CMD_R_DATA, buf, DISK_BLOCK_SIZE * 2);
-        c_printf("read a sector:\n");
+        c_printf("read a sector: %d bytes (0x%x)\n", i*2, ata_alt_status(4));
 
-        current_disk_request->blocks_complete += 1;
+        current_disk_request->blocks_complete += ((i*2)/DISK_BLOCK_SIZE);
         ata_state = ATA_INTRQ_WAIT;
   
         if (current_disk_request->blocks_complete == current_disk_request->num_blocks)
@@ -141,14 +135,11 @@ void ata_read_sectors(disk_request_t *dr)
   while ((status & ATA_STATUS_BUSY) || !(status & ATA_STATUS_READY))
     status = ata_alt_status(0);
 
-  c_printf("issuing read (%d:%d)\n", dr->num_blocks, __inb(ata_cmd_reg | ATA_CMD_R_SECTOR_COUNT) & 0xff);
-
   // inputs
   __outb(ata_cmd_reg | ATA_CMD_R_DEVICE, ATA_DEV_LBA_BIT | ATA_PRI_CHANNEL
                      | ((dr->lba >> 24) & 0xFF));
 
   __outb(ata_cmd_reg | ATA_CMD_R_SECTOR_COUNT, dr->num_blocks);
-  c_printf("issuing read (%d:%d)\n", dr->num_blocks, __inb(ata_cmd_reg | ATA_CMD_R_SECTOR_COUNT) & 0xff);
   __outb(ata_cmd_reg | ATA_CMD_R_LBA_LOW, dr->lba & 0xFF);
   __outb(ata_cmd_reg | ATA_CMD_R_LBA_MID, (dr->lba >> 8) & 0xFF);
   __outb(ata_cmd_reg | ATA_CMD_R_LBA_HIGH, (dr->lba >> 16) & 0xFF);
@@ -227,7 +218,8 @@ void ata_print_device_info( unsigned short *dev_data )
   // check for NULL pointers...
 
   // see Table 16 of ATA/ATAPI-7 Volume 1
-  c_printf("SECTORS PER INTERRUPT: %x\n", dev_data[59] );
+  if (dev_data[59] & 0x0100)
+    c_printf("SECTORS PER BLOCK: %x\n", dev_data[59] & 0xFF );
 
   // words 27-46: model number (40 ASCII characters)
   char model_num[ 41 ];
@@ -262,7 +254,7 @@ void ata_print_device_info( unsigned short *dev_data )
   // words 60-61 are the total number of user addressable sectors
   unsigned int user_addressable_sectors = *( (unsigned int *) &dev_data[ 60 ]);
 
-  c_printf("Total number of user addressable sectors (maximum LBA + 1): 0x%x\n", user_addressable_sectors);
+  c_printf("Disk Size: %d MB (%d sectors)\n", (user_addressable_sectors * 512)/1000000, user_addressable_sectors);
 
   // check for multi-word DMA support (word 63)
   unsigned short dma_modes = dev_data[ 63 ];
