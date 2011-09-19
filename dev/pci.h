@@ -45,11 +45,13 @@ typedef struct pci_device
   unsigned short vendor;
   unsigned short device;
 
+  unsigned short command;
+  unsigned short status;
+
   unsigned char class_code;
   unsigned char subclass_code;
   unsigned char header_type;
 
-  unsigned short command;
 
   unsigned int bar0;
   unsigned int bar1;

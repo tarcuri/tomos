@@ -70,7 +70,7 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
   kb_init();
 
   pci_init();
-  //ata_init();
+  ata_init();
 
   asm ("sti");
 

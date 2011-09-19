@@ -19,12 +19,14 @@ void pci_probe_device_config(pci_dev_t *dev, int echo)
   dev->vendor = pci_read_config_word(dev->bus, dev->slot, dev->func, 0);
   dev->device = pci_read_config_word(dev->bus, dev->slot, dev->func, 2);
 
+  dev->command = pci_read_config_word(dev->bus, dev->slot, dev->func, 0x04);
+  dev->status  = pci_read_config_word(dev->bus, dev->slot, dev->func, 0x06);
+
   dev->class_code    = pci_read_config_word(dev->bus, dev->slot, dev->func, 0x0A) & 0xFF;
   dev->subclass_code = (pci_read_config_word(dev->bus, dev->slot, dev->func, 0x0A) >> 8) & 0x7F;
 
   dev->header_type = pci_read_config_word(dev->bus, dev->slot, dev->func, 0x0E) & 0xAF;
 
-  dev->command = pci_read_config_word(dev->bus, dev->slot, dev->func, 0x04);
 
   dev->bar0 = pci_read_config_dword(dev->bus, dev->slot, dev->func, 0x10);
   dev->bar1 = pci_read_config_dword(dev->bus, dev->slot, dev->func, 0x14);
@@ -44,6 +46,7 @@ void pci_probe_device_config(pci_dev_t *dev, int echo)
     c_printf("Command Register    : 0x%x\n", dev->command);
     if (dev->command & 0x7 == 0x7)
       c_printf("    BUS MASTER, MEMORY SPACE, IO SPACE\n");
+    c_printf("Status Register     : 0x%x\n", dev->status);
     c_printf("Base Address Reg. 0 : 0x%x\n", dev->bar0);
     c_printf("Base Address Reg. 1 : 0x%x\n", dev->bar1);
     c_printf("Base Address Reg. 2 : 0x%x\n", dev->bar2);
