@@ -24,14 +24,17 @@ void ata_init()
   __outb(ata_cmd_reg | ATA_CMD_R_DEVICE, ATA_DEV_LBA_BIT | ATA_PRI_CHANNEL);
 
   // set the sector multiple
+
   __outb(ata_ctrl_reg | ATA_CTRL_R_DEVICE, ATA_DEV_CONTROL_nIEN);
-  __outb(ata_cmd_reg | ATA_CMD_R_SECTOR_COUNT, 1);
+  __outb(ata_cmd_reg | ATA_CMD_R_SECTOR_COUNT, 2);
   __outb(ata_cmd_reg | ATA_CMD_R_COMMAND, ATA_SET_MULTIPLE);
   while (ata_alt_status(5) & ATA_STATUS_BUSY)
     ;
 
   if (ata_alt_status(0) & ATA_STATUS_ERROR)
     c_printf("ERROR: ATA SET MULTIPLE\n");
+
+  c_printf("%x, %x\n", __inb(ata_ctrl_reg), ata_alt_status(0));
 
   // clear nIEN
   __outb(ata_ctrl_reg | ATA_CTRL_R_DEVICE, 0x0);
@@ -42,7 +45,7 @@ void ata_init()
 
 void ata_isr(int vector, int code)
 {
-  asm("cli");
+  //asm("cli");
 
   //__outb(ata_ctrl_reg | ATA_CTRL_R_DEVICE, ATA_DEV_CONTROL_nIEN);
   c_printf("ATA_ISR\n");
@@ -52,7 +55,7 @@ void ata_isr(int vector, int code)
   }
 
   // now in PIO Check_Status state
-  ata_state = ATA_CHECK_STATUS;
+  //ata_state = ATA_CHECK_STATUS;
 
   unsigned int status;
 
@@ -75,7 +78,7 @@ void ata_isr(int vector, int code)
                                + (current_disk_request->blocks_complete * DISK_BLOCK_SIZE));
   
         int i;
-        for (i = 0; i <  DISK_BLOCK_SIZE/2; ++i) {
+        for (i = 0; i <  DISK_BLOCK_SIZE; ++i) {
         //while (ata_alt_status(0) & ATA_STATUS_DRQ) {
           *buf++ = __inw(ata_cmd_reg | ATA_CMD_R_DATA);
           i++;
@@ -108,7 +111,7 @@ void ata_isr(int vector, int code)
   __outb(PIC_MASTER_CMD_PORT, PIC_EOI);
   __outb(PIC_SLAVE_CMD_PORT, PIC_EOI);
 
-  asm("sti");
+  //asm("sti");
 }
 
 unsigned char ata_alt_status(unsigned int poll)

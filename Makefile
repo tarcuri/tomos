@@ -42,8 +42,15 @@ tomos: libs drivers
 	${LD} -T linker.ld -o tomos.bin loader.o kernel.o isr_stubs.o \
 			     ${LIB_OBJ} ${DRV_OBJ} 
 	cat stage1 stage2 pad tomos.bin > tomos.img
+
+bochs: tomos
 	dd if=tomos.img of=disk.img conv=notrunc
+
+virtualbox: tomos
 	dd if=tomos.img of=disk-flat.vmdk conv=notrunc
+
+qemu: tomos
+	dd if=tomos.img of=qemu-disk.raw conv=notrunc
 
 clean:
 	rm *.o *.bin *.img

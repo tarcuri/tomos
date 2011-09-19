@@ -14,6 +14,7 @@ pci_init()
   pci_detect_devices();
 }
 
+// TODO: read an entrire config space into a structure
 void pci_probe_device_config(pci_dev_t *dev, int echo)
 {
   dev->vendor = pci_read_config_word(dev->bus, dev->slot, dev->func, 0);
@@ -22,8 +23,8 @@ void pci_probe_device_config(pci_dev_t *dev, int echo)
   dev->command = pci_read_config_word(dev->bus, dev->slot, dev->func, 0x04);
   dev->status  = pci_read_config_word(dev->bus, dev->slot, dev->func, 0x06);
 
-  dev->class_code    = pci_read_config_word(dev->bus, dev->slot, dev->func, 0x0A) & 0xFF;
-  dev->subclass_code = (pci_read_config_word(dev->bus, dev->slot, dev->func, 0x0A) >> 8) & 0x7F;
+  dev->class_code    = (pci_read_config_word(dev->bus, dev->slot, dev->func, 0x0A) >> 8) & 0xFF;
+  dev->subclass_code = pci_read_config_word(dev->bus, dev->slot, dev->func, 0x0A) & 0xFF;
 
   dev->header_type = pci_read_config_word(dev->bus, dev->slot, dev->func, 0x0E) & 0xAF;
 
@@ -39,20 +40,37 @@ void pci_probe_device_config(pci_dev_t *dev, int echo)
   dev->intr_pin = (pci_read_config_word(dev->bus, dev->slot, dev->func, 0x3C) >> 8) & 0xFF;
 
   if (echo) {
-    c_printf("PCI[%x:%x:%x]  Vendor: %x, Device: %x\n", dev->bus, dev->slot, dev->func, dev->vendor, dev->device);
-    c_printf("Class Code          : 0x%x\n", dev->class_code);
-    c_printf("Sub-Class Code      : 0x%x\n", dev->subclass_code);
-    c_printf("Header Type         : 0x%x\n", dev->header_type);
-    c_printf("Command Register    : 0x%x\n", dev->command);
-    if (dev->command & 0x7 == 0x7)
-      c_printf("    BUS MASTER, MEMORY SPACE, IO SPACE\n");
+    c_printf("B%x:D%x:F%x:  %s, Device: %x [%x]\n", dev->bus, dev->slot, dev->func,
+             pci_vendors[find_vendor_index(dev->vendor)].long_name, dev->device, dev->header_type);
+
+
+    int class_index = find_class_index(dev->class_code, dev->subclass_code); 
+    if (class_index >= 0)
+      c_printf("%s: %s\n", pci_class_table[class_index].base_desc, pci_class_table[class_index].sub_desc);
+    else
+      c_printf("Unknown PCI device class: %xh:%xh\n", dev->class_code, dev->subclass_code);
+
+    c_printf("Command Register    : 0x%x", dev->command);
+    if (dev->command & 0x1)
+      c_printf(" IO");
+    if (dev->command & 0x2)
+      c_printf(" MS");
+    if (dev->command & 0x4)
+      c_printf(" BM");
+    c_printf("\n");
     c_printf("Status Register     : 0x%x\n", dev->status);
-    c_printf("Base Address Reg. 0 : 0x%x\n", dev->bar0);
-    c_printf("Base Address Reg. 1 : 0x%x\n", dev->bar1);
-    c_printf("Base Address Reg. 2 : 0x%x\n", dev->bar2);
-    c_printf("Base Address Reg. 3 : 0x%x\n", dev->bar3);
-    c_printf("Bus Master Address  : 0x%x\n", dev->bar4);
-    c_printf("Base Address Reg. 5 : 0x%x\n", dev->bar5);
+    if (dev->bar0)
+      c_printf("Base Address Reg. 0 : 0x%x\n", dev->bar0);
+    if (dev->bar1)
+      c_printf("Base Address Reg. 1 : 0x%x\n", dev->bar1);
+    if (dev->bar2)
+      c_printf("Base Address Reg. 2 : 0x%x\n", dev->bar2);
+    if (dev->bar3)
+      c_printf("Base Address Reg. 3 : 0x%x\n", dev->bar3);
+    if (dev->bar4)
+      c_printf("Bus Master Address  : 0x%x\n", dev->bar4);
+    if (dev->bar5)
+      c_printf("Base Address Reg. 5 : 0x%x\n", dev->bar5);
     c_printf("Interrupt Line (IRQ): 0x%x\n", dev->irq);
     c_printf("Interrupt Pin       : 0x%x\n", dev->intr_pin);
   }
@@ -75,20 +93,22 @@ pci_detect_devices()
 
   for (bus = 0; bus < 3; ++bus) {
     for (slot = 0; slot < 32; ++slot) {
+
+      // test function 0, then 1-7 iff it is a multifunctional device
       for (func = 0; func < 8; ++func) {
         unsigned short vendor = pci_read_config_word(bus, slot, func, 0);
         if (vendor != 0xFFFF) {
           dev = (pci_dev_t *) kmalloc(sizeof(pci_dev_t), 0);
 
-          // add it to the list
           dev->bus  = bus;
           dev->slot = slot;
           dev->func = func;
 
+          // insert it into the device list
           if (!pci_list_head) {
             dev->next = 0;
             dev->prev = 0;
-            pci_list_head = dev;	// pci device list pointer
+            pci_list_head = dev;
             prev = dev;
           } else {
             dev->prev  = prev;
@@ -96,6 +116,12 @@ pci_detect_devices()
             prev->next = dev;
             prev = dev;
           }
+
+          // only continue if this is a multifuncitonal device
+          if ((pci_read_config_word(bus, slot, func, 0x0E) & 0xFF) & 0x80)
+            continue;
+          else
+            break;
         } // func
       } // slot
     } // bus 
@@ -143,4 +169,26 @@ pci_read_config_word(unsigned short bus, unsigned short slot, unsigned short fun
   // choose the first word of the 32-bit register
   tmp = (unsigned short)((__inl(PCI_CONFIG_DATA) >> ((offset & 2) * 8)) & 0xFFFF);
   return tmp;
+}
+
+static int find_class_index(unsigned char class, unsigned char subclass)
+{
+  pci_class_t *device_class;
+
+  int i;
+  for (i = 0; i < pci_class_list_size; ++i)
+    if ((pci_class_table[i].class_code == class) && (pci_class_table[i].sub_class == subclass))
+      return i;
+
+  return -1;
+}
+
+static int find_vendor_index(unsigned short id)
+{
+  int i;
+  for (i = 0; i < pci_vendor_list_size; ++i)
+    if (pci_vendors[i].id == id)
+      return i;
+
+  return -1;
 }
