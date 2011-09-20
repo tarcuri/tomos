@@ -57,7 +57,7 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
 
   clock_init();
 
-  //_install_isr(0x27, de_handler);
+  _install_isr(0x27, de_handler);
  
   mm_grub_multiboot(mbd, 0);
 
@@ -94,25 +94,21 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
   dr.cmd = DISK_CMD_READ;
   dr.status = DISK_STATUS_READ_PENDING;
   dr.lba = 0;
-  dr.num_blocks = 4;
+  dr.num_blocks = 1;
   dr.blocks_complete = 0;
 
   dr.buffer = (void *) kmalloc(DISK_BLOCK_SIZE * 32, 0);
-
   //ata_identify_device();
-  c_printf("reading sectors...\n");
   ata_read_sectors(&dr);
 
-  c_printf("DONE\n");
+  c_printf("Press any key to continue...\n");
+  c_getcode();
 
-/*
   int i;
-  char *buf = (char *) dr.buffer;
+  unsigned char *buf = (unsigned char *) dr.buffer;
   for (i = 0; i < DISK_BLOCK_SIZE; ++i) {
     c_printf("%x", buf[i]);
-    if (i && (i % 20 == 0))
-      c_printf("\n");
   }
-*/
+  c_printf("\n");
   command_loop();
 }

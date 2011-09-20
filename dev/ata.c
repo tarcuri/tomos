@@ -14,7 +14,6 @@ unsigned int ata_ctrl_reg = ATA_PRI_CONTROL_REG;
 #define	ATA_CHECK_STATUS	2
 #define ATA_TRANSFER_DATA	3
 
-unsigned int ata_state;
 
 void ata_init()
 {
@@ -25,47 +24,45 @@ void ata_init()
 
   // set the sector multiple
 
-  __outb(ata_ctrl_reg | ATA_CTRL_R_DEVICE, ATA_DEV_CONTROL_nIEN);
-  __outb(ata_cmd_reg | ATA_CMD_R_SECTOR_COUNT, 2);
+  //__outb(ata_ctrl_reg | ATA_CTRL_R_DEVICE, ATA_DEV_CONTROL_nIEN);
+
+  // write SECTOR COUNT only when BUSY and DRQ are clear
+  if ((ata_alt_status(5) & (ATA_STATUS_BUSY | ATA_STATUS_DRQ)) == 0)
+    __outb(ata_cmd_reg | ATA_CMD_R_SECTOR_COUNT, 1);
+  else
+    c_printf("Unable to write SECTOR COUNT register (0x%x)\n", ata_alt_status(0));
+
   __outb(ata_cmd_reg | ATA_CMD_R_COMMAND, ATA_SET_MULTIPLE);
-  while (ata_alt_status(5) & ATA_STATUS_BUSY)
-    ;
 
   if (ata_alt_status(0) & ATA_STATUS_ERROR)
     c_printf("ERROR: ATA SET MULTIPLE\n");
 
-  c_printf("%x, %x\n", __inb(ata_ctrl_reg), ata_alt_status(0));
+  // clear pending interrupt
+  __inb(ata_cmd_reg | ATA_CMD_R_STATUS);
 
   // clear nIEN
   __outb(ata_ctrl_reg | ATA_CTRL_R_DEVICE, 0x0);
 
-  ata_state = ATA_INIT;
 }
 
 
 void ata_isr(int vector, int code)
 {
-  //asm("cli");
+  asm("cli");
 
-  //__outb(ata_ctrl_reg | ATA_CTRL_R_DEVICE, ATA_DEV_CONTROL_nIEN);
+  __outb(ata_ctrl_reg | ATA_CTRL_R_DEVICE, ATA_DEV_CONTROL_nIEN);
   c_printf("ATA_ISR\n");
-
-  if (ata_state != ATA_INTRQ_WAIT) {
-    c_printf("UNEXPECTED ATA INTERRRUPT\n");
-  }
-
-  // now in PIO Check_Status state
-  //ata_state = ATA_CHECK_STATUS;
+  //__inb(ata_cmd_reg | ATA_CMD_R_STATUS);
 
   unsigned int status;
 
   if (!current_disk_request) {
     // NON-DATA command interrupt
     c_printf("NON-DATA command interrupt\n");
-    while (ata_alt_status(0) & ATA_STATUS_BUSY)
-      ;
+    //while (ata_alt_status(0) & ATA_STATUS_BUSY)
+      //;
 
-    c_printf("STATUS: %x\n", ata_alt_status(0));
+    //c_printf("STATUS: %x\n", ata_alt_status(0));
   } else {
     switch (current_disk_request->cmd) {
     case DISK_CMD_READ:
@@ -78,21 +75,33 @@ void ata_isr(int vector, int code)
                                + (current_disk_request->blocks_complete * DISK_BLOCK_SIZE));
   
         int i;
-        for (i = 0; i <  DISK_BLOCK_SIZE; ++i) {
+        unsigned short word;
+        for (i = 0; i <  DISK_BLOCK_SIZE/2; ++i) {
         //while (ata_alt_status(0) & ATA_STATUS_DRQ) {
           *buf++ = __inw(ata_cmd_reg | ATA_CMD_R_DATA);
           i++;
-          //c_printf("%x", *(buf - 1));
+          c_printf("%x", *(buf - 1));
         }
-        c_printf("read a sector: %d bytes (0x%x)\n", i*2, ata_alt_status(4));
 
         current_disk_request->blocks_complete += ((i*2)/DISK_BLOCK_SIZE);
-        ata_state = ATA_INTRQ_WAIT;
+
+        c_printf("%d/%d blocks complete\n", current_disk_request->blocks_complete,
+                                            current_disk_request->num_blocks, ata_alt_status(4));
+                                            
+
+        if (ata_alt_status(0) & ATA_STATUS_ERROR) {
+          c_printf("ERROR after reading block\n");
+          c_printf("ERROR REGISTER: 0x%x\n", __inb(ata_cmd_reg | ATA_CMD_R_ERROR));
+          panic("ATA read error\n");
+        }
   
-        if (current_disk_request->blocks_complete == current_disk_request->num_blocks)
+        if (current_disk_request->blocks_complete == current_disk_request->num_blocks) {
           current_disk_request->status = DISK_STATUS_IO_SUCCESS;
+          __inb(ata_cmd_reg | ATA_CMD_R_STATUS);
+        }
       } else {
         current_disk_request->status = DISK_STATUS_IO_ERROR;
+        c_printf("ERROR REGISTER: 0x%x\n", __inb(ata_cmd_reg | ATA_CMD_R_ERROR));
         panic("ATA IO error!\n");
       }
   
@@ -106,12 +115,12 @@ void ata_isr(int vector, int code)
   }
   
   c_printf("LEAVING\n");
-  __outb(ata_ctrl_reg | ATA_CTRL_R_DEVICE, 0x00 );
+  __outb(ata_ctrl_reg | ATA_CTRL_R_DEVICE, 0x00);
 
   __outb(PIC_MASTER_CMD_PORT, PIC_EOI);
   __outb(PIC_SLAVE_CMD_PORT, PIC_EOI);
 
-  //asm("sti");
+  asm("sti");
 }
 
 unsigned char ata_alt_status(unsigned int poll)
@@ -131,7 +140,9 @@ unsigned char ata_alt_status(unsigned int poll)
  */
 void ata_read_sectors(disk_request_t *dr)
 {
-  ata_state = ATA_INIT;
+  asm("cli");
+//  __outb(ata_ctrl_reg | ATA_CTRL_R_DEVICE, ATA_DEV_CONTROL_nIEN);
+  current_disk_request = dr;
 
   // PIO protocol
   unsigned char status = ata_alt_status(0);
@@ -140,27 +151,30 @@ void ata_read_sectors(disk_request_t *dr)
 
   // inputs
   __outb(ata_cmd_reg | ATA_CMD_R_DEVICE, ATA_DEV_LBA_BIT | ATA_PRI_CHANNEL
-                     | ((dr->lba >> 24) & 0xFF));
+                     | ((dr->lba >> 24) & 0xF));
 
   __outb(ata_cmd_reg | ATA_CMD_R_SECTOR_COUNT, dr->num_blocks);
   __outb(ata_cmd_reg | ATA_CMD_R_LBA_LOW, dr->lba & 0xFF);
   __outb(ata_cmd_reg | ATA_CMD_R_LBA_MID, (dr->lba >> 8) & 0xFF);
   __outb(ata_cmd_reg | ATA_CMD_R_LBA_HIGH, (dr->lba >> 16) & 0xFF);
 
-  current_disk_request = dr;
+  //__outb(ata_cmd_reg | ATA_CMD_R_COMMAND, ATA_READ_SECTORS);
+  c_printf("ATA issueing READ_MULTIPLE (0x%x)\n", ata_alt_status(1));
+  __outb(ata_cmd_reg | ATA_CMD_R_COMMAND, ATA_READ_MULTIPLE);
+  c_printf("ATA (0x%x)\n", ata_alt_status(1));
 
-  // issue command, enter INTRQ_wait state
 
-  // while we have data blocks to transfer
+  //__inb(ata_cmd_reg | ATA_CMD_R_STATUS);
+  c_printf("ATA waiting for interrupt\n");
+  asm("sti");
+
   while (dr->blocks_complete < dr->num_blocks) {
-    if (ata_state == ATA_INIT) {
-      ata_state = ATA_INTRQ_WAIT;
-      //__outb(ata_cmd_reg | ATA_CMD_R_COMMAND, ATA_READ_SECTORS);
-      __outb(ata_cmd_reg | ATA_CMD_R_COMMAND, ATA_READ_MULTIPLE);
+    c_printf("ALT_STATUS: 0x%x\n", ata_alt_status(0));
+    
+    if (ata_alt_status(0) & ATA_STATUS_ERROR) {
+      c_printf("ATA ERROR: 0x%x\n", ata_alt_status(0));
+      panic("ATA error\n");
     }
-
-    if (ata_alt_status(0) & ATA_STATUS_ERROR)
-      c_printf(">");
   }
 }
 
@@ -170,7 +184,7 @@ void ata_identify_device()
   asm( "cli" );
 
   // set nIEN
-  __outb(ata_ctrl_reg | ATA_CTRL_R_DEVICE, ATA_DEV_CONTROL_nIEN);
+  //__outb(ata_ctrl_reg | ATA_CTRL_R_DEVICE, ATA_DEV_CONTROL_nIEN);
 
   // we need to wait for DRDY
   unsigned char status = ata_alt_status(0);
@@ -210,8 +224,11 @@ void ata_identify_device()
   ata_print_device_info(ata_id_device_data);
 
   // clear nIEN so we get interrupts again
-  __outb(ata_ctrl_reg | ATA_CTRL_R_DEVICE, 0x00 );
+  //__outb(ata_ctrl_reg | ATA_CTRL_R_DEVICE, 0x00 );
 
+  // clear pending interrupt
+  __inb(ata_cmd_reg | ATA_CMD_R_STATUS);
+ 
   // Subaru Technica International (STi)
   asm( "sti" );
 }
