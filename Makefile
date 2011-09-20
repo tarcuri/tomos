@@ -53,4 +53,4 @@ qemu: tomos
 	dd if=tomos.img of=qemu-disk.raw conv=notrunc
 
 clean:
-	rm *.o *.bin *.img
+	rm *.o *.bin
