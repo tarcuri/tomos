@@ -40,6 +40,10 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
   // initial the console IO
   c_init();
 
+  // kernel stack
+  unsigned int kernel_stack_base = other;
+  c_printf("kernel stack base: 0x%x\n", kernel_stack_base);
+
   // reference to the GDT
   asm("sgdt %0" : "=m"(gdtr_register): :"memory");
   c_printf("[kernel]  gdtr: base: %xh, limit: %xh\n", gdtr_register.base, gdtr_register.limit);
@@ -98,6 +102,7 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
   dr.buffer = (void *) kmalloc(DISK_BLOCK_SIZE * 32, 0);
   //ata_identify_device();
   ata_read_sectors(&dr);
+
 
   c_printf("Press any key to continue...\n");
   c_getcode();

@@ -66,7 +66,8 @@ stack_start:
 
 loader:
 	mov	$(stack + STACKSIZE), %esp 	# set up the stack
-	mov	$gdt_48, %ecx
+	mov	$stack, %ebp
+	mov	%ebp, %ecx			# pass on the base pointer
 	push	%ecx
 	push	%eax                       	# Multiboot magic number
 	push	%ebx                   		# Multiboot data structure
