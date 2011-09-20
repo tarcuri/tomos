@@ -72,8 +72,6 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
   pci_init();
   ata_init();
 
-  c_printf("still no interrupt\n");
-
   asm ("sti");
 
   c_printf("CPU interrupts enabled\n");
@@ -94,7 +92,7 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
   dr.cmd = DISK_CMD_READ;
   dr.status = DISK_STATUS_READ_PENDING;
   dr.lba = 0;
-  dr.num_blocks = 1;
+  dr.num_blocks = 4;
   dr.blocks_complete = 0;
 
   dr.buffer = (void *) kmalloc(DISK_BLOCK_SIZE * 32, 0);
@@ -106,9 +104,14 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
 
   int i;
   unsigned char *buf = (unsigned char *) dr.buffer;
-  for (i = 0; i < DISK_BLOCK_SIZE; ++i) {
+  for (i = 0; i < DISK_BLOCK_SIZE * dr.num_blocks; ++i) {
     c_printf("%x", buf[i]);
+    if (i && i % DISK_BLOCK_SIZE == DISK_BLOCK_SIZE - 1)
+      c_getcode();
   }
   c_printf("\n");
+
+  ata_read_sectors(&dr);
+
   command_loop();
 }

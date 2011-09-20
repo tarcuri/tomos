@@ -19,13 +19,14 @@ void ata_init()
 {
   _install_isr(INT_VEC_PRI_IDE, ata_isr);
 
+  // disable interrupts on the slave
+  __outb(ata_cmd_reg | ATA_CMD_R_DEVICE, ATA_SEC_CHANNEL);
+  __outb(ata_ctrl_reg | ATA_CTRL_R_DEVICE, ATA_DEV_CONTROL_nIEN);
+
   // select device 0, LBA
   __outb(ata_cmd_reg | ATA_CMD_R_DEVICE, ATA_DEV_LBA_BIT | ATA_PRI_CHANNEL);
 
   // set the sector multiple
-
-  //__outb(ata_ctrl_reg | ATA_CTRL_R_DEVICE, ATA_DEV_CONTROL_nIEN);
-
   // write SECTOR COUNT only when BUSY and DRQ are clear
   if ((ata_alt_status(5) & (ATA_STATUS_BUSY | ATA_STATUS_DRQ)) == 0)
     __outb(ata_cmd_reg | ATA_CMD_R_SECTOR_COUNT, 1);
@@ -50,19 +51,12 @@ void ata_isr(int vector, int code)
 {
   asm("cli");
 
-  __outb(ata_ctrl_reg | ATA_CTRL_R_DEVICE, ATA_DEV_CONTROL_nIEN);
-  c_printf("ATA_ISR\n");
-  //__inb(ata_cmd_reg | ATA_CMD_R_STATUS);
-
-  unsigned int status;
+  // when in the Check_status state, the host shall read the STATUS register
+  unsigned int status = __inb(ata_cmd_reg | ATA_CMD_R_STATUS);
 
   if (!current_disk_request) {
     // NON-DATA command interrupt
-    c_printf("NON-DATA command interrupt\n");
-    //while (ata_alt_status(0) & ATA_STATUS_BUSY)
-      //;
-
-    //c_printf("STATUS: %x\n", ata_alt_status(0));
+    c_printf("NON-DATA command interrupt, %x\n", ata_alt_status(0));
   } else {
     switch (current_disk_request->cmd) {
     case DISK_CMD_READ:
@@ -75,34 +69,19 @@ void ata_isr(int vector, int code)
                                + (current_disk_request->blocks_complete * DISK_BLOCK_SIZE));
   
         int i;
-        unsigned short word;
-        for (i = 0; i <  DISK_BLOCK_SIZE/2; ++i) {
-        //while (ata_alt_status(0) & ATA_STATUS_DRQ) {
+        for (i = 0; i <  DISK_BLOCK_SIZE/2; ++i)
           *buf++ = __inw(ata_cmd_reg | ATA_CMD_R_DATA);
-          i++;
-          c_printf("%x", *(buf - 1));
-        }
 
         current_disk_request->blocks_complete += ((i*2)/DISK_BLOCK_SIZE);
-
-        c_printf("%d/%d blocks complete\n", current_disk_request->blocks_complete,
-                                            current_disk_request->num_blocks, ata_alt_status(4));
                                             
-
-        if (ata_alt_status(0) & ATA_STATUS_ERROR) {
-          c_printf("ERROR after reading block\n");
-          c_printf("ERROR REGISTER: 0x%x\n", __inb(ata_cmd_reg | ATA_CMD_R_ERROR));
-          panic("ATA read error\n");
-        }
-  
         if (current_disk_request->blocks_complete == current_disk_request->num_blocks) {
           current_disk_request->status = DISK_STATUS_IO_SUCCESS;
-          __inb(ata_cmd_reg | ATA_CMD_R_STATUS);
+          current_disk_request = 0;
         }
       } else {
         current_disk_request->status = DISK_STATUS_IO_ERROR;
-        c_printf("ERROR REGISTER: 0x%x\n", __inb(ata_cmd_reg | ATA_CMD_R_ERROR));
-        panic("ATA IO error!\n");
+        c_printf("ATA error: DRQ not set for read: 0x%x\n", ata_alt_status(5));
+        panic("ATA ERROR"); 
       }
   
       break;
@@ -113,10 +92,10 @@ void ata_isr(int vector, int code)
       break;
     }
   }
-  
-  c_printf("LEAVING\n");
-  __outb(ata_ctrl_reg | ATA_CTRL_R_DEVICE, 0x00);
 
+  if (ata_alt_status(0) & ATA_STATUS_ERROR)
+    c_printf("ATA ERROR: 0x%x\n", __inb(ata_cmd_reg | ATA_CMD_R_ERROR));
+  
   __outb(PIC_MASTER_CMD_PORT, PIC_EOI);
   __outb(PIC_SLAVE_CMD_PORT, PIC_EOI);
 
@@ -140,8 +119,6 @@ unsigned char ata_alt_status(unsigned int poll)
  */
 void ata_read_sectors(disk_request_t *dr)
 {
-  asm("cli");
-//  __outb(ata_ctrl_reg | ATA_CTRL_R_DEVICE, ATA_DEV_CONTROL_nIEN);
   current_disk_request = dr;
 
   // PIO protocol
@@ -161,15 +138,9 @@ void ata_read_sectors(disk_request_t *dr)
   //__outb(ata_cmd_reg | ATA_CMD_R_COMMAND, ATA_READ_SECTORS);
   c_printf("ATA issueing READ_MULTIPLE (0x%x)\n", ata_alt_status(1));
   __outb(ata_cmd_reg | ATA_CMD_R_COMMAND, ATA_READ_MULTIPLE);
-  c_printf("ATA (0x%x)\n", ata_alt_status(1));
-
-
-  //__inb(ata_cmd_reg | ATA_CMD_R_STATUS);
-  c_printf("ATA waiting for interrupt\n");
-  asm("sti");
 
   while (dr->blocks_complete < dr->num_blocks) {
-    c_printf("ALT_STATUS: 0x%x\n", ata_alt_status(0));
+    //c_printf("ALT_STATUS: 0x%x\n", ata_alt_status(0));
     
     if (ata_alt_status(0) & ATA_STATUS_ERROR) {
       c_printf("ATA ERROR: 0x%x\n", ata_alt_status(0));

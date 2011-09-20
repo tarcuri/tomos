@@ -46,7 +46,7 @@ tomos: libs drivers
 bochs: tomos
 	dd if=tomos.img of=disk.img conv=notrunc
 
-virtualbox: tomos
+vbox: tomos
 	dd if=tomos.img of=disk-flat.vmdk conv=notrunc
 
 qemu: tomos
