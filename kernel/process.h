@@ -1,7 +1,7 @@
 #ifndef PROCESS_H
 #define PROCESS_H
 
-#include "kernel/stack.h"
+#include "stack.h"
 
 // adapted from RIT CS project
 // order must be consistent with isr_stubs.S
@@ -52,31 +52,9 @@ typedef struct process_control_block
 pcb_t *pcb_list;
 unsigned short next_pid;
 
-void proc_init()
-{
-  next_pid = 1;
+pcb_t *current_proc;
 
-  extern kernel_stack_base;
-
-  // create a PCB for the kernel
-  pcb_t *kernel_pcb = (pcb_t *) kmalloc(sizeof(pcb_t));
-
-  kernel_pcb.context = (context_t *) kmalloc(sizeof(context_t));
-
-  kernel_pcb.context->ds = 0x10;
-  kernel_pcb.context->es = 0x10;
-  kernel_pcb.context->fs = 0x10;
-  kernel_pcb.context->gs = 0x10;
-  kernel_pcb.context->ss = 0x18;
-
-  kernel_pcb.stack = (stack_t *) kernel_stack_base;
-  kernel_pcb.next = 0;
-  kernel_pcb.prev = 0;
-
-  kernel_pcb.pid  = next_pid++;
-  kernel_pcb.ppid = 0;
-
-  pcb_list = kernel_pcb;
-}
+// functions
+void proc_init(void);
 
 #endif

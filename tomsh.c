@@ -1,7 +1,7 @@
 #include "dev/console.h"
 #include "tomsh.h"
-#include "mm.h"
-#include "heap.h"
+#include "kernel/mm.h"
+#include "kernel/heap.h"
 
 // we need many string functions,
 // strstr, strtok, etc
@@ -19,6 +19,7 @@ void command_loop()
 
     for (cmd_i = 0; i < 512; ) {
       c = c_getcode();
+      c_printf("%x:", c);
 
       switch (c) {
       case '\n':

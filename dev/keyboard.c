@@ -3,7 +3,7 @@
 #include "x86.h"
 
 #include "dev/console.h"
-#include "heap.h"
+#include "kernel/heap.h"
 
 // eventually, this will know the pid of the current process, and its state
 void kb_init()

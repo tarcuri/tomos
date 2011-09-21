@@ -7,23 +7,26 @@ LD = ${TOOLS}/i586-elf-ld
 CFLAGS = -nostdlib -nostartfiles -nodefaultlibs -fno-builtin-memcpy -fno-builtin-memset -fno-builtin-memmove -fno-builtin-strcpy
 AFLAGS =
 
-LIB_SRC = support.c intr.c mm.c pg.c heap.c tomsh.c
-LIB_OBJ = support.o intr.o mm.o pg.o heap.o tomsh.o
+LIB_SRC = support.c kernel/interrupt.c kernel/mm.c kernel/pg.c kernel/heap.c kernel/process.c tomsh.c
+LIB_OBJ = support.o interrupt.o mm.o pg.o heap.o process.o tomsh.o
 
 DRV_SRC = ./dev/keyboard.c ./dev/console.c ./dev/clock.c ./dev/pci.c ./dev/ata.c
 DRV_OBJ = keyboard.o console.o clock.o pci.o ata.o
 
 # TODO: generate depfiles
 
+BASEDIR=${PWD}
+
 all: tomos
 
 # general libs
 libs: ${LIB_SRC} 
 	${CC} ${CFLAGS} -o support.o -c support.c
-	${CC} ${CFLAGS} -o intr.o -c intr.c
-	${CC} ${CFLAGS} -o mm.o -c mm.c
-	${CC} ${CFLAGS} -o pg.o -c pg.c
-	${CC} ${CFLAGS} -o heap.o -c heap.c
+	${CC} ${CFLAGS} -I${BASEDIR} -o interrupt.o -c kernel/interrupt.c
+	${CC} ${CFLAGS} -I${BASEDIR} -o heap.o -c kernel/heap.c
+	${CC} ${CFLAGS} -I${BASEDIR} -o mm.o -c kernel/mm.c
+	${CC} ${CFLAGS} -I${BASEDIR} -o pg.o -c kernel/pg.c
+	${CC} ${CFLAGS} -I${BASEDIR} -o process.o -c kernel/process.c
 	${CC} ${CFLAGS} -o tomsh.o -c tomsh.c
 
 # devices

@@ -2,7 +2,7 @@
 #include "console.h"
 #include "support.h"
 
-#include "heap.h"
+#include "kernel/heap.h"
 
 void
 pci_init()

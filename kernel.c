@@ -1,10 +1,11 @@
 #include "x86.h"
 #include "support.h"
 
-#include "intr.h"
-#include "mm.h"
-#include "pg.h"
-#include "heap.h"
+#include "kernel/interrupt.h"
+#include "kernel/mm.h"
+#include "kernel/pg.h"
+#include "kernel/heap.h"
+#include "kernel/process.h"
 
 #include "dev/keyboard.h"
 #include "dev/console.h"
@@ -21,6 +22,8 @@
 struct global_desc_table *gdt;
 
 unsigned long long kernel_timer_ticks;
+
+unsigned int kernel_stack_base;
 
 struct dt_register gdtr_register;
 struct dt_register idtr_register;
@@ -41,7 +44,7 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
   c_init();
 
   // kernel stack
-  unsigned int kernel_stack_base = other;
+  kernel_stack_base = other;
   c_printf("kernel stack base: 0x%x\n", kernel_stack_base);
 
   // reference to the GDT
@@ -68,13 +71,15 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
   // merge all memory init into the mm module
   mm_init();
   pg_init();
-
   heap_init();
 
+  // hardware and devices
   kb_init();
-
   pci_init();
   ata_init();
+
+  // processes
+  proc_init();
 
   asm ("sti");
 
@@ -102,7 +107,6 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
   dr.buffer = (void *) kmalloc(DISK_BLOCK_SIZE * 32, 0);
   //ata_identify_device();
   ata_read_sectors(&dr);
-
 
   c_printf("Press any key to continue...\n");
   c_getcode();

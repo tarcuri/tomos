@@ -3,7 +3,7 @@
 #include "dev/disk.h"
 
 #include "x86.h"
-#include "intr.h"
+#include "kernel/interrupt.h"
 
 
 unsigned int ata_cmd_reg  = ATA_PRI_COMMAND_REG;

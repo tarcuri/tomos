@@ -1,5 +1,5 @@
 #include "mm.h"
-#include "heap.h"
+#include "kernel/heap.h"
 #include "dev/console.h"
 #include "multiboot.h"
 #include "support.h"

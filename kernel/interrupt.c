@@ -1,4 +1,4 @@
-#include "intr.h"
+#include "interrupt.h"
 #include "x86.h"
 
 // IDT register

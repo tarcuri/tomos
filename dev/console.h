@@ -11,6 +11,9 @@
 #define SCREEN_MAX_X    ( SCREEN_X_SIZE - 1 )
 #define SCREEN_MAX_Y    ( SCREEN_Y_SIZE - 1 )
 
+#define NUM_WINDOW_BUFFERS	8	// 32K for screen buffers
+#define C_BUF_ROWS		(NUM_WINDOW_BUFFERS * SCREEN_MAX_Y)
+
 unsigned int scroll_min_x;
 unsigned int scroll_min_y;
 unsigned int scroll_max_x;
@@ -23,9 +26,59 @@ unsigned int max_y;
 unsigned int curr_x;
 unsigned int curr_y;
 
+int view_offset;
+
+
 // functions
 void		c_init(void);
 
+/**
+ * Use the idea of a scrolling window that is a view over a screen buffer.
+ * The screen buffer is an array of MAX_Y * NUM_WINDOW_BUFFERS screen rows.
+ * The window is the size of the console. If the window scrolls partially or
+ * completely past a buffer boundary, the window offset is moved up or down the
+ * buffer, and the old rows are referenced from the other (previous) end of the buffer.
+ */
+unsigned short screen_buffer[SCREEN_MAX_Y * NUM_WINDOW_BUFFERS][SCREEN_MAX_X];
+
+// The window offset will always be a valid index into the screen buffer,
+// if the window overlaps a boundary, the overlapping rows are referenced from
+// the other end of the buffer.
+int window_offset;
+
+/**
+ * Scroll the window up/down the screen buffer, partially overlapping a boundary if necessary.
+ * If the scroll overlaps a boundary, move the window offset to the other end of the buffer
+ * and reference the old rows from the old end of the buffer.
+ */
+void c_scroll(int lines);
+
+/**
+ * Write a value to the screen buffer at a given offset. The offset references an area
+ * the size of the screen. This function abstracts the buffer boundarys that come into play.
+ */
+#define c_write_screen_window(int o, unsigned int x, unsigned int y, unsigned short c)  \
+                              screen_buffer[o + y][x] = c;
+
+/**
+ * Clear the window in the screen buffer referenced by offest, then re-draw the screen.
+ */
+void c_clear_window(int offset);
+
+/**
+ * Draw the current window in the screen buffer to the display.
+ */
+void c_draw(int offset) {
+  int y, x;
+  for (y = 0; y < SCREEN_MAX_Y; ++y) {
+    for (x = 0; x < SCREEN_MAX_X; ++x) {
+      unsigned short *addr = VIDEO_ADDR(x,y);
+      *addr = screen_buffer[offset + y][x];
+    }
+  }
+}
+
+// other
 unsigned int	c_strlen(const char *s);
 unsigned int	c_print_str(const char *s);
 void		itoa(char *, int, int);

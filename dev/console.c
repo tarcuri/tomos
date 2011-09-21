@@ -168,6 +168,41 @@ void c_moveto(unsigned int x, unsigned int y)
   c_setcursor();
 }
 
+/*
+void c_scroll(int lines)
+{
+  // just clear if lines is the whole region or more
+
+  // no need to copy data, just adjust the view offset and re-draw
+  int overlap = view_offset + lines;;
+
+  if (lines < 0) {  // scroll up
+    //
+    //  we'll either:
+    //    1. scroll up the buffer and just have to clear some old data at the top
+    //    2. partially go over the top of the buffer, and have to reference rows at the bottom
+    //    3. completely go over the top of the buffer and just move to the bottom
+    //
+    if (overlap < 0) {	// past the top of the buffer boundary
+      if ((overlap + SCREEN_MAX_Y) <= 0) { // completely past the buffer boundary
+
+      } else {		// partially past the buffer boundary
+
+      }
+    } else {		// not overlapping a buffer boundary
+
+    }
+    
+
+  } else {	// scroll down
+
+
+  }
+
+  // re-draw the screen
+  c_draw();
+}
+*/
 void c_scroll(unsigned int lines)
 {
   unsigned short *from;
@@ -290,12 +325,17 @@ void c_putchar_at(unsigned int x, unsigned int y, unsigned int c)
     } else {
       // need to backspace to previous line
     }
+  case 0x33:		// page down
+    break;
+  case 0x39:		// page up
+    curr_y--;
   };
 
   if( curr_y > scroll_max_y ){
     c_scroll( curr_y - scroll_max_y );
     curr_y = scroll_max_y;
   }
+
 
   /* If x or y is too big or small, don't do any output. */
   if(echo && x <= max_x && y <= max_y){
