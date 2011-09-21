@@ -14,8 +14,8 @@ void pg_init()
   pg_k_pdir_base   = mm_alloc_frame();
   pg_k_ptable_base = mm_alloc_frame();
 
-  c_printf("[pg]      kernel page directory initialized at 0x%x\n", pg_k_pdir_base);
-  c_printf("[pg]      kernel page table initialized at 0x%x\n", pg_k_ptable_base);
+  //c_printf("[pg]      kernel page directory initialized at 0x%x\n", pg_k_pdir_base);
+  //c_printf("[pg]      kernel page table initialized at 0x%x\n", pg_k_ptable_base);
 
   // intialize (clear) kernel page directory
   unsigned int i;
@@ -33,7 +33,7 @@ void pg_init()
   // store the table in the directory
   pg_k_pdir_base->tables[0] = (pde_t) ((unsigned int)pg_k_ptable_base | PDE_WRITABLE | PDE_PRESENT);
 
-  c_printf("[pg]      inialized %d bytes of memory for kernel paging\n", MM_FRAME_SIZE * 1024);
+  //c_printf("[pg]      inialized %d bytes of memory for kernel paging\n", MM_FRAME_SIZE * 1024);
 
   // install the page fault handler
   _install_isr(INT_VEC_PAGE_FAULT, pg_page_fault);

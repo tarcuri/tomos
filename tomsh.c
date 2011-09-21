@@ -8,10 +8,14 @@
 void command_loop()
 {
   strcpy(prompt, "tomsh $", 8);
+  int scroll = 0;
 
   char *buffer;
   while (1) {
-    c_printf("%s ", prompt);
+    if (!scroll) {
+      c_printf("%s ", prompt);
+      //c_setcursor();
+    }
 
     unsigned char c;
     int i = 0;
@@ -19,7 +23,11 @@ void command_loop()
 
     for (cmd_i = 0; i < 512; ) {
       c = c_getcode();
-      c_printf("%x:", c);
+
+      if (scroll && (c != 0x39)) {
+        scroll = 0;
+        c_setcursor();
+      }
 
       switch (c) {
       case '\n':
@@ -36,6 +44,14 @@ void command_loop()
           cmd_i--;
         }
         break;
+      case 0x33:	// page down
+        //c_win_scroll(1);
+        //scroll = 1;
+        break;
+      case 0x39:	// page up
+        c_win_scroll(-1);
+        scroll = 1;
+        break;
       default:
         c_putchar(c);
         command_line[cmd_i++] = c;
@@ -45,20 +61,9 @@ void command_loop()
         break;
     }
 
-    if (c_strlen(command_line) == 1) {
-      switch (command_line[0]) {
-      case 'f':
-        kfree(buffer);
-        break;
-      default:
-        buffer = kmalloc(command_line[0], 0);
-      };
-    }
-
-
     if (strncmp(command_line, "dispheap", 8) == 0)
       dump_heap_index(k_heap);
-    else
+    else if (!scroll)
       c_printf("> %s\n", command_line);
   }
 }

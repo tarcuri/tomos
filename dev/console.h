@@ -11,8 +11,8 @@
 #define SCREEN_MAX_X    ( SCREEN_X_SIZE - 1 )
 #define SCREEN_MAX_Y    ( SCREEN_Y_SIZE - 1 )
 
-#define NUM_WINDOW_BUFFERS	8	// 32K for screen buffers
-#define C_BUF_ROWS		(NUM_WINDOW_BUFFERS * SCREEN_MAX_Y)
+#define NUM_WINDOW_BUFFERS	32	// 124K for screen buffers
+#define BUFFER_ROWS		(NUM_WINDOW_BUFFERS * SCREEN_Y_SIZE)
 
 unsigned int scroll_min_x;
 unsigned int scroll_min_y;
@@ -39,44 +39,38 @@ void		c_init(void);
  * completely past a buffer boundary, the window offset is moved up or down the
  * buffer, and the old rows are referenced from the other (previous) end of the buffer.
  */
-unsigned short screen_buffer[SCREEN_MAX_Y * NUM_WINDOW_BUFFERS][SCREEN_MAX_X];
+unsigned short screen_buffer[BUFFER_ROWS][SCREEN_X_SIZE];
+#define WIN(x,y)	screen_buffer[win_offset + y][x]
 
 // The window offset will always be a valid index into the screen buffer,
 // if the window overlaps a boundary, the overlapping rows are referenced from
 // the other end of the buffer.
-int window_offset;
+unsigned int win_offset;
+unsigned int win_scroll_ceiling;	// can never scroll up past the ceiling
+unsigned int win_scroll_floor;		// overwrite data when pushing this down to the ceiling
 
 /**
  * Scroll the window up/down the screen buffer, partially overlapping a boundary if necessary.
  * If the scroll overlaps a boundary, move the window offset to the other end of the buffer
  * and reference the old rows from the old end of the buffer.
  */
-void c_scroll(int lines);
+void c_win_scroll(int lines);
 
 /**
  * Write a value to the screen buffer at a given offset. The offset references an area
  * the size of the screen. This function abstracts the buffer boundarys that come into play.
  */
-#define c_write_screen_window(int o, unsigned int x, unsigned int y, unsigned short c)  \
-                              screen_buffer[o + y][x] = c;
+void c_write_window(unsigned int x, unsigned int y, unsigned short c);
 
 /**
- * Clear the window in the screen buffer referenced by offest, then re-draw the screen.
+ * Clear the window in the screen buffer referenced by win_offest, then re-draw the screen.
  */
-void c_clear_window(int offset);
+//void c_clear_window(void);
 
 /**
  * Draw the current window in the screen buffer to the display.
  */
-void c_draw(int offset) {
-  int y, x;
-  for (y = 0; y < SCREEN_MAX_Y; ++y) {
-    for (x = 0; x < SCREEN_MAX_X; ++x) {
-      unsigned short *addr = VIDEO_ADDR(x,y);
-      *addr = screen_buffer[offset + y][x];
-    }
-  }
-}
+void c_draw(void);
 
 // other
 unsigned int	c_strlen(const char *s);

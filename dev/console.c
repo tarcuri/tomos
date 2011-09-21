@@ -21,6 +21,10 @@ void c_init( void ){
   curr_x = min_x;
   c_setcursor();
 
+  // configure the scroll window
+  win_offset = 0;
+  win_scroll_ceiling = 0;
+
   c_clearscreen();
 }
 
@@ -168,41 +172,6 @@ void c_moveto(unsigned int x, unsigned int y)
   c_setcursor();
 }
 
-/*
-void c_scroll(int lines)
-{
-  // just clear if lines is the whole region or more
-
-  // no need to copy data, just adjust the view offset and re-draw
-  int overlap = view_offset + lines;;
-
-  if (lines < 0) {  // scroll up
-    //
-    //  we'll either:
-    //    1. scroll up the buffer and just have to clear some old data at the top
-    //    2. partially go over the top of the buffer, and have to reference rows at the bottom
-    //    3. completely go over the top of the buffer and just move to the bottom
-    //
-    if (overlap < 0) {	// past the top of the buffer boundary
-      if ((overlap + SCREEN_MAX_Y) <= 0) { // completely past the buffer boundary
-
-      } else {		// partially past the buffer boundary
-
-      }
-    } else {		// not overlapping a buffer boundary
-
-    }
-    
-
-  } else {	// scroll down
-
-
-  }
-
-  // re-draw the screen
-  c_draw();
-}
-*/
 void c_scroll(unsigned int lines)
 {
   unsigned short *from;
@@ -325,28 +294,24 @@ void c_putchar_at(unsigned int x, unsigned int y, unsigned int c)
     } else {
       // need to backspace to previous line
     }
-  case 0x33:		// page down
     break;
-  case 0x39:		// page up
-    curr_y--;
   };
 
   if( curr_y > scroll_max_y ){
-    c_scroll( curr_y - scroll_max_y );
+    //c_scroll( curr_y - scroll_max_y );
+    c_win_scroll(curr_y - scroll_max_y);
     curr_y = scroll_max_y;
+    //echo = 0;
   }
-
 
   /* If x or y is too big or small, don't do any output. */
   if(echo && x <= max_x && y <= max_y){
-    unsigned short *addr = VIDEO_ADDR( x, y );
-
     if(c > 0xff) {
       /* Use the given attributes */
-      *addr = (unsigned short)c;
+      c_write_window(x, y, (unsigned short) c);
     } else {
       /* Use attributes 0000 0111 (white on black) */
-      *addr = (unsigned short)c | 0x0700;
+      c_write_window(x, y, (unsigned short) c | 0x0700);
     }
 
     curr_x++;
@@ -356,6 +321,99 @@ void c_putchar_at(unsigned int x, unsigned int y, unsigned int c)
     }
     c_setcursor();
   }
+}
+
+// window functions
+
+// we can always scroll down, clearing data if needed
+// only can scroll up until we reach the ceiling
+void c_win_scroll(int lines)
+{
+  int target = win_offset + lines;
+
+  if (lines < 0) {		// scroll up
+    if (win_offset == win_scroll_ceiling) {
+      // do nothing
+    } else if (win_offset > win_scroll_ceiling) {
+      win_offset = (target > win_scroll_ceiling) ? (target) : (win_scroll_ceiling);
+    } else {
+      // ceiling is 'below' the window
+      if (target < 0) { 	// past top of buffer
+        win_offset = ((BUFFER_ROWS + target) >= win_scroll_ceiling)
+                         ? (BUFFER_ROWS + target) : (win_scroll_ceiling);
+      } else {
+        win_offset = target;
+      }
+    }
+  } else {			// scroll down
+    // always scroll down, moving the ceiling if neccessary
+    int win_bottom = target + SCREEN_MAX_Y;
+
+    if (win_offset >= win_scroll_ceiling) {
+      // ceiling is 'above'
+      if (win_bottom >= BUFFER_ROWS) {
+        if (target >= BUFFER_ROWS) {
+          target = target - BUFFER_ROWS;
+          win_bottom = target + SCREEN_MAX_Y;
+          if (win_bottom > win_scroll_ceiling)
+            win_scroll_ceiling = win_bottom;
+        } else {
+          int overlap = SCREEN_MAX_Y - (BUFFER_ROWS - target);
+          if (overlap > win_scroll_ceiling)
+            win_scroll_ceiling = overlap;
+        }
+      }
+      win_offset = target;
+    } else {
+      // ceiling is 'below'
+      if (win_bottom < BUFFER_ROWS) {
+        if (win_bottom > win_scroll_ceiling)
+          win_scroll_ceiling = win_bottom;
+      } else {
+        if (target >= BUFFER_ROWS) {
+          target = target - BUFFER_ROWS;
+          win_bottom = target + SCREEN_MAX_Y;
+          if (win_bottom > win_scroll_ceiling)
+            win_scroll_ceiling = win_bottom;
+        } else {
+          win_scroll_ceiling = SCREEN_MAX_Y - (BUFFER_ROWS - target);
+        }
+      } // do we hit the bottom?
+    } // is ceiling above or below?
+
+    // clear lines rows from the bottom of the new window
+    int x, y;
+    for (y = SCREEN_MAX_Y; y > (SCREEN_MAX_Y - lines); --y)
+      for (x = 0; x < SCREEN_X_SIZE; ++x)
+        *VIDEO_ADDR(x, y) = ' ' | 0x0700;
+    
+  } // up or down?
+
+  //c_printf("offset: %d\n", win_offset);
+  c_draw();
+}
+
+void c_write_window(unsigned int x, unsigned int y, unsigned short c)
+{
+  if ((win_offset + y) > BUFFER_ROWS) {		// need to write at the top of the buffer
+    int overlap = ((win_offset + y) - BUFFER_ROWS) - 1;
+    screen_buffer[0 + overlap][x] = c;
+  } else {
+    screen_buffer[win_offset + y][x] = c;
+  }
+
+  // update the screen
+  *VIDEO_ADDR(x,y) = WIN(x,y);
+}
+
+void c_draw()
+{
+  int y, x;
+  for (y = 0; y < SCREEN_Y_SIZE; ++y)
+    for (x = 0; x < SCREEN_X_SIZE; ++x)
+      *VIDEO_ADDR(x,y) = WIN(x,y);
+
+  c_setcursor();
 }
 
 // this is all we need by design, let the shell handle the characters

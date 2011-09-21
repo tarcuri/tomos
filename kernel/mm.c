@@ -28,9 +28,9 @@ void mm_init()
   mm_bit_map = (unsigned char *) mm_kernel_end_aligned;	// mm bitmap follows kernel end
   mm_bit_map_length = ((mm_total_frames/8) & 0xfffffffc) + 4;	// align on dword
 
-  c_printf("[mm]      high-mem base: 0x%x, limit 0x%x\n", mm_high_mem_base, mm_high_mem_limit);
-  c_printf("[mm]      bit-map base: 0x%x, size: %d bytes\n", mm_bit_map, mm_bit_map_length);
-  c_printf("[mm]      total frames available: %d\n", mm_total_frames);
+  //c_printf("[mm]      high-mem base: 0x%x, limit 0x%x\n", mm_high_mem_base, mm_high_mem_limit);
+  //c_printf("[mm]      bit-map base: 0x%x, size: %d bytes\n", mm_bit_map, mm_bit_map_length);
+  //c_printf("[mm]      total frames available: %d\n", mm_total_frames);
 
   mm_allocated_frames = 0;
 }

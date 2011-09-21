@@ -49,12 +49,12 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
 
   // reference to the GDT
   asm("sgdt %0" : "=m"(gdtr_register): :"memory");
-  c_printf("[kernel]  gdtr: base: %xh, limit: %xh\n", gdtr_register.base, gdtr_register.limit);
+  //c_printf("[kernel]  gdtr: base: %xh, limit: %xh\n", gdtr_register.base, gdtr_register.limit);
 
   // get it back
   struct dt_register my_idtr;
   asm("sidt %0" : "=m"(my_idtr): :"memory");
-  c_printf("[kernel]  idtr:   base: %xh, limit: %xh\n", my_idtr.base, my_idtr.limit);
+  //c_printf("[kernel]  idtr:   base: %xh, limit: %xh\n", my_idtr.base, my_idtr.limit);
 
   // GDT should be all set by now
   if (magic != GRUB_MAGIC_NUMBER) {
@@ -75,15 +75,14 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
 
   // hardware and devices
   kb_init();
-  pci_init();
-  ata_init();
+  //pci_init();
+  //ata_init();
 
   // processes
-  proc_init();
+  //proc_init();
 
   asm ("sti");
 
-  c_printf("CPU interrupts enabled\n");
 /*
   pci_dev_t *dev= pci_list_head;
   while (dev) {
@@ -93,7 +92,6 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
 
     dev = dev->next;
   }
-*/
 
   c_printf("\n");
 
@@ -108,9 +106,14 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
   //ata_identify_device();
   ata_read_sectors(&dr);
 
+*/
+
   c_printf("Press any key to continue...\n");
   c_getcode();
+  //c_win_scroll(1);
+  //c_setcursor();
 
+/*
   int i;
   unsigned char *buf = (unsigned char *) dr.buffer;
   for (i = 0; i < DISK_BLOCK_SIZE * dr.num_blocks; ++i) {
@@ -121,6 +124,7 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
   c_printf("\n");
 
   ata_read_sectors(&dr);
+*/
 
   command_loop();
 }
