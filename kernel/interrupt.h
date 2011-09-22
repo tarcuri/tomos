@@ -1,31 +1,6 @@
 #ifndef INTR_H
 #define INTR_H
 
-// global descriptor table entry
-struct global_desc_entry {
-  unsigned short limit_low;
-  unsigned short base_low;
-  unsigned char base_mid;
-  unsigned char access_byte;
-  unsigned char granularity;
-  unsigned char base_high;
-} __attribute__ ((__packed__));
-
-// my hard-coded gdt
-struct global_desc_table {
-  struct global_desc_entry null_desc;
-
-  struct global_desc_entry code_seg;	// 0x08
-  struct global_desc_entry data_seg;	// 0x10
-  struct global_desc_entry stack_seg;	// 0x18
-} __attribute__ ((__packed__));
-
-// gdtr/idtr register
-struct dt_register {
-  unsigned short limit;
-  unsigned int   base;
-} __attribute__ ((__packed__));
-
 // idt entry gate
 struct idt_entry {
   unsigned short offset_15_0;

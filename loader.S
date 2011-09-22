@@ -99,6 +99,11 @@ loader:
 
 	call	kernel				# call kernel proper
 
+	# now the kernels PCB should be setup,
+	# jumping to isr_restore will restore its context and 
+	# jump to kmain
+	jmp	isr_restore
+
 	cli
 
 	hlt                    # halt machine should kernel return

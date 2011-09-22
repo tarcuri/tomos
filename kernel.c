@@ -1,3 +1,5 @@
+#include "kernel.h"
+
 #include "x86.h"
 #include "support.h"
 
@@ -16,24 +18,7 @@
 
 #include "tomsh.h"
 
-#define GRUB_MAGIC_NUMBER	0x2BADB002
-
-// global data
-struct global_desc_table *gdt;
-
-unsigned long long kernel_timer_ticks;
-
-unsigned int kernel_stack_base;
-
-struct dt_register gdtr_register;
-struct dt_register idtr_register;
-
-unsigned int _memory_ceiling;
-
-// functions
-void main_loop(void);
-
-// main kernel entry point
+// initial kernel entry point
 void kernel( void* mbd, unsigned int magic, unsigned int other)
 {
   // initialize IDT, interrupts
@@ -42,10 +27,6 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
 
   // initial the console IO
   c_init();
-
-  // kernel stack
-  kernel_stack_base = other;
-  c_printf("kernel stack base: 0x%x\n", kernel_stack_base);
 
   // reference to the GDT
   asm("sgdt %0" : "=m"(gdtr_register): :"memory");
@@ -75,56 +56,23 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
 
   // hardware and devices
   kb_init();
-  //pci_init();
-  //ata_init();
+  pci_init();
+  ata_init();
 
-  // processes
-  //proc_init();
 
   asm ("sti");
 
-/*
-  pci_dev_t *dev= pci_list_head;
-  while (dev) {
-    pci_probe_device_config(dev, 1);
-    c_printf("%d s\n", (unsigned int)clock_ticks/TIMER_DEFAULT_TICKS_PER_SECOND);
-    c_getcode();
+  // processes
+  proc_init();
 
-    dev = dev->next;
-  }
+  // at this point proc should have initlialized a pcb for the kernel,
+  // when we return loader.S should jmp to isr_restore which will inialize a
+  // new context and stack for the kernel and jump down to main
+}
 
-  c_printf("\n");
-
-  disk_request_t dr;
-  dr.cmd = DISK_CMD_READ;
-  dr.status = DISK_STATUS_READ_PENDING;
-  dr.lba = 0;
-  dr.num_blocks = 4;
-  dr.blocks_complete = 0;
-
-  dr.buffer = (void *) kmalloc(DISK_BLOCK_SIZE * 32, 0);
-  //ata_identify_device();
-  ata_read_sectors(&dr);
-
-*/
-
-  c_printf("Press any key to continue...\n");
-  c_getcode();
-  //c_win_scroll(1);
-  //c_setcursor();
-
-/*
-  int i;
-  unsigned char *buf = (unsigned char *) dr.buffer;
-  for (i = 0; i < DISK_BLOCK_SIZE * dr.num_blocks; ++i) {
-    c_printf("%x", buf[i]);
-    if (i && i % DISK_BLOCK_SIZE == DISK_BLOCK_SIZE - 1)
-      c_getcode();
-  }
-  c_printf("\n");
-
-  ata_read_sectors(&dr);
-*/
+void kmain()
+{
+  c_printf("We made it!\n");
 
   command_loop();
 }

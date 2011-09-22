@@ -1,70 +1,86 @@
 # isr_stubs.S
+# adapted from SP2 project at RIT
 
 # usr a macro like SP2 to preserve sanity
+
+	.text
+
+/*
+** _isr_table holds 32-bit pointers, so use 4 as a scale
+*/
+	.global	_isr_table
+	.global isr_restore
+
+#define ISR(vector)				  \
+	.globl _isr_##vector			; \
+_isr_##vector:					; \
+	push	$0				; \
+	push	$vector				; \
+	jmp	isr_entry
+
+
+#define ERR_ISR(vector)     \
+        .globl _isr_##vector                    ; \
+_isr_##vector:                                  ; \
+        push    $vector                         ; \
+        pusha                                   ; \
+	jmp	isr_entry
+
+
+isr_entry:
+	pusha
+        pushl   %ds
+        pushl   %es
+        pushl   %fs
+        pushl   %gs
+        pushl   %ss
+
+
 	/*
 	** Stack contents (all 32-bit longwords) and offsets from ESP:
 	**
 	**   SS GS FS ES DS EDI ESI EBP ESP EBX EDX ECX EAX vec cod 
 	**   0  4  8  12 16 20  24  28  32  36  40  44  48  52  56  
 	*/ 
-	.text
+	.global	current_proc
 
-/*
-** _isr_table holds 32-bit pointers, so use 4 as a scale
-*/
-	.globl	_isr_table
-#define ISR(vector)				  \
-	.globl _isr_##vector			; \
-_isr_##vector:					; \
-	push	$0				; \
-	push	$vector				; \
-	pusha					; \
-        pushl   %ds				; \
-        pushl   %es				; \
-        pushl   %fs				; \
-        pushl   %gs				; \
-        pushl   %ss				; \
-	movl	52(%esp), %eax  		; \
-	movl	56(%esp), %ebx  		; \
-	push	%ebx				; \
-	push	%eax				; \
-	movl	_isr_table(,%eax,4), %ebx 	; \
-	call	*%ebx				; \
-	addl	$8, %esp			; \
-        popl	%ss				; \
-        popl	%gs				; \
-        popl	%fs				; \
-        popl	%es				; \
-        popl	%ds				; \
-	popa					; \
-	addl	$8, %esp			; \
+	movl	current_proc, %ebx		// save the context pointer
+	movl	%esp, (%ebx)
+	movl	52(%esp), %eax 			// save vector
+	movl	56(%esp), %ebx  		// save code
+	push	%ebx				
+	push	%eax
+
+
+	movl	_isr_table(,%eax,4), %ebx 	// call the ISR
+	call	*%ebx
+	addl	$8, %esp			// pop the args
+
+
+isr_restore:
+
+        /* restore the context */
+	movl	current_proc, %ebx
+	movl	(%ebx), %esp
+
+        # temp debugging code
+	pushl	$fmt
+	call	c_printf
+	addl	$4, %esp
+
+        popl	%ss
+        popl	%gs
+        popl	%fs
+        popl	%es
+        popl	%ds
+	popa
+	addl	$8, %esp
 	iret
 
-#define ERR_ISR(vector)     \
-        .globl _isr_##vector                    ; \
-_isr_##vector:                                  ; \
-        push    $vector                         ; \
-        pusha                                  ; \
-        pushl   %ds				; \
-        pushl   %es				; \
-        pushl   %fs				; \
-        pushl   %gs				; \
-        pushl   %ss				; \
-        movl    52(%esp), %eax                  ; \
-        movl    56(%esp), %ebx                  ; \
-        push    %ebx                            ; \
-        push    %eax                            ; \
-        movl    _isr_table(,%eax,4), %ebx       ; \
-        call    *%ebx                           ; \
-        addl    $8, %esp                        ; \
-        popl	%ss				; \
-        popl	%gs				; \
-        popl	%fs				; \
-        popl	%es				; \
-        popl	%ds				; \
-        popa                                   ; \
-        addl    $8, %esp                        ; \
-        iret
+fmt:	.ascii	"\nss=%x  gs=%x  fs=%x  es=%x  ds=%x\n"
+	.ascii	"edi=%x esi=%x ebp=%x esp=%x ebx=%x\n"
+	.ascii	"edx=%x ecx=%x eax=%x vec=%x cod=%x\n"
+	.string	"eip=%x  cs=%x efl=%x\n"
 
 # the actual stubs
 ISR(0x00);      ISR(0x01);      ISR(0x02);      ISR(0x03);
