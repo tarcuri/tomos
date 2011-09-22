@@ -11,7 +11,7 @@
 #define SCREEN_MAX_X    ( SCREEN_X_SIZE - 1 )
 #define SCREEN_MAX_Y    ( SCREEN_Y_SIZE - 1 )
 
-#define NUM_WINDOW_BUFFERS	32	// 124K for screen buffers
+#define NUM_WINDOW_BUFFERS	2	// 124K for screen buffers
 #define BUFFER_ROWS		(NUM_WINDOW_BUFFERS * SCREEN_Y_SIZE)
 
 unsigned int scroll_min_x;
@@ -48,13 +48,17 @@ unsigned short screen_buffer[BUFFER_ROWS][SCREEN_X_SIZE];
 unsigned int win_offset;
 unsigned int win_scroll_ceiling;	// can never scroll up past the ceiling
 unsigned int win_scroll_floor;		// overwrite data when pushing this down to the ceiling
+unsigned int win_dist_ceiling;		// distance from window offset to ceiling
+unsigned int win_dist_floor;		// distance from window bottom to floor 
+unsigned int win_dist_floor_to_ceiling;	// distance from floor to ceiling
+
 
 /**
  * Scroll the window up/down the screen buffer, partially overlapping a boundary if necessary.
  * If the scroll overlaps a boundary, move the window offset to the other end of the buffer
  * and reference the old rows from the old end of the buffer.
  */
-void c_win_scroll(int lines);
+int c_win_scroll(int lines);
 
 /**
  * Write a value to the screen buffer at a given offset. The offset references an area
