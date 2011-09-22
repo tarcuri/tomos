@@ -182,37 +182,6 @@ void c_moveto(unsigned int x, unsigned int y)
   c_setcursor();
 }
 
-void c_scroll(unsigned int lines)
-{
-  unsigned short *from;
-  unsigned short *to;
-  int	nchars = scroll_max_x - scroll_min_x + 1;
-  int	line, c;
-
-  // If # of lines is the whole scrolling region or more, just clear.
-  if( lines > scroll_max_y - scroll_min_y ){
-    c_clearscroll();
-    curr_x = scroll_min_x;
-    curr_y = scroll_min_y;
-    c_setcursor();
-    return;
-  }
-
-  // Must copy it line by line.
-  for( line = scroll_min_y; line <= scroll_max_y - lines; line += 1 ){
-    from = VIDEO_ADDR( scroll_min_x, line + lines );
-    to = VIDEO_ADDR( scroll_min_x, line );
-    for(c = 0; c < nchars; c += 1)
-      *to++ = *from++;
-  }
-
-  for( ; line <= scroll_max_y; line += 1){
-    to = VIDEO_ADDR(scroll_min_x, line);
-    for(c = 0; c < nchars; c += 1)
-      *to++ = ' ' | 0x0700;
-  }
-}
-
 void c_setscroll(unsigned int s_min_x, unsigned int s_min_y, unsigned int s_max_x, unsigned int s_max_y)
 {
   scroll_min_x = c_bound( min_x, s_min_x, max_x );
@@ -371,6 +340,8 @@ int c_win_scroll(int lines)
         win_scroll_ceiling = win_scroll_floor;
         win_dist_floor_to_ceiling = 0;
       }
+    } else {
+      win_dist_floor -= lines;
     }
 
     win_dist_ceiling += lines;
@@ -383,15 +354,12 @@ int c_win_scroll(int lines)
 
 void c_write_window(unsigned int x, unsigned int y, unsigned short c)
 {
-  if ((win_offset + y) > BUFFER_ROWS) {		// need to write at the top of the buffer
-    int overlap = ((win_offset + y) - BUFFER_ROWS) - 1;
-    screen_buffer[0 + overlap][x] = c;
+  if ((win_offset + y) >= BUFFER_ROWS) {
+    int overlap = ((win_offset + y) - BUFFER_ROWS);
+    *VIDEO_ADDR(x,y) = screen_buffer[overlap][x] = c;
   } else {
-    screen_buffer[win_offset + y][x] = c;
+    *VIDEO_ADDR(x,y) = screen_buffer[win_offset + y][x] = c;
   }
-
-  // update the screen
-  *VIDEO_ADDR(x,y) = WIN(x,y);
 }
 
 void c_draw()
@@ -401,41 +369,39 @@ void c_draw()
 
   int rows_to_split = 0;
   int rows_to_print = SCREEN_Y_SIZE;
-  if ((win_offset + SCREEN_Y_SIZE) >= BUFFER_ROWS) {
-    rows_to_split = (SCREEN_Y_SIZE - (BUFFER_ROWS - win_offset)) + 1;
+  if ((win_offset + SCREEN_Y_SIZE) > BUFFER_ROWS) {
+    rows_to_split = (SCREEN_Y_SIZE - (BUFFER_ROWS - win_offset));
     rows_to_print = SCREEN_Y_SIZE - rows_to_split;
   }
 
   int lines_split = 0;
+  int lines_copied = 0;
   int overwrite; 	// flag to know when weve overitten a line before
   int split;		// similar
+  int copied;
   int y, x;
   for (y = 0; y < SCREEN_Y_SIZE; ++y) {
-    for (x = 0, overwrite = 0, split = 0; x < SCREEN_X_SIZE; ++x) {
+    for (x = 0, copied =0, overwrite = 0, split = 0; x < SCREEN_X_SIZE; ++x) {
       if (y < rows_to_print) {
-        *VIDEO_ADDR(x,y) = screen_buffer[win_offset + y][x];
+        *VIDEO_ADDR(x,y) = screen_buffer[ win_offset + y ][x];
       } else {
-        if (lines_split < lines_overwritten) {
-          *VIDEO_ADDR(x,y) = screen_buffer[(y - rows_to_print)][x];
+        if (lines_copied < lines_overwritten) {
+          *VIDEO_ADDR(x,y) = screen_buffer[ y - rows_to_print ][x];
+          if (!copied)
+            copied = 1;
         } else {
-          *VIDEO_ADDR(x,y) = screen_buffer[(y - rows_to_print)][x] = ' ' | 0x0700;
-          if (!overwrite) {
-            ++lines_overwritten;
+          // clear everything else
+          *VIDEO_ADDR(x,y) = screen_buffer[ y - rows_to_print ][x] = ' ' | 0x0700;
+          if (!overwrite)
             overwrite = 1;
-          }
-
-          if (!split) {
-            ++lines_split;
-            split = 1;
-          }
-            
-
-          if (lines_overwritten == SCREEN_Y_SIZE)
-            lines_overwritten = 0;
         }
-
       }
-    }
+    } // the line
+
+    if (copied)
+      lines_copied++;
+    if (overwrite)
+      lines_overwritten++;
   }
   c_setcursor();
 }

@@ -11,7 +11,7 @@
 #define SCREEN_MAX_X    ( SCREEN_X_SIZE - 1 )
 #define SCREEN_MAX_Y    ( SCREEN_Y_SIZE - 1 )
 
-#define NUM_WINDOW_BUFFERS	2	// 124K for screen buffers
+#define NUM_WINDOW_BUFFERS	32	// 124K for screen buffers
 #define BUFFER_ROWS		(NUM_WINDOW_BUFFERS * SCREEN_Y_SIZE)
 
 unsigned int scroll_min_x;

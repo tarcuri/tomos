@@ -12,7 +12,6 @@ void command_loop()
   int lines_up = 0;
 
   char *buffer;
-  c_printf("%x\n", *VIDEO_ADDR(curr_x + 10, curr_y));
   while (1) {
     if (!scroll) {
       c_printf("%s ", prompt);
