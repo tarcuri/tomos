@@ -1,9 +1,9 @@
 TOOLS=./tools/cross/bin
 
-CPP = ${TOOLS}/i586-elf-cpp
-CC = ${TOOLS}/i586-elf-gcc
-AS = ${TOOLS}/i586-elf-as
-LD = ${TOOLS}/i586-elf-ld
+CPP = ${TOOLS}/i586-pc-tomos-cpp
+CC = ${TOOLS}/i586-pc-tomos-gcc
+AS = ${TOOLS}/i586-pc-tomos-as
+LD = ${TOOLS}/i586-pc-tomos-ld
 
 #CFLAGS = -nostdlib -nostartfiles -nodefaultlibs -fno-builtin-memcpy -fno-builtin-memset -fno-builtin-memmove -fno-builtin-strcpy
 CFLAGS = -nostdlib -nostartfiles -nodefaultlibs -fno-builtin -fno-hosted
@@ -50,7 +50,8 @@ tomos: libs drivers
 	${CC} ${CFLAGS} -o syscall_stubs.o -c syscall_stubs.S
 	rm syscalls_asm.h
 	${LD} -T linker.ld -o tomos.bin loader.o kernel.o isr_stubs.o syscall_stubs.o \
-			     ${LIB_OBJ} ${DRV_OBJ} 
+			     ${LIB_OBJ} ${DRV_OBJ} \
+                             ./lib/libc.a ./lib/libm.a ./lib/libnosys.a ./lib/libg.a
 	cat stage1 stage2 pad tomos.bin > tomos.img
 
 bochs: tomos

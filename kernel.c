@@ -20,6 +20,8 @@
 
 #include "tomsh.h"
 
+#include <stdio.h>
+
 // initial kernel entry point
 void kernel( void* mbd, unsigned int magic, unsigned int other)
 {
@@ -69,10 +71,7 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
   syscall_init();
 
 
-  c_printf("Press any key to continue...\n");
-  //c_getcode();
-  c_printf("Here...we....go!\n");
-
+  c_printf("System initialization complete!\n");
   // at this point proc should have initlialized a pcb for the kernel,
   // when we return loader.S should jmp to isr_restore which will inialize a
   // new context and stack for the kernel and jump down to main
@@ -80,7 +79,9 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
 
 void kmain()
 {
-  c_printf("We made it!\n");
+  printf("Press any key to continue...\n");
+  c_getcode();
+  write(1, "CONTINUE\n", 9);
 
   command_loop();
 }

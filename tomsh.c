@@ -5,18 +5,23 @@
 
 #include "syscalls.h"
 
+#include <stdio.h>
+
 // we need many string functions,
 // strstr, strtok, etc
 void command_loop()
 {
+  printf("pid: %d\n", getpid());
+  printf("pid: %d\n", getpid());
   strcpy(prompt, "tomsh $", 8);
   int scroll = 0;
   int lines_up = 0;
+  printf("llllllllllllllllllllllllllllllllllllllllong string WTF?\n");
+  c_printf("printf ret: %d\n", printf(">>"));
 
-  char *buffer;
   while (1) {
     if (!scroll) {
-      c_printf("%s ", prompt);
+      printf("%s ", prompt);
       //c_setcursor();
     }
     //c_printf("%x", *VIDEO_ADDR(0, curr_y));

@@ -92,6 +92,7 @@ void		c_clearscroll( void );
 unsigned int	c_bound( unsigned int min, unsigned int value, unsigned int max );
 void		c_setcursor(void);
 
+void		c_write(const char *str, int len);
 void		c_putchar(const char c);
 void		c_putchar_at(unsigned int x, unsigned int y, unsigned int c);
 

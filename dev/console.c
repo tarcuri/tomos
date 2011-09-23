@@ -245,6 +245,13 @@ void c_setcursor( void )
   __outb( 0x3d5, addr & 0xff );
 }
 
+void c_write(const char *str, int len)
+{
+  int i;
+  for (i = 0; i < len; ++i)
+    c_putchar(*str++);
+}
+
 void c_putchar(const char c)
 {
   c_putchar_at(curr_x, curr_y, (unsigned int) c);
