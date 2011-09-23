@@ -38,26 +38,26 @@ void syscall_init()
 // kernel system call implementations
 int sys_exit(context_t *c, unsigned int *args)
 {
-  c_write("unimplemented system call\n", 26);
+  c_printf("unimplemented call exit\n");
   c->eax = -1;
 }
 
 int sys_close(context_t *c, unsigned int *args)
 {
-  c_write("unimplemented system call\n", 26);
+  c_printf("unimplemented call close\n");
   c->eax = -1;
 }
 
 int sys_open(context_t *c, unsigned int *args)
 {
-  c_write("unimplemented system call\n", 26);
+  c_printf("unimplemented call open\n");
   c->eax = -1;
 }
 
 
 int sys_read(context_t *c, unsigned int *args)
 {
-  c_write("unimplemented system call\n", 26);
+  c_printf("unimplemented call read\n");
   c->eax = 0;
 }
 
@@ -65,29 +65,30 @@ int sys_write(context_t *c, unsigned int *args)
 {
   // use the console driver here
   int file = args[0];
-  char *p  = args[1];
+  char *p  = (char *) args[1];
   int len  = args[2];
 
+  //c_printf("write(%d, 0x%x, %d) ", file, p, len);
   c_write(p, len);
   c->eax = len;
 }
 
 int sys_lseek(context_t *c, unsigned int *args)
 {
-  c_write("unimplemented system call\n", 26);
+  c_printf("unimplemented call lseek\n");
   c->eax = 0;
 }
 
 int sys_link(context_t *c, unsigned int *args)
 {
-  c_write("unimplemented system call\n", 26);
+  c_printf("unimplemented call link\n");
   errno = EMLINK;
   c->eax = -1;
 }
 
 int sys_unlink(context_t *c, unsigned int *args)
 {
-  c_write("unimplemented system call\n", 26);
+  c_printf("unimplemented call unlink\n");
   errno = ENOENT;
   c->eax = -1;
 }
@@ -99,21 +100,21 @@ int sys_getpid(context_t *c, unsigned int *args)
 
 int sys_fork(context_t *c, unsigned int *args)
 {
-  c_write("unimplemented system call\n", 26);
+  c_printf("unimplemented call fork\n");
   errno = EAGAIN;
   c->eax = -1;
 }
 
 int sys_kill(context_t *c, unsigned int *args)
 {
-  c_write("unimplemented system call\n", 26);
+  c_printf("unimplemented call kill\n");
   errno = EINVAL;
   c->eax = -1;
 }
 
 int sys_execve(context_t *c, unsigned int *args)
 {
-  c_write("unimplemented system call\n", 26);
+  c_printf("unimplemented call execve\n");
   errno = ENOMEM;
   c->eax = -1;
 }
@@ -121,14 +122,16 @@ int sys_execve(context_t *c, unsigned int *args)
 // increases program data space (needed by malloc)
 int sys_sbrk(context_t *c, unsigned int *args)
 {
-  c_write("unimplemented system call\n", 26);
+  unsigned int *p = (unsigned int *) kmalloc(args[0]);
 
+  c_printf("sbrk(%d) = 0x%x\n", args[0], p);
+  c->eax = (unsigned int) p;
 }
 
 int sys_stat(context_t *c, unsigned int *args)
 {
-  c_write("unimplemented system call\n", 26);
-  struct stat *st = *args;
+  c_printf("stat(%d, 0x%x)\n", args[0], args[1]);
+  struct stat *st = (struct stat *) args[1];
   st->st_mode = S_IFCHR;
   c->eax = 0;
 
@@ -136,27 +139,27 @@ int sys_stat(context_t *c, unsigned int *args)
 
 int sys_fstat(context_t *c, unsigned int *args)
 {
-  c_write("unimplemented system call\n", 26);
-  struct stat *st = *args;
+  c_printf("fstat(%d,0x%x)\n", args[0], args[1]);
+  struct stat *st = (struct stat *) args[1];
   st->st_mode = S_IFCHR;
   c->eax = 0;
 }
 
 int sys_isatty(context_t *c, unsigned int *args)
 {
-  c_write("unimplemented system call\n", 26);
+  c_printf("isatty(%d)\n", args[0]);
   c->eax = 1;
 }
 
 int sys_times(context_t *c, unsigned int *args)
 {
-  c_write("unimplemented system call\n", 26);
+  c_printf("unimplemented call times\n");
   c->eax = -1;
 }
 
 int sys_wait(context_t *c, unsigned int *args)
 {
-  c_write("unimplemented system call\n", 26);
+  c_printf("unimplemented call wait\n");
   errno = ECHILD;
   c->eax = -1;
 }

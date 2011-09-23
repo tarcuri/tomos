@@ -23,12 +23,6 @@ unsigned int mm_last_allocated_frame;	// index of the most recently allocated fr
 unsigned int mm_total_frames;		// total number of frames available
 
 // management functions
-void memset(void *dst, unsigned char value, unsigned int n);
-void memcpy(void *dst, void *src, unsigned int n);
-void *memmove(void *dst, void *src, unsigned int n);
-
-char *strcpy(char *dst, const char *src, unsigned int n);
-int strncmp (const char * const s1, const char * const s2, const unsigned int num);
 
 #define ASSERT(cond)		{if (!(cond)) { panic("ASSERTION ERROR\n"); } }
 

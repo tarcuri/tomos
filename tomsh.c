@@ -11,17 +11,14 @@
 // strstr, strtok, etc
 void command_loop()
 {
-  printf("pid: %d\n", getpid());
-  printf("pid: %d\n", getpid());
   strcpy(prompt, "tomsh $", 8);
   int scroll = 0;
   int lines_up = 0;
-  printf("llllllllllllllllllllllllllllllllllllllllong string WTF?\n");
-  c_printf("printf ret: %d\n", printf(">>"));
 
   while (1) {
     if (!scroll) {
       printf("%s ", prompt);
+      fflush(0);
       //c_setcursor();
     }
     //c_printf("%x", *VIDEO_ADDR(0, curr_y));

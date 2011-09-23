@@ -55,5 +55,5 @@ void proc_init()
   current_proc = kernel_pcb;
 
   //c_printf("[proc]    kernel process intialized\n");
-  c_printf("esp: 0x%x, eip: 0x%x\n", current_proc->context, kmain);
+  //c_printf("stack: 0x%x -> 0x%x\n", kernel_pcb->stack, (unsigned int)kernel_pcb->stack + (4*STACK_SIZE));
 }

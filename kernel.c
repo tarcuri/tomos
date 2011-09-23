@@ -11,6 +11,8 @@
 
 #include "syscalls.h"
 
+#include "kernel/stack.h"
+
 #include "dev/keyboard.h"
 #include "dev/console.h"
 #include "dev/clock.h"
@@ -70,7 +72,6 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
   proc_init();
   syscall_init();
 
-
   c_printf("System initialization complete!\n");
   // at this point proc should have initlialized a pcb for the kernel,
   // when we return loader.S should jmp to isr_restore which will inialize a
@@ -81,7 +82,6 @@ void kmain()
 {
   printf("Press any key to continue...\n");
   c_getcode();
-  write(1, "CONTINUE\n", 9);
 
   command_loop();
 }
