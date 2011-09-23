@@ -1,4 +1,4 @@
-#include "kernel.h"
+#include "kernel/kernel.h"
 
 #include "x86.h"
 #include "support.h"
@@ -8,6 +8,8 @@
 #include "kernel/pg.h"
 #include "kernel/heap.h"
 #include "kernel/process.h"
+
+#include "syscalls.h"
 
 #include "dev/keyboard.h"
 #include "dev/console.h"
@@ -59,11 +61,17 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
   pci_init();
   ata_init();
 
-
-  asm ("sti");
-
+  // TODO: i get an unhandled interrupt 0x82 if interrupts are enabled
+  // after the proc_init....
   // processes
+  asm ("sti");
   proc_init();
+  syscall_init();
+
+
+  c_printf("Press any key to continue...\n");
+  //c_getcode();
+  c_printf("Here...we....go!\n");
 
   // at this point proc should have initlialized a pcb for the kernel,
   // when we return loader.S should jmp to isr_restore which will inialize a

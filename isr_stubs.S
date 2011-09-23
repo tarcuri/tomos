@@ -58,15 +58,14 @@ isr_entry:
 
 
 isr_restore:
-
         /* restore the context */
 	movl	current_proc, %ebx
-	movl	(%ebx), %esp
+	movl	(%ebx), %esp		// the context pointer of the current pcb
 
         # temp debugging code
-	pushl	$fmt
-	call	c_printf
-	addl	$4, %esp
+	#pushl	$fmt
+	#call	c_printf
+	#addl	$4, %esp
 
         popl	%ss
         popl	%gs
@@ -77,10 +76,10 @@ isr_restore:
 	addl	$8, %esp
 	iret
 
-fmt:	.ascii	"\nss=%x  gs=%x  fs=%x  es=%x  ds=%x\n"
-	.ascii	"edi=%x esi=%x ebp=%x esp=%x ebx=%x\n"
-	.ascii	"edx=%x ecx=%x eax=%x vec=%x cod=%x\n"
-	.string	"eip=%x  cs=%x efl=%x\n"
+#fmt:	.ascii	"\nss=%x  gs=%x  fs=%x  es=%x  ds=%x\n"
+#	.ascii	"edi=%x esi=%x ebp=%x esp=%x ebx=%x\n"
+#	.ascii	"edx=%x ecx=%x eax=%x vec=%x cod=%x\n"
+#	.string	"eip=%x  cs=%x efl=%x\n"
 
 # the actual stubs
 ISR(0x00);      ISR(0x01);      ISR(0x02);      ISR(0x03);

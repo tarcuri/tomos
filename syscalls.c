@@ -1,4 +1,6 @@
 #include "syscalls.h"
+#include "x86.h"
+#include "kernel/interrupt.h"
 
 #include "dev/console.h"
 
@@ -6,10 +8,11 @@
 
 void syscall_init()
 {
-  syscall_table[SYS_GETPID] = sys_getpid;
+  syscall_table[SYS_getpid] = sys_getpid;
+  _install_isr(INT_VEC_SYSCALL, syscall_isr);
 }
 
-int sys_getpid(context *c, unsigned int *args)
+int sys_getpid(context_t *c, unsigned int *args)
 {
   c->eax = current_proc->pid;
 }
@@ -17,24 +20,16 @@ int sys_getpid(context *c, unsigned int *args)
 // do it like linux, use int 80h
 void syscall_isr(int vector, int code)
 {
-  asm("cli");
-
   // from here call the actual system call
   int call_num = current_proc->context->eax;
 
-  stack_t *pstack = (unsigned int *)(current_proc->context + 1) + 1;
+  unsigned int *args = ((unsigned int *)(current_proc->context + 1)) + 1;
   
-  (*syscall_table[call_num])(current_proc->context, 0); 
+  // Invoke the handler.  The first argument is the process
+  // context; the second is the address of the first user
+  // syscall argument, which is  the second longword following
+  // the context save area on the stack.
+  (*syscall_table[call_num])(current_proc->context, args); 
 
-/*
-	// Invoke the handler.  The first argument is the process
-	// context; the second is the address of the first user
-	// syscall argument, which is  the second longword following
-	// the context save area on the stack.
-
-	(*_syscalls[num])( _current->context,
-			   ((uint32_t *)(_current->context + 1)) + 1 );
-*/
-
-  asm("sti");
+  __outb( PIC_MASTER_CMD_PORT, PIC_EOI );
 }

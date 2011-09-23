@@ -3,6 +3,8 @@
 #include "kernel/mm.h"
 #include "kernel/heap.h"
 
+#include "syscalls.h"
+
 // we need many string functions,
 // strstr, strtok, etc
 void command_loop()
@@ -68,6 +70,8 @@ void command_loop()
 
     if (strncmp(command_line, "dispheap", 8) == 0)
       dump_heap_index(k_heap);
+    else if (strncmp(command_line, "getpid", 6) == 0)
+      c_printf("PID: %d\n", getpid());
     else if (!scroll && c_strlen(command_line))
       c_printf("> %s\n", command_line);
   }

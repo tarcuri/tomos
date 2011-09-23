@@ -35,22 +35,25 @@ void proc_init()
   kernel_pcb->context = ((context_t *)ret) - 1;
 
   // now store the segment registers on the stack to be later popped
+  kernel_pcb->context->eax = 0xBEEF;
   // by isr_restore
+  kernel_pcb->context->cs = 0x08;
   kernel_pcb->context->ds = 0x10;
   kernel_pcb->context->es = 0x10;
   kernel_pcb->context->fs = 0x10;
   kernel_pcb->context->gs = 0x10;
   kernel_pcb->context->ss = 0x18;
 
-  unsigned int eflags;
-  asm volatile ("pushfl; popl %0" : "=r"(eflags));
-  c_printf("current eflags: 0x%x\n", eflags);
-  kernel_pcb->context->eflags = eflags;
+  //unsigned int eflags;
+  //asm volatile ("pushfl; popl %0" : "=r"(eflags));
+  //c_printf("current eflags: 0x%x\n", eflags);
+  kernel_pcb->context->eflags = 0x2 | 0x200;
 
   // kernel entry point
   kernel_pcb->context->eip = (unsigned int) kmain;
 
   current_proc = kernel_pcb;
 
-  c_printf("[proc]    kernel process intialized\n");
+  //c_printf("[proc]    kernel process intialized\n");
+  c_printf("esp: 0x%x, eip: 0x%x\n", current_proc->context, kmain);
 }

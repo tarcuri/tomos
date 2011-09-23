@@ -1,14 +1,17 @@
 TOOLS=./tools/cross/bin
 
+CPP = ${TOOLS}/i586-elf-cpp
 CC = ${TOOLS}/i586-elf-gcc
 AS = ${TOOLS}/i586-elf-as
 LD = ${TOOLS}/i586-elf-ld
 
-CFLAGS = -nostdlib -nostartfiles -nodefaultlibs -fno-builtin-memcpy -fno-builtin-memset -fno-builtin-memmove -fno-builtin-strcpy
+#CFLAGS = -nostdlib -nostartfiles -nodefaultlibs -fno-builtin-memcpy -fno-builtin-memset -fno-builtin-memmove -fno-builtin-strcpy
+CFLAGS = -nostdlib -nostartfiles -nodefaultlibs -fno-builtin -fno-hosted
 AFLAGS =
 
-LIB_SRC = support.c kernel/interrupt.c kernel/mm.c kernel/pg.c kernel/heap.c kernel/process.c tomsh.c
-LIB_OBJ = support.o interrupt.o mm.o pg.o heap.o process.o tomsh.o
+LIB_SRC = support.c syscalls.c kernel/interrupt.c kernel/mm.c kernel/pg.c kernel/heap.c \
+          kernel/process.c tomsh.c
+LIB_OBJ = support.o syscalls.o interrupt.o mm.o pg.o heap.o process.o tomsh.o
 
 DRV_SRC = ./dev/keyboard.c ./dev/console.c ./dev/clock.c ./dev/pci.c ./dev/ata.c
 DRV_OBJ = keyboard.o console.o clock.o pci.o ata.o
@@ -27,6 +30,7 @@ libs: ${LIB_SRC}
 	${CC} ${CFLAGS} -I${BASEDIR} -o mm.o -c kernel/mm.c
 	${CC} ${CFLAGS} -I${BASEDIR} -o pg.o -c kernel/pg.c
 	${CC} ${CFLAGS} -I${BASEDIR} -o process.o -c kernel/process.c
+	${CC} ${CFLAGS}	-I${BASEDIR} -o syscalls.o -c syscalls.c
 	${CC} ${CFLAGS} -o tomsh.o -c tomsh.c
 
 # devices
@@ -42,7 +46,10 @@ tomos: libs drivers
 	${CC} ${CFLAGS} -o loader.o -c loader.S
 	${CC} ${CFLAGS} -o kernel.o -c kernel.c
 	${CC} ${CFLAGS} -o isr_stubs.o -c isr_stubs.S
-	${LD} -T linker.ld -o tomos.bin loader.o kernel.o isr_stubs.o \
+	${CPP} ${CFLAGS} -dM syscalls.h > syscalls_asm.h
+	${CC} ${CFLAGS} -o syscall_stubs.o -c syscall_stubs.S
+	rm syscalls_asm.h
+	${LD} -T linker.ld -o tomos.bin loader.o kernel.o isr_stubs.o syscall_stubs.o \
 			     ${LIB_OBJ} ${DRV_OBJ} 
 	cat stage1 stage2 pad tomos.bin > tomos.img
 
