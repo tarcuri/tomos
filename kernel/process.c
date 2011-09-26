@@ -35,7 +35,6 @@ void proc_init()
   kernel_pcb->context = ((context_t *)ret) - 1;
 
   // now store the segment registers on the stack to be later popped
-  kernel_pcb->context->eax = 0xBEEF;
   // by isr_restore
   kernel_pcb->context->cs = 0x08;
   kernel_pcb->context->ds = 0x10;

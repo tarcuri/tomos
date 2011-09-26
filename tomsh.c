@@ -28,7 +28,7 @@ void command_loop()
     int cmd_i = 0;
 
     for (cmd_i = 0; i < 512; ) {
-      c = c_getcode();
+      read(1, &c, 1);
 
       if (scroll && ((c != 0x39) || (c != 0x33))) {
         scroll = 0;

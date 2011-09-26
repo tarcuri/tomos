@@ -57,8 +57,20 @@ int sys_open(context_t *c, unsigned int *args)
 
 int sys_read(context_t *c, unsigned int *args)
 {
-  c_printf("unimplemented call read\n");
-  c->eax = 0;
+  int fd = args[0];
+  unsigned char *buf = (unsigned char *) args[1];
+  int len = args[2];
+
+  // how should this be done? can we wait for keypresses in a syscall?
+
+  // need to clear bss
+  int i;
+  c_printf("read(%d, 0x%x, %d) = %d\n", fd, buf, len, i);
+  for (i = 0; i < len; ++i)
+    buf[i] = c_getcode(); 
+
+
+  c->eax = i;
 }
 
 int sys_write(context_t *c, unsigned int *args)
@@ -124,13 +136,13 @@ int sys_sbrk(context_t *c, unsigned int *args)
 {
   unsigned int *p = (unsigned int *) kmalloc(args[0]);
 
-  c_printf("sbrk(%d) = 0x%x\n", args[0], p);
+  //c_printf("sbrk(%d) = 0x%x\n", args[0], p);
   c->eax = (unsigned int) p;
 }
 
 int sys_stat(context_t *c, unsigned int *args)
 {
-  c_printf("stat(%d, 0x%x)\n", args[0], args[1]);
+  //c_printf("stat(%d, 0x%x)\n", args[0], args[1]);
   struct stat *st = (struct stat *) args[1];
   st->st_mode = S_IFCHR;
   c->eax = 0;
@@ -139,7 +151,7 @@ int sys_stat(context_t *c, unsigned int *args)
 
 int sys_fstat(context_t *c, unsigned int *args)
 {
-  c_printf("fstat(%d,0x%x)\n", args[0], args[1]);
+  //c_printf("fstat(%d,0x%x)\n", args[0], args[1]);
   struct stat *st = (struct stat *) args[1];
   st->st_mode = S_IFCHR;
   c->eax = 0;

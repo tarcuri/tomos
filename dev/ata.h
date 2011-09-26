@@ -56,7 +56,8 @@ void ata_init(void);
 void ata_isr(int, int);
 
 // ATA commands
-void ata_read_sectors(disk_request_t *);
+void ata_read_multiple(disk_request_t *);
+void ata_write_multiple(disk_request_t *);
 
 unsigned char ata_alt_status(unsigned int);
 void ata_identify_device(void);

@@ -114,10 +114,10 @@ unsigned char ata_alt_status(unsigned int poll)
 }
 
 /**
- * ATA: READ SECTOR (S)
+ * ATA: READ MULTIPLE
  * PIT data-in protocol
  */
-void ata_read_sectors(disk_request_t *dr)
+void ata_read_multiple(disk_request_t *dr)
 {
   current_disk_request = dr;
 
@@ -135,7 +135,6 @@ void ata_read_sectors(disk_request_t *dr)
   __outb(ata_cmd_reg | ATA_CMD_R_LBA_MID, (dr->lba >> 8) & 0xFF);
   __outb(ata_cmd_reg | ATA_CMD_R_LBA_HIGH, (dr->lba >> 16) & 0xFF);
 
-  //__outb(ata_cmd_reg | ATA_CMD_R_COMMAND, ATA_READ_SECTORS);
   c_printf("ATA issueing READ_MULTIPLE (0x%x)\n", ata_alt_status(1));
   __outb(ata_cmd_reg | ATA_CMD_R_COMMAND, ATA_READ_MULTIPLE);
 
