@@ -2,6 +2,7 @@
 #define ATA_H
 
 #include "disk.h"
+#include "device.h"
 
 #define ATA_PRI_CHANNEL		0x00
 #define ATA_SEC_CHANNEL		0x10
@@ -52,8 +53,16 @@
 #define ATA_IDENTIFY_DEVICE		0xEC
 #define ATA_FLUSH_CACHE			0xE7
 
+// driver interface
+
 void ata_init(void);
 void ata_isr(int, int);
+
+// driver interface
+device_t *ata_open();
+int ata_read(int);
+int ata_write(int);
+int ata_ctrl(unsigned int, void *);
 
 // ATA commands
 void ata_read_multiple(disk_request_t *);

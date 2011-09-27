@@ -1,6 +1,5 @@
 #include "dev/ata.h"
 #include "dev/console.h"
-#include "dev/disk.h"
 
 #include "x86.h"
 #include "kernel/interrupt.h"
@@ -14,7 +13,41 @@ unsigned int ata_ctrl_reg = ATA_PRI_CONTROL_REG;
 #define	ATA_CHECK_STATUS	2
 #define ATA_TRANSFER_DATA	3
 
+/*
+ * driver interface
+ */
+device_t *ata_open()
+{
+  device_t *d = kmalloc(sizeof(device_t) ,0);
 
+  d->type   = DEVICE_BLOCK;
+  d->_read  = 0;
+  d->_write = 0;
+  d->_ctrl  = ata_ctrl;
+
+  return d;
+}
+
+int ata_ctrl(unsigned int cmd, void *buf)
+{
+  int res = 0;
+
+  disk_request_t *d = (disk_request_t *) buf;
+
+  switch(d->cmd) {
+  case DISK_CMD_READ:
+    ata_read_multiple(d);
+    break;
+  default:
+    res = 1;
+  };
+
+  return res;
+}
+
+/*
+ * module code
+ */
 void ata_init()
 {
   _install_isr(INT_VEC_PRI_IDE, ata_isr);
@@ -113,7 +146,7 @@ unsigned char ata_alt_status(unsigned int poll)
   return status;
 }
 
-/**
+/*
  * ATA: READ MULTIPLE
  * PIT data-in protocol
  */

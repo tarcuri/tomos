@@ -5,12 +5,20 @@
 
 #include "syscalls.h"
 
+#include "dev/device.h"
+#include "dev/ata.h"
+
 #include <stdio.h>
+#include <stdlib.h>
+
+static void hdd_read(unsigned int lba, void *buf, unsigned int len);
 
 // we need many string functions,
 // strstr, strtok, etc
 void command_loop()
 {
+  int val = atoi("56");
+  c_printf("%d\n", val);
   strcpy(prompt, "tomsh $", 8);
   int scroll = 0;
   int lines_up = 0;
@@ -28,7 +36,8 @@ void command_loop()
     int cmd_i = 0;
 
     for (cmd_i = 0; i < 512; ) {
-      read(1, &c, 1);
+      //read(1, &c, 1);
+      c = c_getcode();
 
       if (scroll && ((c != 0x39) || (c != 0x33))) {
         scroll = 0;
@@ -70,11 +79,36 @@ void command_loop()
       }
     }
 
+
     if (strncmp(command_line, "dispheap", 8) == 0)
       dump_heap_index(k_heap);
     else if (strncmp(command_line, "getpid", 6) == 0)
       c_printf("PID: %d\n", getpid());
-    else if (!scroll && c_strlen(command_line))
+    else if (strncmp(command_line, "readhdd", 7) == 0) {
+      void *tbuf = kmalloc(4096,0);
+      //hdd_read(command_line[8], tbuf, command_line[10]);
+      c_printf("read(%d, X, %d)\n", atoi(command_line[8]), atoi(command_line[10]));
+      kfree(tbuf);
+    } else if (!scroll && c_strlen(command_line))
       c_printf("> %s\n", command_line);
   }
+}
+static void hdd_read(unsigned int lba, void *buf, unsigned int len)
+{
+  device_t *hdd = ata_open();
+
+  disk_request_t d;
+  d.cmd = ATA_READ_MULTIPLE;
+  d.lba = lba;
+  d.buffer = buf;
+  d.num_blocks = len;
+  d.blocks_complete = 0;
+
+  hdd->_ctrl(DISK_CMD_READ, (void *) &d);
+
+  int i;
+  for (i = 0; i < 512 * len; ++i)
+    c_printf("%x", *(((unsigned char *)buf) + i));
+
+  kfree(hdd);
 }
