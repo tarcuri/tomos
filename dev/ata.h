@@ -1,6 +1,8 @@
 #ifndef ATA_H
 #define ATA_H
 
+#include <stdint.h>
+
 #include "disk.h"
 #include "device.h"
 
@@ -53,23 +55,21 @@
 #define ATA_IDENTIFY_DEVICE		0xEC
 #define ATA_FLUSH_CACHE			0xE7
 
-// driver interface
-
 void ata_init(void);
-void ata_isr(int, int);
+void ata_isr(int32_t, int32_t);
 
 // driver interface
-device_t *ata_open();
-int ata_read(int);
-int ata_write(int);
-int ata_ctrl(unsigned int, void *);
+device_t *ata_open(void);
+int32_t ata_read(int32_t);
+int32_t ata_write(int32_t);
+int32_t ata_ctrl(uint32_t, void *);
 
 // ATA commands
 void ata_read_multiple(disk_request_t *);
 void ata_write_multiple(disk_request_t *);
 
-unsigned char ata_alt_status(unsigned int);
+uint8_t ata_alt_status(uint32_t);
 void ata_identify_device(void);
-void ata_print_device_info(unsigned short *);
+void ata_print_device_info(uint16_t *);
 
 #endif

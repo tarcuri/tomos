@@ -5,8 +5,8 @@
 #include "kernel/interrupt.h"
 
 
-unsigned int ata_cmd_reg  = ATA_PRI_COMMAND_REG;
-unsigned int ata_ctrl_reg = ATA_PRI_CONTROL_REG;
+uint32_t ata_cmd_reg  = ATA_PRI_COMMAND_REG;
+uint32_t ata_ctrl_reg = ATA_PRI_CONTROL_REG;
 
 #define ATA_INIT		0
 #define ATA_INTRQ_WAIT		1
@@ -18,7 +18,7 @@ unsigned int ata_ctrl_reg = ATA_PRI_CONTROL_REG;
  */
 device_t *ata_open()
 {
-  device_t *d = kmalloc(sizeof(device_t) ,0);
+  device_t *d = (device_t *) kmalloc(sizeof(device_t), 0);
 
   d->type   = DEVICE_BLOCK;
   d->_read  = 0;
@@ -28,14 +28,16 @@ device_t *ata_open()
   return d;
 }
 
-int ata_ctrl(unsigned int cmd, void *buf)
+int32_t ata_ctrl(uint32_t cmd, void *buf)
 {
-  int res = 0;
+  c_printf("ATA_CTRL\n");
+  int32_t res = 0;
 
   disk_request_t *d = (disk_request_t *) buf;
 
-  switch(d->cmd) {
+  switch(cmd) {
   case DISK_CMD_READ:
+    c_printf("DISK READ OPERATION\n");
     ata_read_multiple(d);
     break;
   default:
@@ -80,12 +82,12 @@ void ata_init()
 }
 
 
-void ata_isr(int vector, int code)
+void ata_isr(int32_t vector, int32_t code)
 {
   asm("cli");
 
   // when in the Check_status state, the host shall read the STATUS register
-  unsigned int status = __inb(ata_cmd_reg | ATA_CMD_R_STATUS);
+  uint32_t status = __inb(ata_cmd_reg | ATA_CMD_R_STATUS);
 
   if (!current_disk_request) {
     // NON-DATA command interrupt
@@ -98,10 +100,10 @@ void ata_isr(int vector, int code)
         status = ata_alt_status(5);
   
       if (status & ATA_STATUS_DRQ) {
-        unsigned short *buf = (unsigned short *) ((unsigned int)current_disk_request->buffer
+        uint16_t *buf = (uint16_t *) ((uint32_t)current_disk_request->buffer
                                + (current_disk_request->blocks_complete * DISK_BLOCK_SIZE));
   
-        int i;
+        int32_t i;
         for (i = 0; i <  DISK_BLOCK_SIZE/2; ++i)
           *buf++ = __inw(ata_cmd_reg | ATA_CMD_R_DATA);
 
@@ -135,11 +137,11 @@ void ata_isr(int vector, int code)
   asm("sti");
 }
 
-unsigned char ata_alt_status(unsigned int poll)
+uint8_t ata_alt_status(uint32_t poll)
 {
-  unsigned char status = __inb(ata_ctrl_reg | ATA_CTRL_R_ALT_STATUS);
+  uint8_t status = __inb(ata_ctrl_reg | ATA_CTRL_R_ALT_STATUS);
 
-  int i;
+  int32_t i;
   for (i = 0; i < poll; ++i) {
     status = __inb(ata_ctrl_reg | ATA_CTRL_R_ALT_STATUS);
   }
@@ -155,7 +157,7 @@ void ata_read_multiple(disk_request_t *dr)
   current_disk_request = dr;
 
   // PIO protocol
-  unsigned char status = ata_alt_status(0);
+  uint8_t status = ata_alt_status(0);
   while ((status & ATA_STATUS_BUSY) || !(status & ATA_STATUS_READY))
     status = ata_alt_status(0);
 
@@ -190,7 +192,7 @@ void ata_identify_device()
   //__outb(ata_ctrl_reg | ATA_CTRL_R_DEVICE, ATA_DEV_CONTROL_nIEN);
 
   // we need to wait for DRDY
-  unsigned char status = ata_alt_status(0);
+  uint8_t status = ata_alt_status(0);
 
   //c_printf("ATA: identify device: waiting for DRDY...\n");
   while ( !(status & ATA_STATUS_READY) ) {
@@ -203,8 +205,8 @@ void ata_identify_device()
   __outb(ata_cmd_reg | ATA_CMD_R_COMMAND, ATA_IDENTIFY_DEVICE);
   
   // now transfer 256 words of data
-  int word_i;
-  unsigned short ata_id_device_data[256];
+  int32_t word_i;
+  uint16_t ata_id_device_data[256];
 
   /*
   ** i)  wait for DRQ=1 and BSY=0 (cycle status register)
@@ -236,7 +238,7 @@ void ata_identify_device()
   asm( "sti" );
 }
 
-void ata_print_device_info( unsigned short *dev_data )
+void ata_print_device_info( uint16_t *dev_data )
 {
   // check for NULL pointers...
 
@@ -251,7 +253,7 @@ void ata_print_device_info( unsigned short *dev_data )
   model_num[ 40 ] = '\0';
 
   // un-scramble?
-  int len = 40;
+  int32_t len = 40;
   char c, *p = model_num, *end = model_num + (len & ~1);  
   
   /* Swap characters. */  
@@ -275,12 +277,12 @@ void ata_print_device_info( unsigned short *dev_data )
   c_printf("MODEL: (%c%c) %s\n", model_num[0], model_num[1],(char *) &model_num[0]);
 
   // words 60-61 are the total number of user addressable sectors
-  unsigned int user_addressable_sectors = *( (unsigned int *) &dev_data[ 60 ]);
+  uint32_t user_addressable_sectors = *( (uint32_t *) &dev_data[ 60 ]);
 
   c_printf("Disk Size: %d MB (%d sectors)\n", (user_addressable_sectors * 512)/1000000, user_addressable_sectors);
 
   // check for multi-word DMA support (word 63)
-  unsigned short dma_modes = dev_data[ 63 ];
+  uint16_t dma_modes = dev_data[ 63 ];
   
   c_printf("DMA modes 0x%x\n", dma_modes );
 

@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static void hdd_read(unsigned int lba, void *buf, unsigned int len);
+void hdd_read(unsigned int lba, void *buf, unsigned int len);
 
 // we need many string functions,
 // strstr, strtok, etc
@@ -27,9 +27,7 @@ void command_loop()
     if (!scroll) {
       printf("%s ", prompt);
       fflush(0);
-      //c_setcursor();
     }
-    //c_printf("%x", *VIDEO_ADDR(0, curr_y));
 
     unsigned char c;
     int i = 0;
@@ -46,6 +44,7 @@ void command_loop()
       switch (c) {
       case '\n':
         command_line[cmd_i++] = '\0';
+
         c_putchar('\n');
         break;
       case 0x1B:	// escape
@@ -56,6 +55,7 @@ void command_loop()
         if (cmd_i) {
           c_putchar(c);
           cmd_i--;
+
         }
         break;
       case 0x33:	// page down
@@ -83,32 +83,30 @@ void command_loop()
     if (strncmp(command_line, "dispheap", 8) == 0)
       dump_heap_index(k_heap);
     else if (strncmp(command_line, "getpid", 6) == 0)
-      c_printf("PID: %d\n", getpid());
-    else if (strncmp(command_line, "readhdd", 7) == 0) {
-      void *tbuf = kmalloc(4096,0);
-      //hdd_read(command_line[8], tbuf, command_line[10]);
-      c_printf("read(%d, X, %d)\n", atoi(command_line[8]), atoi(command_line[10]));
-      kfree(tbuf);
-    } else if (!scroll && c_strlen(command_line))
-      c_printf("> %s\n", command_line);
+      printf("PID: %d\n", getpid());
+    else if (!scroll && c_strlen(command_line))
+      printf("> %s\n", command_line);
   }
 }
-static void hdd_read(unsigned int lba, void *buf, unsigned int len)
+void hdd_read(unsigned int lba, void *buf, unsigned int len)
 {
   device_t *hdd = ata_open();
 
   disk_request_t d;
-  d.cmd = ATA_READ_MULTIPLE;
+  d.cmd = DISK_CMD_READ;
   d.lba = lba;
   d.buffer = buf;
   d.num_blocks = len;
   d.blocks_complete = 0;
 
+  // call the ata driver
   hdd->_ctrl(DISK_CMD_READ, (void *) &d);
 
   int i;
   for (i = 0; i < 512 * len; ++i)
-    c_printf("%x", *(((unsigned char *)buf) + i));
+    printf("%x", *(((unsigned char *)buf) + i));
+
+  printf("\n");
 
   kfree(hdd);
 }

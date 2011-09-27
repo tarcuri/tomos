@@ -1,6 +1,8 @@
 #ifndef SYSCALL_H
 #define SYSCALL_H
 
+#include <stdint.h>
+
 #include "kernel/process.h"
 
 
@@ -37,32 +39,32 @@
 #define SYS_wait	18
 
 // system call table
-int (*syscall_table[NUM_SYSCALLS])();
+int32_t (*syscall_table[NUM_SYSCALLS])();
 
 // user level interface for system calls
 
 // kernel implementation of system calls 
-int sys_exit	(context_t *c, unsigned int *args);
-int sys_close	(context_t *c, unsigned int *args);
-int sys_open	(context_t *c, unsigned int *args);
-int sys_read	(context_t *c, unsigned int *args);
-int sys_write	(context_t *c, unsigned int *args);
-int sys_lseek	(context_t *c, unsigned int *args);
-int sys_link	(context_t *c, unsigned int *args);
-int sys_unlink	(context_t *c, unsigned int *args);
-int sys_getpid	(context_t *c, unsigned int *args);
-int sys_fork	(context_t *c, unsigned int *args);
-int sys_kill	(context_t *c, unsigned int *args);
-int sys_execve	(context_t *c, unsigned int *args);
-int sys_sbrk	(context_t *c, unsigned int *args);
-int sys_stat	(context_t *c, unsigned int *args);
-int sys_fstat	(context_t *c, unsigned int *args);
-int sys_isatty	(context_t *c, unsigned int *args);
-int sys_times	(context_t *c, unsigned int *args);
-int sys_wait	(context_t *c, unsigned int *args);
+int32_t sys_exit	(context_t *c, uint32_t *args);
+int32_t sys_close	(context_t *c, uint32_t *args);
+int32_t sys_open	(context_t *c, uint32_t *args);
+int32_t sys_read	(context_t *c, uint32_t *args);
+int32_t sys_write	(context_t *c, uint32_t *args);
+int32_t sys_lseek	(context_t *c, uint32_t *args);
+int32_t sys_link	(context_t *c, uint32_t *args);
+int32_t sys_unlink	(context_t *c, uint32_t *args);
+int32_t sys_getpid	(context_t *c, uint32_t *args);
+int32_t sys_fork	(context_t *c, uint32_t *args);
+int32_t sys_kill	(context_t *c, uint32_t *args);
+int32_t sys_execve	(context_t *c, uint32_t *args);
+int32_t sys_sbrk	(context_t *c, uint32_t *args);
+int32_t sys_stat	(context_t *c, uint32_t *args);
+int32_t sys_fstat	(context_t *c, uint32_t *args);
+int32_t sys_isatty	(context_t *c, uint32_t *args);
+int32_t sys_times	(context_t *c, uint32_t *args);
+int32_t sys_wait	(context_t *c, uint32_t *args);
 
 void syscall_init(void);
 
-void syscall_isr(int vector, int code);
+void syscall_isr(int32_t vector, int32_t code);
 
 #endif

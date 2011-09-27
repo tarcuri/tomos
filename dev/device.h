@@ -1,16 +1,18 @@
 #ifndef DEVICE_H
 #define DEVICE_H
 
+#include <stdint.h>
+
 #define DEVICE_BLOCK	0x01
 #define DEVICE_CHAR	0x02
 
 typedef struct device
 {
-  unsigned char type;
+  uint8_t type;
 
-  int (*_read)(int);
-  int (*_write)(int);
-  int (*_ctrl)(unsigned int, void *);
+  int32_t (*_read)(int32_t);
+  int32_t (*_write)(int32_t);
+  int32_t (*_ctrl)(uint32_t, void *);
 } device_t;
 
 #endif

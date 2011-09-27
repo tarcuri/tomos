@@ -13,6 +13,7 @@
 
 #include "kernel/stack.h"
 
+#include "dev/device.h"
 #include "dev/keyboard.h"
 #include "dev/console.h"
 #include "dev/clock.h"
@@ -20,12 +21,14 @@
 #include "dev/ata.h"
 #include "dev/disk.h"
 
+#include "fs/ext2.h"
+
 #include "tomsh.h"
 
 #include <stdio.h>
 
 // initial kernel entry point
-void kernel( void* mbd, unsigned int magic, unsigned int other)
+void kernel(void* mbd, uint32_t magic, uint32_t other)
 {
   // initialize IDT, interrupts
   extern void (*_isr_stubs[256])(void);
@@ -51,7 +54,7 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
 
   clock_init();
 
-  //_install_isr(0x27, de_handler);
+  _install_isr(0x27, de_handler);
  
   mm_grub_multiboot(mbd, 0);
 
@@ -65,14 +68,12 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
   pci_init();
   ata_init();
 
-  // TODO: i get an unhandled interrupt 0x82 if interrupts are enabled
-  // after the proc_init....
-  // processes
+  // TODO: still get int 82h if interrupts aren't already enabled
   asm ("sti");
   proc_init();
   syscall_init();
 
-  c_printf("System initialization complete!\n");
+  //c_printf("\nSystem initialization complete!\n");
   // at this point proc should have initlialized a pcb for the kernel,
   // when we return loader.S should jmp to isr_restore which will inialize a
   // new context and stack for the kernel and jump down to main
@@ -80,8 +81,10 @@ void kernel( void* mbd, unsigned int magic, unsigned int other)
 
 void kmain()
 {
+  // superblock read completes only if we call printf first....
   printf("Press any key to continue...\n");
-  c_getcode();
+  //c_getcode();
 
+  ext2_init();
   command_loop();
 }

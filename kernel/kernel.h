@@ -1,6 +1,8 @@
 #ifndef KERNEL_H
 #define KERNEL_H
 
+#include <stdint.h>
+
 
 #define GRUB_MAGIC_NUMBER	0x2BADB002
 
@@ -45,6 +47,6 @@ unsigned int _memory_ceiling;
 // functions
 void kmain(void);
 
-void kernel(void *mbd, unsigned int magic, unsigned int other);
+void kernel(void *mbd, uint32_t magic, uint32_t other);
 
 #endif

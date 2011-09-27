@@ -1,12 +1,14 @@
 #ifndef INTR_H
 #define INTR_H
 
+#include <stdint.h>
+
 // idt entry gate
 struct idt_entry {
-  unsigned short offset_15_0;
-  unsigned short selector;
-  unsigned short type_attr;
-  unsigned short offset_31_16;
+  uint16_t offset_15_0;
+  uint16_t selector;
+  uint16_t type_attr;
+  uint16_t offset_31_16;
 } __attribute__ ((__packed__));
 
 
@@ -14,17 +16,17 @@ struct idt_entry {
 struct idt_entry _idt[256];
 
 // ISR table 
-void (*_isr_table[256])(int vector, int code);
+void (*_isr_table[256])(int32_t vector, int32_t code);
 
 void init_interrupts(void);
 static void init_pic(void);
 static void init_idt(void);
 
-void set_idt_entry(int entry, void (*handler)(void));
+void set_idt_entry(int32_t entry, void (*handler)(void));
 
-void du_handler( int vector, int code);
-void de_handler( int vector, int code);
+void du_handler(int32_t vector, int32_t code);
+void de_handler(int32_t vector, int32_t code);
 
-void (*_install_isr(int vector, void (*old)(int vector, int code)))(int vector, int code);
+void (*_install_isr(int32_t vector, void (*old)(int32_t vector, int32_t code)))(int32_t vector, int32_t code);
 
 #endif

@@ -11,7 +11,7 @@ struct dt_register idtr;
 
 void init_interrupts()
 {
-  idtr.base  = (unsigned int) &_idt[0];
+  idtr.base  = (uint32_t) &_idt[0];
   idtr.limit = 0x800;
 
   // now load the IDTR
@@ -23,7 +23,7 @@ void init_interrupts()
 
 static void init_idt()
 {
-  int i;
+  int32_t i;
   extern void (*_isr_stubs[256])(void);
 
   for (i = 0; i < 256; ++i) {
@@ -60,7 +60,7 @@ static void init_pic(void){
 }
 
 
-void set_idt_entry(int entry, void (*handler)(void))
+void set_idt_entry(int32_t entry, void (*handler)(void))
 {
   struct idt_entry *g = &_idt[entry]; 
 
@@ -72,14 +72,14 @@ void set_idt_entry(int entry, void (*handler)(void))
 
 
 /* default, unexpected handler */
-void du_handler( int vector, int code)
+void du_handler( int32_t vector, int32_t code)
 {
   c_printf( "\nVector=0x%x, code=%d\n", vector, code );
   panic( "Unhandled interrupt" );
 }
 
 /* default, expected handler */
-void de_handler(int vector, int code)
+void de_handler(int32_t vector, int32_t code)
 {
   if( vector >= 0x20 && vector < 0x30 ){
     __outb( PIC_MASTER_CMD_PORT, PIC_EOI );
@@ -91,9 +91,9 @@ void de_handler(int vector, int code)
 }
 
 
-void (*_install_isr(int vector, void (*new)(int vector, int code)))(int vector, int code)
+void (*_install_isr(int32_t vector, void (*new)(int32_t vector, int32_t code)))(int32_t vector, int32_t code)
 {
-  void (*old)(int vector, int code);
+  void (*old)(int32_t vector, int32_t code);
 
   old = _isr_table[vector];
   _isr_table[vector] = new;
