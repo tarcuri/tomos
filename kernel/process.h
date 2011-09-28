@@ -3,27 +3,29 @@
 
 #include "stack.h"
 
+#include <stdint.h>
+
 // adapted from RIT CS project
 // order must be consistent with isr_stubs.S
 typedef struct context {
-  unsigned int ss;
-  unsigned int gs;
-  unsigned int fs;
-  unsigned int es;
-  unsigned int ds;
-  unsigned int edi;
-  unsigned int esi;
-  unsigned int ebp;
-  unsigned int esp;
-  unsigned int ebx;
-  unsigned int edx;
-  unsigned int ecx;
-  unsigned int eax;
-  unsigned int vector;
-  unsigned int code;
-  unsigned int eip;
-  unsigned int cs;
-  unsigned int eflags;
+  uint32_t ss;
+  uint32_t gs;
+  uint32_t fs;
+  uint32_t es;
+  uint32_t ds;
+  uint32_t edi;
+  uint32_t esi;
+  uint32_t ebp;
+  uint32_t esp;
+  uint32_t ebx;
+  uint32_t edx;
+  uint32_t ecx;
+  uint32_t eax;
+  uint32_t vector;
+  uint32_t code;
+  uint32_t eip;
+  uint32_t cs;
+  uint32_t eflags;
 } context_t;
 
 // modeled after RIT/Linux PCBs
@@ -41,8 +43,8 @@ typedef struct process_control_block
   struct proccess_control_block *next;
   struct proccess_control_block *prev;
 
-  unsigned short	pid;
-  unsigned short	ppid;
+  uint16_t	pid;
+  uint16_t	ppid;
 
   unsigned char		status;		// can use a bit here to identify privledge level
 } pcb_t;
@@ -50,7 +52,9 @@ typedef struct process_control_block
 
 // global data
 pcb_t *pcb_list;
-unsigned short next_pid;
+uint16_t next_pid;
+
+uint32_t *kernel_esp;
 
 pcb_t *current_proc;
 

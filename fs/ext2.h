@@ -52,6 +52,8 @@ typedef struct superblock
   // 2 bytes
   uint16_t reserved_user_id;
   uint16_t reserved_group_id;
+
+  uint8_t  reserved[1024-84];
 } __attribute__((__packed__)) superblock_t;
 
 

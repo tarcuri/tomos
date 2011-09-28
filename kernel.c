@@ -74,7 +74,6 @@ void kernel(void* mbd, uint32_t magic, uint32_t other)
 
   //asm volatile ("sti");
   //c_printf("EFLAGS: %x\n", get_eflags());
-  //stack_dump(current_proc->stack);
   //c_getcode();
   //c_printf("\nSystem initialization complete!\n");
   // at this point proc should have initlialized a pcb for the kernel,
@@ -85,12 +84,14 @@ void kernel(void* mbd, uint32_t magic, uint32_t other)
 
 void kmain()
 {
+  //c_printf("ANYTHING?\n");
+  //stack_dump(current_proc);
   // TODO: interrupts fire for an ATA command only if printf()  is called first...
   //printf("Press any key to continue...\n");
   //putchar('?');
   //getchar();
 
-  c_printf("EFLAGS: %x\n", get_eflags());
+  //c_printf("EFLAGS: %x\n", get_eflags());
 
   ext2_init();
   command_loop();

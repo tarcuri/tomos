@@ -43,6 +43,7 @@ isr_entry:
 	**   0  4  8  12 16 20  24  28  32  36  40  44  48  52  56  
 	*/ 
 	.global	current_proc
+	.global kernel_esp
 
 	movl	current_proc, %ebx		// save the context pointer
 	movl	%esp, (%ebx)
@@ -55,6 +56,7 @@ isr_entry:
 
 	movl	52(%esp), %eax 			// save vector
 	movl	56(%esp), %ebx  		// save code
+	movl	kernel_esp, %esp
 	push	%ebx				
 	push	%eax
 
@@ -66,13 +68,14 @@ isr_entry:
 
 isr_restore:
         /* restore the context */
+	movl	%esp, kernel_esp
 	movl	current_proc, %ebx
 	movl	(%ebx), %esp		// the context pointer of the current pcb
 
         # temp debugging code
-	pushl	$fmt
-	call	c_printf
-	addl	$4, %esp
+	#pushl	$fmt
+	#call	c_printf
+	#addl	$4, %esp
 	#jmp	.
 
         popl	%ss

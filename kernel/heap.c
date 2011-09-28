@@ -104,6 +104,8 @@ void *kmalloc(unsigned int size, int align)
     insert_into_index(new_header, heap);
   }
 
+  //c_printf("allocated %d bytes\n", size);
+
   return (void *) address;
 }
 

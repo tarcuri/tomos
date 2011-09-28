@@ -30,14 +30,14 @@ device_t *ata_open()
 
 int32_t ata_ctrl(uint32_t cmd, void *buf)
 {
-  c_printf("ATA_CTRL\n");
+  //c_printf("ATA_CTRL\n");
   int32_t res = 0;
 
   disk_request_t *d = (disk_request_t *) buf;
 
   switch(cmd) {
   case DISK_CMD_READ:
-    c_printf("DISK READ OPERATION\n");
+    //c_printf("DISK READ OPERATION\n");
     ata_read_multiple(d);
     break;
   default:
@@ -170,13 +170,13 @@ void ata_read_multiple(disk_request_t *dr)
   __outb(ata_cmd_reg | ATA_CMD_R_LBA_MID, (dr->lba >> 8) & 0xFF);
   __outb(ata_cmd_reg | ATA_CMD_R_LBA_HIGH, (dr->lba >> 16) & 0xFF);
 
-  c_printf("READ_MULTIPLE(%d, %d)   [0x%x]\n", dr->num_blocks, dr->lba, ata_alt_status(0));
+  c_printf("ATA READ_MULTIPLE(%d, %d)   [0x%x]\n", dr->num_blocks, dr->lba, ata_alt_status(0));
   __outb(ata_cmd_reg | ATA_CMD_R_COMMAND, ATA_READ_MULTIPLE);
 
   while (ata_alt_status(0) & ATA_STATUS_BUSY)
     ;
 
-  c_printf("ALT_STATUS: 0x%x\n", ata_alt_status(0));
+  //c_printf("ALT_STATUS: 0x%x\n", ata_alt_status(0));
 
   while (dr->blocks_complete < dr->num_blocks) {
     //c_printf("ALT_STATUS: 0x%x\n", ata_alt_status(0));

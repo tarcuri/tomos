@@ -10,6 +10,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 void hdd_read(unsigned int lba, void *buf, unsigned int len);
 
@@ -17,23 +18,19 @@ void hdd_read(unsigned int lba, void *buf, unsigned int len);
 // strstr, strtok, etc
 void command_loop()
 {
-  int val = atoi("56");
-  c_printf("%d\n", val);
-  strcpy(prompt, "tomsh $", 8);
+  strncpy(prompt, "tomsh $", 8);
   int scroll = 0;
   int lines_up = 0;
 
   while (1) {
     if (!scroll) {
-      printf("%s ", prompt);
-      fflush(0);
+      c_printf("%s ", prompt);
     }
 
-    unsigned char c;
-    int i = 0;
+    uint8_t c;
     int cmd_i = 0;
 
-    for (cmd_i = 0; i < 512; ) {
+    while (cmd_i < 512) {
       //read(1, &c, 1);
       c = c_getcode();
 
@@ -83,9 +80,9 @@ void command_loop()
     if (strncmp(command_line, "dispheap", 8) == 0)
       dump_heap_index(k_heap);
     else if (strncmp(command_line, "getpid", 6) == 0)
-      printf("PID: %d\n", getpid());
-    else if (!scroll && c_strlen(command_line))
-      printf("> %s\n", command_line);
+      c_printf("PID: %d\n", getpid());
+    else if (!scroll && strlen(command_line))
+      c_printf("> %s\n", command_line);
   }
 }
 void hdd_read(unsigned int lba, void *buf, unsigned int len)

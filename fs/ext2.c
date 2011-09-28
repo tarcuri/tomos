@@ -1,4 +1,5 @@
 #include "ext2.h"
+#include "kernel/heap.h"
 #include "dev/ata.h"
 
 #include <stdio.h>
@@ -15,22 +16,22 @@ void ext2_init()
   uint32_t block_groups_b = (sb->total_blocks / sb->blocks_per_group) + 1;
   uint32_t block_groups_i = (sb->total_inodes / sb->inodes_per_group) + 1;
 
-  c_printf("b: %d, i: %d\n", block_groups_b, block_groups_i);
+  uint32_t block_groups = (block_groups_b > block_groups_i) ? block_groups_b : block_groups_a;
+  c_printf("[ext2]     %d block groups\n", block_groups);
 
-/*
   int i;
   for (i = 0; i < (sb->total_inodes - sb->inodes_unallocated); ++i) {
     c_printf("reading inode #%d...\n", i);
 
     // determine which block the inode belongs too
   }
-*/
 }
 
 superblock_t *read_superblock(device_t *dev)
 {
   // superblock is 1024 bytes from the beginning of the volume
-  superblock_t *sb = (superblock_t *) kmalloc(sizeof(superblock_t));
+  superblock_t *sb = (superblock_t *) kmalloc(sizeof(superblock_t), 0);
+  dump_heap_index(k_heap);
 
   // device should be ata block device
   disk_request_t dr;
@@ -44,7 +45,9 @@ superblock_t *read_superblock(device_t *dev)
   // call the IOCTRL
   dev->_ctrl(DISK_CMD_READ, (void *) &dr);
 
+  return sb;
   // print info
+#if 0
   c_printf("\nSuperblock Info:\n");
   c_printf("  Total inodes        : %d\n", sb->total_inodes);
   c_printf("  Total blocks        : %d\n", sb->total_blocks);
@@ -71,4 +74,5 @@ superblock_t *read_superblock(device_t *dev)
   c_printf("  Major Version       : %d\n", sb->major_version);
   c_printf("  Reserved User ID    : %d\n", sb->reserved_user_id);
   c_printf("  Reserved Group ID   : %d\n", sb->reserved_group_id);
+#endif 
 }

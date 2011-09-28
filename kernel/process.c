@@ -28,8 +28,8 @@ void proc_init()
 
   // start things at the bottom of the stack structure since x86 stacks grow down
   // dummy return address at bottom of stack followed by a zero dword
-  unsigned int *ret = ((unsigned int *)(kernel_pcb->stack + 1)) - 2;
-  *ret = (unsigned int) kmain;
+  uint32_t *ret = ((uint32_t *)(kernel_pcb->stack + 1)) - 2;
+  *ret = (uint32_t) kmain;
 
   // point the context just above the dummy return address
   kernel_pcb->context = ((context_t *)ret) - 1;
@@ -43,17 +43,23 @@ void proc_init()
   kernel_pcb->context->gs = 0x10;
   kernel_pcb->context->ss = 0x18;
 
-  //unsigned int eflags;
+  //c_printf("KERNEL STACK TOP   : 0x%x\n", kernel_pcb->stack);
+  //c_printf("KERNEL STACK BOTTOM: 0x%x\n", kernel_pcb->stack + 1);
+  //c_printf("KERNEL STACK SIZE  : %x bytes\n", (kernel_pcb->stack + 1) - (kernel_pcb->stack));
+  kernel_pcb->context->ebp = (uint32_t) ret;
+  kernel_esp = (uint32_t *) kernel_pcb->context;
+
+  //uint32_t eflags;
   //asm volatile ("pushfl; popl %0" : "=r"(eflags));
   //c_printf("current eflags: 0x%x\n", eflags);
   c_printf("original EFLAGS: %x\n", get_eflags());
   kernel_pcb->context->eflags = 0x2 | 0x200;
 
   // kernel entry point
-  kernel_pcb->context->eip = (unsigned int) kmain;
+  kernel_pcb->context->eip = (uint32_t) kmain;
 
   current_proc = kernel_pcb;
 
   //c_printf("[proc]    kernel process intialized\n");
-  //c_printf("stack: 0x%x -> 0x%x\n", kernel_pcb->stack, (unsigned int)kernel_pcb->stack + (4*STACK_SIZE));
+  //c_printf("stack: 0x%x -> 0x%x\n", kernel_pcb->stack, (uint32_t)kernel_pcb->stack + (4*STACK_SIZE));
 }
