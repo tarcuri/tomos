@@ -4,34 +4,108 @@
 
 #include <stdio.h>
 
+superblock_t *fs_sb;
+uint32_t fs_block_size;
+uint32_t fs_block_groups;
+block_group_desc_t *fs_bgd_table;
+
+
 void ext2_init()
 {
   device_t *hdd = ata_open();
 
-  superblock_t *sb = read_superblock(hdd);
+  fs_sb = read_superblock(hdd);
 
-  uint32_t block_size = 1024 << sb->block_size_shift;
+  fs_block_size = 1024 << fs_sb->block_size_shift;
 
   // determine number of block groups
-  uint32_t block_groups_b = (sb->total_blocks / sb->blocks_per_group) + 1;
-  uint32_t block_groups_i = (sb->total_inodes / sb->inodes_per_group) + 1;
+  uint32_t block_groups_b = (fs_sb->total_blocks / fs_sb->blocks_per_group) + 1;
+  uint32_t block_groups_i = (fs_sb->total_inodes / fs_sb->inodes_per_group) + 1;
 
-  uint32_t block_groups = (block_groups_b > block_groups_i) ? block_groups_b : block_groups_a;
-  c_printf("[ext2]     %d block groups\n", block_groups);
+  fs_block_groups = (block_groups_b > block_groups_i) ? block_groups_b : block_groups_i;
+  c_printf("[ext2]    %d block groups\n", fs_block_groups);
 
-  int i;
-  for (i = 0; i < (sb->total_inodes - sb->inodes_unallocated); ++i) {
-    c_printf("reading inode #%d...\n", i);
+  // block group descriptor table
+  fs_bgd_table = read_bgd_table(hdd);
+  
+  // which block group for root dir? (inode 2)
+  uint32_t root_bg  = (2 - 1) / fs_sb->inodes_per_group;
+  uint32_t index    = (2 - 1) % fs_sb->inodes_per_group;
+  uint32_t root_blk = (index * fs_sb->inode_size) / fs_block_size;
 
-    // determine which block the inode belongs too
-  }
+  // root BG descriptor looks OK...
+  c_printf("BGD:\n");
+  c_printf("  %d\n", fs_bgd_table[root_bg].block_usage_block);
+  c_printf("  %d\n", fs_bgd_table[root_bg].inode_usage_block);
+  c_printf("  %d\n", fs_bgd_table[root_bg].inode_table_block);
+  c_printf("  %d\n", fs_bgd_table[root_bg].free_blocks);
+  c_printf("  %d\n", fs_bgd_table[root_bg].free_inodes);
+  c_printf("  num_dirs: %d\n", fs_bgd_table[root_bg].num_dirs);
+
+  c_printf("root inode index: %d\n", index);
+  c_printf("[ext2]    inode table found at block %d\n", fs_bgd_table[root_bg].inode_table_block);
+  inode_t *root_inode = read_inode(hdd, fs_bgd_table[root_bg].inode_table_block, index);
+
+  print_inode(root_inode);
+}
+
+void print_inode(inode_t *inode)
+{
+  c_printf("inode:\n");
+  c_printf("  mode: %x\n", inode->mode);
+  c_printf("   uid: %x\n", inode->uid);
+  c_printf("c-time: %x\n", inode->c_time);
+}
+
+inode_t *read_inode(device_t *dev, uint32_t table_block_addr, uint32_t index)
+{
+  disk_request_t dr;
+  inode_t *inode_table = (inode_t *) kmalloc(512, 0);
+
+  dr.cmd = DISK_CMD_READ;
+  dr.lba = 2 + (table_block_addr * 2);
+  dr.num_blocks = 1;
+  dr.blocks_complete = 0;
+  dr.buffer = (void *) inode_table;
+
+  c_printf("reading inode from disk sector %d\n", dr.lba);
+  dev->_ctrl(DISK_CMD_READ, (void *) &dr);
+
+  inode_t *inode = (inode_t *) kmalloc(sizeof(inode_t), 0);
+
+  c_printf("READ INODE\n");
+
+  memcpy((void *) inode, (void *) &inode_table[index], sizeof(inode_t));
+
+  kfree(inode_table);
+
+  return inode;
+}
+
+block_group_desc_t *read_bgd_table(device_t *dev)
+{
+  disk_request_t dr;
+
+  uint32_t bs_bytes = sizeof(block_group_desc_t) * fs_block_groups;
+
+  dr.cmd = DISK_CMD_READ;
+  dr.lba = 2 + (fs_block_size/512);
+  dr.num_blocks = (bs_bytes / 512) + ((bs_bytes % 512) ? 1 : 0);
+  dr.blocks_complete = 0;
+
+  block_group_desc_t *bgd_table = (block_group_desc_t *) kmalloc(dr.num_blocks * 512, 0);
+
+  dr.buffer = (void *) bgd_table;
+
+  dev->_ctrl(DISK_CMD_READ, (void *) &dr);
+
+  return bgd_table;
 }
 
 superblock_t *read_superblock(device_t *dev)
 {
   // superblock is 1024 bytes from the beginning of the volume
   superblock_t *sb = (superblock_t *) kmalloc(sizeof(superblock_t), 0);
-  dump_heap_index(k_heap);
 
   // device should be ata block device
   disk_request_t dr;
@@ -45,21 +119,20 @@ superblock_t *read_superblock(device_t *dev)
   // call the IOCTRL
   dev->_ctrl(DISK_CMD_READ, (void *) &dr);
 
-  return sb;
   // print info
-#if 0
   c_printf("\nSuperblock Info:\n");
   c_printf("  Total inodes        : %d\n", sb->total_inodes);
   c_printf("  Total blocks        : %d\n", sb->total_blocks);
   c_printf("  Blocks Reserved     : %d\n", sb->blocks_reserved);
-  c_printf("  Blocks Unallocated  : %d\n", sb->blocks_unallocated);
-  c_printf("  Inodes Unallocated  : %d\n", sb->inodes_unallocated);
+  c_printf("  Blocks Unallocated  : %d\n", sb->free_blocks);
+  c_printf("  Inodes Unallocated  : %d\n", sb->free_inodes);
   c_printf("  First Data Block    : %d\n", sb->first_data_block);
   c_printf("  Block Size Shift    : %d\n", sb->block_size_shift);
   c_printf("  Fragment Size Shift : %d\n", sb->frag_size_shift);
   c_printf("  Blocks / group      : %d\n", sb->blocks_per_group);
   c_printf("  Fragments / group   : %d\n", sb->frags_per_group);
   c_printf("  Inodes / group      : %d\n", sb->inodes_per_group);
+#if 0 
   c_printf("  Last mount time     : %d\n", sb->last_mount_time);
   c_printf("  Last write time     : %d\n", sb->last_write_time);
   c_printf("  Mounts since check  : %d\n", sb->mounts_since_ccheck);
@@ -74,5 +147,7 @@ superblock_t *read_superblock(device_t *dev)
   c_printf("  Major Version       : %d\n", sb->major_version);
   c_printf("  Reserved User ID    : %d\n", sb->reserved_user_id);
   c_printf("  Reserved Group ID   : %d\n", sb->reserved_group_id);
-#endif 
+#endif
+
+  return sb;
 }

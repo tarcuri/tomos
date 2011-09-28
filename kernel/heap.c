@@ -100,12 +100,10 @@ void *kmalloc(unsigned int size, int align)
                            - ((unsigned int) new_header + sizeof(heap_header_t));
 
     orig_footer->header = new_header;
-
     insert_into_index(new_header, heap);
   }
 
-  //c_printf("allocated %d bytes\n", size);
-
+  //c_printf("allocated %d bytes at 0x%x\n", size, address);
   return (void *) address;
 }
 

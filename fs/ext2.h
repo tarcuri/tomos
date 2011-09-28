@@ -27,8 +27,8 @@ typedef struct superblock
   uint32_t total_inodes;
   uint32_t total_blocks;
   uint32_t blocks_reserved;
-  uint32_t blocks_unallocated;
-  uint32_t inodes_unallocated;
+  uint32_t free_blocks;
+  uint32_t free_inodes;
   uint32_t first_data_block;
   uint32_t block_size_shift;
   uint32_t frag_size_shift;
@@ -53,26 +53,39 @@ typedef struct superblock
   uint16_t reserved_user_id;
   uint16_t reserved_group_id;
 
-  uint8_t  reserved[1024-84];
+
+  uint32_t first_inode;
+  uint16_t inode_size;
+  uint8_t  reserved[1024-90];
 } __attribute__((__packed__)) superblock_t;
 
-
+typedef struct block_group_descriptor
+{
+  uint32_t block_usage_block;
+  uint32_t inode_usage_block;
+  uint32_t inode_table_block;
+  uint16_t free_blocks;
+  uint16_t free_inodes;
+  uint16_t num_dirs;
+  uint16_t pad;
+  uint8_t  reserved[12];
+} block_group_desc_t;
 
 typedef struct inode
 {
-  uint16_t type_permissions;
-  uint16_t user_id;
+  uint16_t mode;
+  uint16_t uid;
 
   uint32_t size_low;
-  uint32_t access_time;
-  uint32_t creation_time;
-  uint32_t modification_time;
-  uint32_t deteltion_time;
+  uint32_t a_time;
+  uint32_t c_time;
+  uint32_t m_time;
+  uint32_t d_time;
 
-  uint16_t group_id;
-  uint16_t hard_links;		// hard links to this inode
+  uint16_t gid;
+  uint16_t links_count;		// hard links to this inode
 
-  uint32_t disk_sectors;	// sectors in use by this inode
+  uint32_t blocks;		// sectors in use by this inode
   uint32_t flags;
   uint32_t os_specific_1;
   uint32_t dblock_ptr_0;
@@ -90,7 +103,7 @@ typedef struct inode
   uint32_t singly_iblock_ptr;	// points to a block that is a list of block pointers to data
   uint32_t doubly_iblock_ptr;	// points to a block that is a list of block pointers to SIBs
   uint32_t triply_iblock_ptr;	// points to a block that is a list of block pointers to DIBs
-  uint32_t generation_num;
+  uint32_t generation;
   uint32_t extended_attr_block;
   uint32_t size_high;
   uint32_t block_addr_of_frag;
@@ -100,8 +113,11 @@ typedef struct inode
   uint32_t os_specific_4;
 } __attribute__((__packed__)) inode_t;
 
+void print_inode(inode_t *inode);
 
 void ext2_init(void);
+inode_t *read_inode(device_t *dev, uint32_t table_block_addr, uint32_t index);
+block_group_desc_t *read_bgd_table(device_t *dev);
 superblock_t *read_superblock(device_t *dev);
 
 #endif

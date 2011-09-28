@@ -15,7 +15,7 @@ void stack_dump(pcb_t *proc)
 //  c_printf("ESP index: 0x%x\n", ((uint32_t) esp + 2));
 
   int first = 1;
-  while (esp < stack_end) {
+  while ((uint32_t)esp < stack_end) {
     if (first) {
       c_printf("esp ->    0x%x\n", *esp);
       first = 0;
