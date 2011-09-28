@@ -52,9 +52,9 @@ void kernel(void* mbd, uint32_t magic, uint32_t other)
     return;
   }
 
-  clock_init();
+  //clock_init();
 
-  _install_isr(0x27, de_handler);
+  _install_isr(0x27, du_handler);
  
   mm_grub_multiboot(mbd, 0);
 
@@ -66,24 +66,31 @@ void kernel(void* mbd, uint32_t magic, uint32_t other)
   // hardware and devices
   kb_init();
   pci_init();
-  ata_init();
 
   // TODO: still get int 82h if interrupts aren't already enabled
-  asm ("sti");
   proc_init();
   syscall_init();
+  ata_init();
 
+  //asm volatile ("sti");
+  //c_printf("EFLAGS: %x\n", get_eflags());
+  //stack_dump(current_proc->stack);
+  //c_getcode();
   //c_printf("\nSystem initialization complete!\n");
   // at this point proc should have initlialized a pcb for the kernel,
   // when we return loader.S should jmp to isr_restore which will inialize a
   // new context and stack for the kernel and jump down to main
+  //kmain();
 }
 
 void kmain()
 {
-  // superblock read completes only if we call printf first....
-  printf("Press any key to continue...\n");
-  //c_getcode();
+  // TODO: interrupts fire for an ATA command only if printf()  is called first...
+  //printf("Press any key to continue...\n");
+  //putchar('?');
+  //getchar();
+
+  c_printf("EFLAGS: %x\n", get_eflags());
 
   ext2_init();
   command_loop();

@@ -1,10 +1,23 @@
 #include "support.h"
 
+#include "kernel/process.h"
+
+#include <stdint.h>
+
 void panic(char *reason){
   asm( "cli" );
   c_printf("\nPANIC: %s\nHalting...", reason);
+
+  stack_dump(current_proc->stack);
   for(;;)
     ;
+}
+
+uint32_t get_eflags()
+{
+  uint32_t eflags;
+  asm volatile ("pushf; popl %0" : "=g"(eflags));
+  return eflags;
 }
 
 /*

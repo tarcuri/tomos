@@ -15,12 +15,12 @@ void ext2_init()
   uint32_t block_groups_b = (sb->total_blocks / sb->blocks_per_group) + 1;
   uint32_t block_groups_i = (sb->total_inodes / sb->inodes_per_group) + 1;
 
-  printf("b: %d, i: %d\n", block_groups_b, block_groups_i);
+  c_printf("b: %d, i: %d\n", block_groups_b, block_groups_i);
 
 /*
   int i;
   for (i = 0; i < (sb->total_inodes - sb->inodes_unallocated); ++i) {
-    printf("reading inode #%d...\n", i);
+    c_printf("reading inode #%d...\n", i);
 
     // determine which block the inode belongs too
   }
@@ -45,29 +45,30 @@ superblock_t *read_superblock(device_t *dev)
   dev->_ctrl(DISK_CMD_READ, (void *) &dr);
 
   // print info
-  printf("\nSuperblock Info:\n");
-  printf("  Total inodes        : %3d\n", sb->total_inodes);
-  printf("  Total blocks        : %3d\n", sb->total_blocks);
-  printf("  Blocks Reserved     : %3d\n", sb->blocks_reserved);
-  printf("  Blocks Unallocated  : %3d\n", sb->blocks_unallocated);
-  printf("  Inodes Unallocated  : %3d\n", sb->inodes_unallocated);
-  printf("  First Data Block    : %3d\n", sb->first_data_block);
-  printf("  Block Size Shift    : %3d\n", sb->block_size_shift);
-  printf("  Fragment Size Shift : %3d\n", sb->frag_size_shift);
-  printf("  Blocks / group      : %3d\n", sb->blocks_per_group);
-  printf("  Fragments / group   : %3d\n", sb->frags_per_group);
-  printf("  Last mount time     : %3d\n", sb->last_mount_time);
-  printf("  Last write time     : %3d\n", sb->last_write_time);
-  printf("  Mounts since check  : %3d\n", sb->mounts_since_ccheck);
-  printf("  Mounts allowed      : %3d\n", sb->mounts_allowed_ccheck);
-  printf("  EXT2 Signature      : %3d\n", sb->ext2_signature);
-  printf("  File System State   : %3d\n", sb->file_system_state);
-  printf("  EXT2 Error Action   : %3d\n", sb->ext2_error_action);
-  printf("  Minor Version       : %3d\n", sb->minor_version);
-  printf("  POSTIX time check   : %3d\n", sb->p_time_last_ccheck);
-  printf("  Forced check int.   : %3d\n", sb->forced_ccheck_interval);
-  printf("  Creation OS ID      : %xh\n", sb->creation_os_id);
-  printf("  Major Version       : %3d\n", sb->major_version);
-  printf("  Reserved User ID    : %3d\n", sb->reserved_user_id);
-  printf("  Reserved Group ID   : %3d\n", sb->reserved_group_id);
+  c_printf("\nSuperblock Info:\n");
+  c_printf("  Total inodes        : %d\n", sb->total_inodes);
+  c_printf("  Total blocks        : %d\n", sb->total_blocks);
+  c_printf("  Blocks Reserved     : %d\n", sb->blocks_reserved);
+  c_printf("  Blocks Unallocated  : %d\n", sb->blocks_unallocated);
+  c_printf("  Inodes Unallocated  : %d\n", sb->inodes_unallocated);
+  c_printf("  First Data Block    : %d\n", sb->first_data_block);
+  c_printf("  Block Size Shift    : %d\n", sb->block_size_shift);
+  c_printf("  Fragment Size Shift : %d\n", sb->frag_size_shift);
+  c_printf("  Blocks / group      : %d\n", sb->blocks_per_group);
+  c_printf("  Fragments / group   : %d\n", sb->frags_per_group);
+  c_printf("  Inodes / group      : %d\n", sb->inodes_per_group);
+  c_printf("  Last mount time     : %d\n", sb->last_mount_time);
+  c_printf("  Last write time     : %d\n", sb->last_write_time);
+  c_printf("  Mounts since check  : %d\n", sb->mounts_since_ccheck);
+  c_printf("  Mounts allowed      : %d\n", sb->mounts_allowed_ccheck);
+  c_printf("  EXT2 Signature      : %d\n", sb->ext2_signature);
+  c_printf("  File System State   : %d\n", sb->file_system_state);
+  c_printf("  EXT2 Error Action   : %d\n", sb->ext2_error_action);
+  c_printf("  Minor Version       : %d\n", sb->minor_version);
+  c_printf("  POSTIX time check   : %d\n", sb->p_time_last_ccheck);
+  c_printf("  Forced check int.   : %d\n", sb->forced_ccheck_interval);
+  c_printf("  Creation OS ID      : %xh\n", sb->creation_os_id);
+  c_printf("  Major Version       : %d\n", sb->major_version);
+  c_printf("  Reserved User ID    : %d\n", sb->reserved_user_id);
+  c_printf("  Reserved Group ID   : %d\n", sb->reserved_group_id);
 }

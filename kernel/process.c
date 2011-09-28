@@ -46,6 +46,7 @@ void proc_init()
   //unsigned int eflags;
   //asm volatile ("pushfl; popl %0" : "=r"(eflags));
   //c_printf("current eflags: 0x%x\n", eflags);
+  c_printf("original EFLAGS: %x\n", get_eflags());
   kernel_pcb->context->eflags = 0x2 | 0x200;
 
   // kernel entry point

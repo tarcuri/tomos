@@ -1,8 +1,11 @@
 #ifndef SUPPORT_H
 #define SUPPORT_H
 
+#include <stdint.h>
+
 void panic(char *reason);
 
+uint32_t get_eflags(void);
 
 unsigned char __inb(unsigned int port);
 unsigned short __inw(unsigned int port);

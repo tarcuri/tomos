@@ -29,6 +29,7 @@ libs: ${LIB_SRC}
 	${CC} ${CFLAGS} -I${BASEDIR} -o heap.o -c kernel/heap.c
 	${CC} ${CFLAGS} -I${BASEDIR} -o mm.o -c kernel/mm.c
 	${CC} ${CFLAGS} -I${BASEDIR} -o pg.o -c kernel/pg.c
+	${CC} ${CFLAGS} -I${BASEDIR} -o stack.o -c kernel/stack.c
 	${CC} ${CFLAGS} -I${BASEDIR} -o process.o -c kernel/process.c
 	${CC} ${CFLAGS}	-I${BASEDIR} -o syscalls.o -c syscalls.c
 	${CC} ${CFLAGS} -o tomsh.o -c tomsh.c
@@ -51,7 +52,7 @@ tomos: libs drivers
 	${CC} ${CFLAGS} -o syscall_stubs.o -c syscall_stubs.S
 	rm syscalls_asm.h
 	${LD} -T linker.ld -o tomos.bin loader.o kernel.o isr_stubs.o syscall_stubs.o \
-			     ${LIB_OBJ} ${DRV_OBJ} ext2.o \
+			     ${LIB_OBJ} ${DRV_OBJ} stack.o ext2.o \
                              ./lib/libc.a ./lib/libm.a ./lib/libnosys.a ./lib/libg.a
 	cat stage1 stage2 pad tomos.bin > tomos.img
 

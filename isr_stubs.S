@@ -46,6 +46,13 @@ isr_entry:
 
 	movl	current_proc, %ebx		// save the context pointer
 	movl	%esp, (%ebx)
+
+	# DEBUG: print esp
+	#pushl	%esp
+	#pushl	$fmt
+	#call	c_printf
+	#addl	$8, %esp
+
 	movl	52(%esp), %eax 			// save vector
 	movl	56(%esp), %ebx  		// save code
 	push	%ebx				
@@ -63,9 +70,10 @@ isr_restore:
 	movl	(%ebx), %esp		// the context pointer of the current pcb
 
         # temp debugging code
-	#pushl	$fmt
-	#call	c_printf
-	#addl	$4, %esp
+	pushl	$fmt
+	call	c_printf
+	addl	$4, %esp
+	#jmp	.
 
         popl	%ss
         popl	%gs
@@ -76,10 +84,11 @@ isr_restore:
 	addl	$8, %esp
 	iret
 
-#fmt:	.ascii	"\nss=%x  gs=%x  fs=%x  es=%x  ds=%x\n"
-#	.ascii	"edi=%x esi=%x ebp=%x esp=%x ebx=%x\n"
-#	.ascii	"edx=%x ecx=%x eax=%x vec=%x cod=%x\n"
-#	.string	"eip=%x  cs=%x efl=%x\n"
+#fmt:	.string "ISR esp: 0x%x\n"
+fmt:	.ascii	"\nss=%x  gs=%x  fs=%x  es=%x  ds=%x\n"
+	.ascii	"edi=%x esi=%x ebp=%x esp=%x ebx=%x\n"
+	.ascii	"edx=%x ecx=%x eax=%x vec=%x cod=%x\n"
+	.string	"eip=%x  cs=%x efl=%x\n"
 
 # the actual stubs
 ISR(0x00);      ISR(0x01);      ISR(0x02);      ISR(0x03);
