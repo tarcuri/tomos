@@ -22,6 +22,42 @@
 #define OS_CREATOR_FREEBSD	0x03
 #define OS_CREATOR_BSD_LITE	0x04
 
+// EXT2 mode field (taken from EXT2 docs by Dave Poirier)
+// http://www.nongnu.org/ext2-doc/ext2.html
+// -- file format --
+#define EXT2_S_IFSOCK		0xC000		// socket
+#define EXT2_S_IFLNK		0xA000		// symbolic link
+#define EXT2_S_IFREG		0x8000		// regular file
+#define EXT2_S_IFBLK		0x6000		// block device
+#define EXT2_S_IFDIR		0x4000		// directory
+#define EXT2_S_IFCHR		0x2000		// character device
+#define EXT2_S_IFIFO		0x1000		// fifo
+// -- process execution user/group override --
+#define EXT2_S_ISUID		0x0800		// Set process User ID
+#define EXT2_S_ISGID		0x0400		// Set process Group ID
+#define EXT2_S_ISVTX		0x0200		// sticky bit
+// -- access rights --
+#define EXT2_S_IRUSR		0x0100		// user read
+#define	EXT2_S_IWUSR		0x0080		// user write
+#define EXT2_S_IXUSR		0x0040		// user execute
+#define EXT2_S_IRGRP		0x0020		// group read
+#define EXT2_S_IWGRP		0x0010		// group write
+#define EXT2_S_IXGRP		0x0008		// group execute
+#define EXT2_S_IROTH		0x0004		// others read
+#define EXT2_S_IWOTH		0x0002		// others write
+#define EXT2_S_IXOTH		0x0001		// others execute
+
+// EXT2 file types
+#define EXT2_FT_UNKNOWN		0	// Unknown File Type
+#define EXT2_FT_REG_FILE	1	// Regular File
+#define EXT2_FT_DIR		2	// Directory File
+#define EXT2_FT_CHRDEV		3	// Character Device
+#define EXT2_FT_BLKDEV		4	// Block Device
+#define EXT2_FT_FIFO		5	// Buffer File
+#define EXT2_FT_SOCK		6	// Socket File
+#define EXT2_FT_SYMLINK		7	// Symbolic Link
+
+// ext2 superblock
 typedef struct superblock
 {
   uint32_t total_inodes;
@@ -53,12 +89,12 @@ typedef struct superblock
   uint16_t reserved_user_id;
   uint16_t reserved_group_id;
 
-
   uint32_t first_inode;
   uint16_t inode_size;
   uint8_t  reserved[1024-90];
 } __attribute__((__packed__)) superblock_t;
 
+// ext2 block group descriptor
 typedef struct block_group_descriptor
 {
   uint32_t block_usage_block;
@@ -71,6 +107,7 @@ typedef struct block_group_descriptor
   uint8_t  reserved[12];
 } block_group_desc_t;
 
+// ext2 inode
 typedef struct inode
 {
   uint16_t mode;
@@ -113,9 +150,20 @@ typedef struct inode
   uint32_t os_specific_4;
 } __attribute__((__packed__)) inode_t;
 
-void print_inode(inode_t *inode);
+// ext2 directory entry
+typedef struct dir_entry
+{
+  uint32_t inode;
+  uint16_t rec_len;
+  uint8_t  name_len;
+  uint8_t  file_type;
+  char     name[1];	// size of this dir_entry_t = sizeof(direct_t) + strlen(d.name)
+} __attribute__((__packed__)) dir_entry_t;
 
 void ext2_init(void);
+void read_block(uint32_t fs_block, void *buf, uint32_t len);
+
+inode_t *find_inode(uint32_t inode);
 inode_t *read_inode(device_t *dev, uint32_t table_block_addr, uint32_t index);
 block_group_desc_t *read_bgd_table(device_t *dev);
 superblock_t *read_superblock(device_t *dev);
