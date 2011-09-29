@@ -63,7 +63,7 @@ inode_t *read_inode(device_t *dev, uint32_t table_block_addr, uint32_t index)
   inode_t *inode_table = (inode_t *) kmalloc(512, 0);
 
   dr.cmd = DISK_CMD_READ;
-  dr.lba = 2 + (table_block_addr * 2);
+  dr.lba = (table_block_addr * 2);
   dr.num_blocks = 1;
   dr.blocks_complete = 0;
   dr.buffer = (void *) inode_table;
