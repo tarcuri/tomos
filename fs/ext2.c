@@ -5,11 +5,7 @@
 #include <stdio.h>
 #include <time.h>
 
-device_t *fs_dev;
-superblock_t *fs_sb;
-uint32_t fs_block_size;
-uint32_t fs_block_groups;
-block_group_desc_t *fs_bgd_table;
+
 
 
 void ext2_init()
@@ -29,62 +25,9 @@ void ext2_init()
 
   // block group descriptor table
   fs_bgd_table = read_bgd_table(hdd);
-  
   fs_dev = hdd;
 
-  inode_t *root_inode = find_inode(2);
-  
-  // now parse the root directory's entries
-  void *buf = kmalloc(1024, 0);
-
-  read_block(root_inode->dblock_ptr_0, buf, 1);
-
-  uint32_t *dirp = (uint32_t *) buf;
-
-  int i;
-  char name[256];
-  for (i = 0; i < 4; ++i) {
-    dir_entry_t *dir = (dir_entry_t *)dirp;
-
-    printf("inode: %d\n", dir->inode);
-    strncpy(name, dir->name, dir->name_len);
-    name[dir->name_len] = '\0';
-    printf(" %s\n", name);
-    dirp = (void *) ((uint32_t)dirp + dir->rec_len);
-
-    if (dir->inode == 11) {
-      // read this dir
-      inode_t *kernel_dir = find_inode(dir->inode);
-      printf("block0: %x\n", kernel_dir->dblock_ptr_0);
-
-      // read the first data block
-      void *kdir = kmalloc(1024, 0);
-      read_block(kernel_dir->dblock_ptr_0, kdir, 1);
-
-      uint32_t *kp = (uint32_t *) kdir;
-      int j;
-      for (j = 0; j < 6; ++j) {
-        dir_entry_t *d = (dir_entry_t *)kp;
-
-        printf("inode: %d\n", d->inode);
-        strncpy(name, d->name, d->name_len);
-        name[d->name_len] = '\0';
-        printf(" %s\n", name);
-        if (d->file_type & EXT2_FT_REG_FILE) {
-          inode_t *fnode = find_inode(d->inode);
-          void *fdata = kmalloc(1024, 0);
-          read_block(fnode->dblock_ptr_0, fdata, 1);
-          printf("->> %s\n", (char *) fdata);
-          kfree(fdata);
-        }
-
-        kp = (void *) ((uint32_t)kp + d->rec_len);
-      }
-    }
-  }
   printf("[ext2]    initialization complete\n");
-
-  kfree(buf);
 }
 
 void read_block(uint32_t fs_block, void *buf, uint32_t len)
@@ -100,34 +43,52 @@ void read_block(uint32_t fs_block, void *buf, uint32_t len)
   fs_dev->_ctrl(DISK_CMD_READ, (void *) &dr);
 }
 
-inode_t *find_inode(uint32_t inode)
+uint32_t open_inode_table(uint32_t inum)
 {
-  uint32_t bg  = (inode - 1) / fs_sb->inodes_per_group;
-  uint32_t idx = (inode - 1) % fs_sb->inodes_per_group;
-  uint32_t blk = (idx * fs_sb->inode_size) / fs_block_size;
+  uint32_t group = get_block_group(inum);
 
-  return read_inode(fs_dev, fs_bgd_table[bg].inode_table_block, idx);
+  return fs_bgd_table[group].inode_table_block;
 }
 
-inode_t *read_inode(device_t *dev, uint32_t table_block_addr, uint32_t index)
+inode_t *get_inode(uint32_t inum, inode_t *inode_table)
 {
-  disk_request_t dr;
+  uint32_t index = get_block_index(inum);
+  return &inode_table[index];
+}
+
+// read an entire inode table into a buffer, and return the pointer
+inode_t *read_inode_table(device_t *dev, uint32_t table_block)
+{
   uint32_t table_size = fs_sb->inode_size * fs_sb->inodes_per_group;
   inode_t *inode_table = (inode_t *) kmalloc(table_size, 0);
 
+  // transfer 256 sectors at a time
+  uint32_t nsectors = table_size / 512;
+  uint32_t nsect_to_read = (nsectors > 256) ? 256 : nsectors;
+  uint32_t sect_transferred = 0;
+
+  void *bufp = (void *) inode_table;
+
+  disk_request_t dr;
   dr.cmd = DISK_CMD_READ;
-  dr.lba = (table_block_addr * 2);
-  dr.num_blocks = (table_size / 512);
-  dr.blocks_complete = 0;
-  dr.buffer = (void *) inode_table;
+  dr.lba = (table_block * 2);
+  while (sect_transferred < nsectors) {
+    dr.num_blocks = (nsect_to_read == 256) ? 0 : nsect_to_read;
+    dr.blocks_complete = 0;
+    dr.buffer = bufp;
 
-  dev->_ctrl(DISK_CMD_READ, (void *) &dr);
+    // read this chunk
+    dev->_ctrl(DISK_CMD_READ, (void *) &dr);
+    printf("read chunk\n");
+    
+    // increment, everything
+    dr.lba += nsect_to_read;
+    bufp = (void*) (((uint32_t)bufp) + (nsect_to_read * 512));
+    sect_transferred += nsect_to_read;
+    nsect_to_read = ((nsectors - sect_transferred) > 256) ? 256 : (nsectors - sect_transferred);
+  }
 
-  inode_t *inode = (inode_t *) kmalloc(sizeof(inode_t), 0);
-  memcpy((void *) inode, (void *) &inode_table[index], sizeof(inode_t));
-
-  kfree(inode_table);
-  return inode;
+  return inode_table;
 }
 
 block_group_desc_t *read_bgd_table(device_t *dev)

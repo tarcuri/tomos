@@ -8,7 +8,6 @@ void panic(char *reason){
   asm( "cli" );
   c_printf("\nPANIC: %s\nHalting...", reason);
 
-  stack_dump(current_proc->stack);
   for(;;)
     ;
 }

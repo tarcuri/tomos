@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#define STACK_SIZE	0x1000		// 64K stacks
+#define STACK_SIZE	0x2000		// 64K stacks
 
 typedef uint32_t stack_t[STACK_SIZE];
 

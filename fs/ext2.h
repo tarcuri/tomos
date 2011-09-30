@@ -151,20 +151,39 @@ typedef struct inode
 } __attribute__((__packed__)) inode_t;
 
 // ext2 directory entry
-typedef struct dir_entry
+typedef struct dirent 
 {
   uint32_t inode;
   uint16_t rec_len;
   uint8_t  name_len;
   uint8_t  file_type;
-  char     name[1];	// size of this dir_entry_t = sizeof(direct_t) + strlen(d.name)
-} __attribute__((__packed__)) dir_entry_t;
+  char     name[256];
+} __attribute__((__packed__)) dirent_t;
 
+// data
+device_t *fs_dev;
+superblock_t *fs_sb;
+uint32_t fs_block_size;
+uint32_t fs_block_groups;
+block_group_desc_t *fs_bgd_table;
+
+// functions
 void ext2_init(void);
 void read_block(uint32_t fs_block, void *buf, uint32_t len);
 
-inode_t *find_inode(uint32_t inode);
-inode_t *read_inode(device_t *dev, uint32_t table_block_addr, uint32_t index);
+#define get_block_group(inum)	((inum - 1) / fs_sb->inodes_per_group)
+#define get_block_index(inum)	((inum - 1) % fs_sb->inodes_per_group)
+#define get_block(i)		((i * fs_sb->inode_size) / fs_block_size)
+
+// find the inode table containing inum
+uint32_t open_inode_table(uint32_t inum);
+
+// read the inode out of the inode_table
+inode_t *get_inode(uint32_t inum, inode_t *inode_table);
+
+// read an entire inode table into a buffer, and return the pointer
+inode_t *read_inode_table(device_t *dev, uint32_t table_block);
+
 block_group_desc_t *read_bgd_table(device_t *dev);
 superblock_t *read_superblock(device_t *dev);
 

@@ -1,14 +1,20 @@
 #ifndef FS_H
 #define FS_H
 
-typedef struct dirent
-{
-  inode_t *inode;
-  uint16_t mode;
-  char *name;
-} dirent_t;
+#include "ext2.h"
 
-typedef inode_t dir_t;
+typedef struct dir_stream
+{
+  inode_t *inode_table;		// allocated by read_inode_table
+  void *dblock_buffer;		// temp. hold this inodes data blocks
+  uint32_t dblock_bufsize;
+
+  uint32_t curr_idx;		// current inode index being read
+  inode_t  *curr_inode;
+  dirent_t *curr_ent;
+} dir_t;
+
+void test_fs(void);
 
 dir_t *opendir(uint32_t inode_num);
 dirent_t *readdir(dir_t *dir);

@@ -22,6 +22,7 @@
 #include "dev/disk.h"
 
 #include "fs/ext2.h"
+#include "fs/fs.h"
 
 #include "tomsh.h"
 
@@ -60,7 +61,7 @@ void kernel(void* mbd, uint32_t magic, uint32_t other)
 
   // merge all memory init into the mm module
   mm_init();
-  pg_init();
+  //pg_init();
   heap_init();
 
   // hardware and devices
@@ -94,5 +95,6 @@ void kmain()
   //c_printf("EFLAGS: %x\n", get_eflags());
 
   ext2_init();
+  test_fs();
   command_loop();
 }
