@@ -10,8 +10,6 @@
 
 void mm_init()
 {
-  extern unsigned int kernel_start;	// defined in linker script
-  extern unsigned int kernel_end;
 
   mm_kernel_end  = (unsigned int) &kernel_end;
   mm_kernel_end_aligned = (mm_kernel_end & 0xFFFFF000) + 0x1000;

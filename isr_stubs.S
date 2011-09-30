@@ -56,19 +56,17 @@ isr_entry:
 
 	movl	52(%esp), %eax 			// save vector
 	movl	56(%esp), %ebx  		// save code
-	movl	kernel_esp, %esp
 	push	%ebx				
 	push	%eax
 
-
+        # when connected to QEMU w/ GDB, it skips this line
 	movl	_isr_table(,%eax,4), %ebx 	// call the ISR
-	call	*%ebx
+	call	*%ebx				// how the does the compiler return from this?
 	addl	$8, %esp			// pop the args
 
 
 isr_restore:
         /* restore the context */
-	movl	%esp, kernel_esp
 	movl	current_proc, %ebx
 	movl	(%ebx), %esp		// the context pointer of the current pcb
 

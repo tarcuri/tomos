@@ -103,13 +103,16 @@ void ata_isr(int32_t vector, int32_t code)
         uint16_t *buf = (uint16_t *) ((uint32_t)current_disk_request->buffer
                                + (current_disk_request->blocks_complete * DISK_BLOCK_SIZE));
   
+        uint32_t nblocks = (current_disk_request->num_blocks)
+                               ? (current_disk_request->num_blocks) : 256;
         int32_t i;
         for (i = 0; i <  DISK_BLOCK_SIZE/2; ++i)
           *buf++ = __inw(ata_cmd_reg | ATA_CMD_R_DATA);
 
         current_disk_request->blocks_complete += ((i*2)/DISK_BLOCK_SIZE);
                                             
-        if (current_disk_request->blocks_complete == current_disk_request->num_blocks) {
+        if (current_disk_request->blocks_complete == nblocks) {
+          c_printf("ATA REQUEST COMPLETE\n");
           current_disk_request->status = DISK_STATUS_IO_SUCCESS;
           current_disk_request = 0;
         }
@@ -178,7 +181,8 @@ void ata_read_multiple(disk_request_t *dr)
 
   //c_printf("ALT_STATUS: 0x%x\n", ata_alt_status(0));
 
-  while (dr->blocks_complete < dr->num_blocks) {
+  uint32_t nblocks = (dr->num_blocks) ? dr->num_blocks : 256;
+  while (dr->blocks_complete < nblocks) {
     //c_printf("ALT_STATUS: 0x%x\n", ata_alt_status(0));
     
     if (ata_alt_status(0) & ATA_STATUS_ERROR) {

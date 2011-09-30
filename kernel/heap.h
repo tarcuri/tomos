@@ -6,8 +6,9 @@
 
 #define HEAP_MAGIC_TAG_31	0x1A4BC8D6
 
-// place the kernel heap directly after the page table
-#define HEAP_BASE_ADDRESS	(((unsigned int) pg_k_ptable_base) + 0x1000)
+#include <stdint.h>
+
+#define HEAP_BASE_ADDRESS	(&kernel_end + 0x4000)
 #define HEAP_LIMIT_ADDRESS	0x00400000	// expandable to 4MB
 #define HEAP_INDEX_SIZE		0x1000		// 4096 holes
 

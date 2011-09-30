@@ -9,6 +9,8 @@
 
 // define 'allocable' memory
 extern unsigned int _memory_ceiling;
+extern unsigned int kernel_start;	// defined in linker script
+extern unsigned int kernel_end;
 
 unsigned int mm_high_mem_base;		// memory past kernel
 unsigned int mm_high_mem_limit;		// memory limit (size pase base)

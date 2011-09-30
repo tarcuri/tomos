@@ -6,7 +6,7 @@ AS = ${TOOLS}/i586-pc-tomos-as
 LD = ${TOOLS}/i586-pc-tomos-ld
 
 #CFLAGS = -nostdlib -nostartfiles -nodefaultlibs -fno-builtin-memcpy -fno-builtin-memset -fno-builtin-memmove -fno-builtin-strcpy
-CFLAGS = -nostdlib -nostartfiles -nodefaultlibs -fno-builtin -fno-hosted
+CFLAGS = -g -nostdlib -nostartfiles -nodefaultlibs -fno-builtin -fno-hosted
 AFLAGS =
 
 LIB_SRC = support.c syscalls.c kernel/interrupt.c kernel/mm.c kernel/pg.c kernel/heap.c \

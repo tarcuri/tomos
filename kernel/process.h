@@ -47,7 +47,7 @@ typedef struct process_control_block
   uint16_t	ppid;
 
   unsigned char		status;		// can use a bit here to identify privledge level
-} pcb_t;
+} __attribute__((__packed__)) pcb_t;
 
 
 // global data
