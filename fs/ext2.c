@@ -112,22 +112,21 @@ inode_t *find_inode(uint32_t inode)
 inode_t *read_inode(device_t *dev, uint32_t table_block_addr, uint32_t index)
 {
   disk_request_t dr;
-  inode_t *inode_table = (inode_t *) kmalloc(2048, 0);
+  uint32_t table_size = fs_sb->inode_size * fs_sb->inodes_per_group;
+  inode_t *inode_table = (inode_t *) kmalloc(table_size, 0);
 
   dr.cmd = DISK_CMD_READ;
   dr.lba = (table_block_addr * 2);
-  dr.num_blocks = 4;
+  dr.num_blocks = (table_size / 512);
   dr.blocks_complete = 0;
   dr.buffer = (void *) inode_table;
 
   dev->_ctrl(DISK_CMD_READ, (void *) &dr);
 
   inode_t *inode = (inode_t *) kmalloc(sizeof(inode_t), 0);
-
   memcpy((void *) inode, (void *) &inode_table[index], sizeof(inode_t));
 
   kfree(inode_table);
-
   return inode;
 }
 

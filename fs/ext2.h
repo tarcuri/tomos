@@ -122,7 +122,7 @@ typedef struct inode
   uint16_t gid;
   uint16_t links_count;		// hard links to this inode
 
-  uint32_t blocks;		// sectors in use by this inode
+  uint32_t blocks;		// 512 byte sectors in use by this inode
   uint32_t flags;
   uint32_t os_specific_1;
   uint32_t dblock_ptr_0;
