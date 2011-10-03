@@ -55,7 +55,7 @@ void kernel(void* mbd, uint32_t magic, uint32_t other)
 
   //clock_init();
 
-  _install_isr(0x27, du_handler);
+  //_install_isr(0x27, du_handler);
  
   mm_grub_multiboot(mbd, 0);
 

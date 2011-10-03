@@ -2,6 +2,11 @@
 # adapted from SP2 project at RIT
 
 # usr a macro like SP2 to preserve sanity
+	.data
+
+	.global intrq_count
+intrq_count:
+	.word	0,0
 
 	.text
 
@@ -28,12 +33,15 @@ _isr_##vector:                                  ; \
 
 
 isr_entry:
+	cli
 	pusha
         pushl   %ds
         pushl   %es
         pushl   %fs
         pushl   %gs
         pushl   %ss
+
+	add	$1, intrq_count
 
 
 	/*
@@ -66,6 +74,7 @@ isr_entry:
 
 
 isr_restore:
+	cli
         /* restore the context */
 	movl	current_proc, %ebx
 	movl	(%ebx), %esp		// the context pointer of the current pcb
@@ -83,6 +92,7 @@ isr_restore:
         popl	%ds
 	popa
 	addl	$8, %esp
+	sti
 	iret
 
 #fmt:	.string "ISR esp: 0x%x\n"

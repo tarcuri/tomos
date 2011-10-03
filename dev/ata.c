@@ -84,7 +84,7 @@ void ata_init()
 
 void ata_isr(int32_t vector, int32_t code)
 {
-  asm("cli");
+  asm volatile ("cli" : : :"memory");
 
   // when in the Check_status state, the host shall read the STATUS register
   uint32_t status = __inb(ata_cmd_reg | ATA_CMD_R_STATUS);
@@ -137,7 +137,7 @@ void ata_isr(int32_t vector, int32_t code)
   __outb(PIC_MASTER_CMD_PORT, PIC_EOI);
   __outb(PIC_SLAVE_CMD_PORT, PIC_EOI);
 
-  asm("sti");
+  asm volatile ("sti" : : :"memory");
 }
 
 uint8_t ata_alt_status(uint32_t poll)

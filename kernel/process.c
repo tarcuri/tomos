@@ -49,6 +49,8 @@ void proc_init()
   kernel_pcb->context->ebp = (uint32_t) ret;
   kernel_esp = (uint32_t *) kernel_pcb->context;
 
+  c_printf("ESP initialized at 0x%x\n", kernel_esp);
+
   //uint32_t eflags;
   //asm volatile ("pushfl; popl %0" : "=r"(eflags));
   //c_printf("current eflags: 0x%x\n", eflags);
