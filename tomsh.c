@@ -17,6 +17,9 @@
 void ls_dir(int ino);
 void hdd_read(unsigned int lba, void *buf, unsigned int len);
 
+#define KB_PG_UP	0x149
+#define KB_PG_DN	0x151
+
 // we need many string functions,
 // strstr, strtok, etc
 void command_loop()
@@ -30,12 +33,13 @@ void command_loop()
       c_printf("%s ", prompt);
     }
 
-    uint8_t c;
+    uint16_t c;
     int cmd_i = 0;
 
     while (cmd_i < 512) {
       //read(1, &c, 1);
       c = c_getcode();
+      c_printf("%x ", c);
 
       if (scroll && ((c != 0x39) || (c != 0x33))) {
         scroll = 0;
@@ -58,13 +62,15 @@ void command_loop()
 
         }
         break;
-      case 0x33:	// page down
+      //case 0x33:	// page down
+      case KB_PG_DN:
         if (lines_up) {
           lines_up -= c_win_scroll(1);
           scroll = 1;
         }
         break;
-      case 0x39:	// page up
+      //case 0x39:	// page up
+      case KB_PG_UP:
         lines_up += c_win_scroll(-1);
         scroll = 1;
         break;

@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-// TODO: need file type checks!
+// TODO: need file type checks! actually, need a whole lot more
 dir_t *opendir(uint32_t inode_num)
 {
   uint32_t table_block = open_inode_table(inode_num);
@@ -18,20 +18,15 @@ dir_t *opendir(uint32_t inode_num)
   dir->curr_idx    = get_block_index(inode_num);
   dir->curr_inode  = &(dir->inode_table[dir->curr_idx]);
 
-  printf("opening %d (%d)\n", inode_num, dir->curr_idx);
-
   // read in the directory data blocks
   dir->dblock_bufsize = dir->curr_inode->blocks * 512;
   dir->dblock_buffer  = kmalloc(dir->dblock_bufsize, 0);
   void *bufp = dir->dblock_buffer;
 
-  printf("directory has %d blocks [%d bytes]\n", dir->curr_inode->blocks, dir->dblock_bufsize);
-
   uint32_t bread = 0;
   uint32_t nblocks = dir->dblock_bufsize / fs_block_size;
   uint32_t *dblock = &(dir->curr_inode->dblock_ptr_0);
   while (bread < nblocks) {
-    printf("reading dblock %d [0x%x]\n", *dblock, dblock);
     read_block(*dblock++, bufp, 1);
     bread++;
     bufp = (void *) (((uint32_t)bufp) + 1024);

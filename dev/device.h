@@ -10,6 +10,9 @@ typedef struct device
 {
   uint8_t type;
 
+  uint32_t state;	// device specific state
+  uint32_t reg;		// device specific command/data register
+
   int32_t (*_read)(int32_t);
   int32_t (*_write)(int32_t);
   int32_t (*_ctrl)(uint32_t, void *);

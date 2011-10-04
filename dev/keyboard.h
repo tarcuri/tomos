@@ -1,6 +1,8 @@
 #ifndef KEYBOARD_H
 #define KEYBOARD_H
 
+#include <stdint.h>
+
 #define KEYBOARD_ESCAPE		0x01
 #define KEYBOARD_BACKSPACE	0x0E
 #define KEYBOARD_L_SHIFT	0x2A
@@ -19,14 +21,14 @@
 // buffers will always be circular, 4KB pages
 #define KEYBOARD_BUFSIZE	(0x1000)
 
-unsigned char *kb_active_buffer;
+uint8_t *kb_active_buffer;
 
 int kb_write_idx;
 int kb_read_idx;
 
-int kb_read(unsigned char *buf, int n);
+int kb_read(uint8_t *buf, int n);
 
-static unsigned char kb_scancode_table[ 2 ][ 128 ] = {
+static uint8_t kb_scancode_table[ 2 ][ 128 ] = {
         {
 /* 00-07 */     '\377', '\033', '1',    '2',    '3',    '4',    '5',    '6',
 /* 08-0f */     '7',    '8',    '9',    '0',    '-',    '=',    '\b',   '\t',
@@ -66,10 +68,14 @@ static unsigned char kb_scancode_table[ 2 ][ 128 ] = {
         }
 };
 
-unsigned char kb_wait_code();
-unsigned char kb_get_code();
+uint8_t kb_wait_code();
+uint8_t kb_get_code();
 
-static void kb_insert_code(unsigned char code);
+static void kb_insert_code(uint8_t code);
 static void kb_handler(int vector, int code);
+
+#if 1
+
+#endif
 
 #endif
