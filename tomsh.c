@@ -8,10 +8,13 @@
 #include "dev/device.h"
 #include "dev/ata.h"
 
+#include "fs/fs.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+void ls_dir(int ino);
 void hdd_read(unsigned int lba, void *buf, unsigned int len);
 
 // we need many string functions,
@@ -81,10 +84,31 @@ void command_loop()
       dump_heap_index(k_heap);
     else if (strncmp(command_line, "getpid", 6) == 0)
       c_printf("PID: %d\n", getpid());
+    else if (strncmp(command_line, "ls ", 3) == 0)
+      ls_dir(atoi(&command_line[3]));
     else if (!scroll && strlen(command_line))
       c_printf("> %s\n", command_line);
   }
 }
+
+void ls_dir(int ino)
+{
+  dir_t *dir = opendir(ino);	// open the root directory
+
+  // list its contents
+  char name[256];
+  dirent_t *ent = readdir(dir);
+  while (ent != NULL) {
+    memcpy((void *) name, (void *) ent->name, ent->name_len);
+    name[ent->name_len] = '\0';
+    printf("  %04d: %s\n", ent->inode, name);
+    ent = readdir(dir);
+  }
+
+  closedir(dir);
+}
+
+
 void hdd_read(unsigned int lba, void *buf, unsigned int len)
 {
   device_t *hdd = ata_open();

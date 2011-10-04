@@ -84,7 +84,7 @@ void ata_init()
 
 void ata_isr(int32_t vector, int32_t code)
 {
-  asm volatile ("cli" : : :"memory");
+  //asm volatile ("cli" : : :"memory");
 
   // when in the Check_status state, the host shall read the STATUS register
   uint32_t status = __inb(ata_cmd_reg | ATA_CMD_R_STATUS);
@@ -112,7 +112,7 @@ void ata_isr(int32_t vector, int32_t code)
         current_disk_request->blocks_complete += ((i*2)/DISK_BLOCK_SIZE);
                                             
         if (current_disk_request->blocks_complete == nblocks) {
-          c_printf("ATA REQUEST COMPLETE\n");
+          //c_printf("ATA REQUEST COMPLETE\n");
           current_disk_request->status = DISK_STATUS_IO_SUCCESS;
           current_disk_request = 0;
         }
@@ -137,7 +137,7 @@ void ata_isr(int32_t vector, int32_t code)
   __outb(PIC_MASTER_CMD_PORT, PIC_EOI);
   __outb(PIC_SLAVE_CMD_PORT, PIC_EOI);
 
-  asm volatile ("sti" : : :"memory");
+  //asm volatile ("sti" : : :"memory");
 }
 
 uint8_t ata_alt_status(uint32_t poll)
@@ -173,7 +173,7 @@ void ata_read_multiple(disk_request_t *dr)
   __outb(ata_cmd_reg | ATA_CMD_R_LBA_MID, (dr->lba >> 8) & 0xFF);
   __outb(ata_cmd_reg | ATA_CMD_R_LBA_HIGH, (dr->lba >> 16) & 0xFF);
 
-  c_printf("ATA READ_MULTIPLE(%d, %d)   [0x%x]\n", dr->lba, dr->num_blocks, ata_alt_status(0));
+  //c_printf("ATA READ_MULTIPLE(%d, %d)   [0x%x]\n", dr->lba, dr->num_blocks, ata_alt_status(0));
   __outb(ata_cmd_reg | ATA_CMD_R_COMMAND, ATA_READ_MULTIPLE);
 
   while (ata_alt_status(0) & ATA_STATUS_BUSY)

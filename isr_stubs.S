@@ -19,6 +19,7 @@ intrq_count:
 #define ISR(vector)				  \
 	.globl _isr_##vector			; \
 _isr_##vector:					; \
+	cli					; \
 	push	$0				; \
 	push	$vector				; \
 	jmp	isr_entry
@@ -27,13 +28,13 @@ _isr_##vector:					; \
 #define ERR_ISR(vector)     \
         .globl _isr_##vector                    ; \
 _isr_##vector:                                  ; \
+	cli					; \
         push    $vector                         ; \
         pusha                                   ; \
 	jmp	isr_entry
 
 
 isr_entry:
-	cli
 	pusha
         pushl   %ds
         pushl   %es
@@ -74,7 +75,6 @@ isr_entry:
 
 
 isr_restore:
-	cli
         /* restore the context */
 	movl	current_proc, %ebx
 	movl	(%ebx), %esp		// the context pointer of the current pcb

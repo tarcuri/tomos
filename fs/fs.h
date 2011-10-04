@@ -14,9 +14,8 @@ typedef struct dir_stream
   dirent_t *curr_ent;
 } dir_t;
 
-void test_fs(void);
-
-dir_t *opendir(uint32_t inode_num);
+dir_t  *opendir(uint32_t inode_num);
+int	closedir(dir_t *dir);
 dirent_t *readdir(dir_t *dir);
 
 #endif

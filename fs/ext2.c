@@ -5,9 +5,6 @@
 #include <stdio.h>
 #include <time.h>
 
-
-
-
 void ext2_init()
 {
   device_t *hdd = ata_open();
@@ -79,7 +76,6 @@ inode_t *read_inode_table(device_t *dev, uint32_t table_block)
 
     // read this chunk
     dev->_ctrl(DISK_CMD_READ, (void *) &dr);
-    printf("read chunk\n");
     
     // increment, everything
     dr.lba += nsect_to_read;

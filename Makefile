@@ -32,7 +32,7 @@ libs: ${LIB_SRC}
 	${CC} ${CFLAGS} -I${BASEDIR} -o stack.o -c kernel/stack.c
 	${CC} ${CFLAGS} -I${BASEDIR} -o process.o -c kernel/process.c
 	${CC} ${CFLAGS}	-I${BASEDIR} -o syscalls.o -c syscalls.c
-	${CC} ${CFLAGS} -o tomsh.o -c tomsh.c
+	${CC} ${CFLAGS} -I. -o tomsh.o -c tomsh.c
 
 # devices
 drivers: ${DRV_SRC} 
