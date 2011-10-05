@@ -114,7 +114,7 @@ typedef struct inode
   uint16_t uid;
 
   uint32_t size_low;
-  uint32_t a_time;
+  uint3q2_t a_time;
   uint32_t c_time;
   uint32_t m_time;
   uint32_t d_time;
