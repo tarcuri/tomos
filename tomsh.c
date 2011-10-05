@@ -1,4 +1,5 @@
 #include "dev/console.h"
+#include "dev/keyboard.h"
 #include "tomsh.h"
 #include "kernel/mm.h"
 #include "kernel/heap.h"
@@ -16,9 +17,6 @@
 
 void ls_dir(int ino);
 void hdd_read(unsigned int lba, void *buf, unsigned int len);
-
-#define KB_PG_UP	0x149
-#define KB_PG_DN	0x151
 
 // we need many string functions,
 // strstr, strtok, etc
@@ -39,9 +37,10 @@ void command_loop()
     while (cmd_i < 512) {
       //read(1, &c, 1);
       c = c_getcode();
-      c_printf("%x ", c);
 
-      if (scroll && ((c != 0x39) || (c != 0x33))) {
+      if (scroll && (c != KCODE_PAGE_DOWN) && (c != KCODE_PAGE_UP)) {
+        c_win_scroll(lines_up);
+        lines_up = 0;
         scroll = 0;
       }
 
@@ -63,14 +62,14 @@ void command_loop()
         }
         break;
       //case 0x33:	// page down
-      case KB_PG_DN:
+      case KCODE_PAGE_DOWN:
         if (lines_up) {
           lines_up -= c_win_scroll(1);
           scroll = 1;
         }
         break;
       //case 0x39:	// page up
-      case KB_PG_UP:
+      case KCODE_PAGE_UP:
         lines_up += c_win_scroll(-1);
         scroll = 1;
         break;

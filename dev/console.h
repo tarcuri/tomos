@@ -96,7 +96,7 @@ void		c_write(const char *str, int len);
 void		c_putchar(const char c);
 void		c_putchar_at(unsigned int x, unsigned int y, unsigned int c);
 
-unsigned char	c_getcode(void);
+unsigned short	c_getcode(void);
 
 // input
 #define CIO_IN_BUFSIZE	1024

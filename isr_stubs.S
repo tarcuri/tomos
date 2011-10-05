@@ -19,7 +19,6 @@ intrq_count:
 #define ISR(vector)				  \
 	.globl _isr_##vector			; \
 _isr_##vector:					; \
-	cli					; \
 	push	$0				; \
 	push	$vector				; \
 	jmp	isr_entry
@@ -28,7 +27,6 @@ _isr_##vector:					; \
 #define ERR_ISR(vector)     \
         .globl _isr_##vector                    ; \
 _isr_##vector:                                  ; \
-	cli					; \
         push    $vector                         ; \
         pusha                                   ; \
 	jmp	isr_entry
@@ -57,12 +55,6 @@ isr_entry:
 	movl	current_proc, %ebx		// save the context pointer
 	movl	%esp, (%ebx)
 
-	# DEBUG: print esp
-	#pushl	%esp
-	#pushl	$fmt
-	#call	c_printf
-	#addl	$8, %esp
-
 	movl	52(%esp), %eax 			// save vector
 	movl	56(%esp), %ebx  		// save code
 	push	%ebx				
@@ -70,7 +62,7 @@ isr_entry:
 
         # when connected to QEMU w/ GDB, it skips this line
 	movl	_isr_table(,%eax,4), %ebx 	// call the ISR
-	call	*%ebx				// how the does the compiler return from this?
+	call	*%ebx
 	addl	$8, %esp			// pop the args
 
 
@@ -79,12 +71,6 @@ isr_restore:
 	movl	current_proc, %ebx
 	movl	(%ebx), %esp		// the context pointer of the current pcb
 
-        # temp debugging code
-	#pushl	$fmt
-	#call	c_printf
-	#addl	$4, %esp
-	#jmp	.
-
         popl	%ss
         popl	%gs
         popl	%fs
@@ -92,7 +78,6 @@ isr_restore:
         popl	%ds
 	popa
 	addl	$8, %esp
-	sti
 	iret
 
 #fmt:	.string "ISR esp: 0x%x\n"

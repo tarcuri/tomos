@@ -3,7 +3,8 @@
 #include "support.h"
 #include "x86.h"
 
-void c_init( void ){
+void c_init()
+{
   // Screen dimensions
   min_x  = SCREEN_MIN_X;
   min_y  = SCREEN_MIN_Y;
@@ -414,7 +415,7 @@ void c_draw()
 }
 
 // this is all we need by design, let the shell handle the characters
-unsigned char c_getcode()
+uint16_t c_getcode()
 {
   return kb_wait_code();
 }

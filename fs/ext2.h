@@ -114,7 +114,7 @@ typedef struct inode
   uint16_t uid;
 
   uint32_t size_low;
-  uint3q2_t a_time;
+  uint32_t a_time;
   uint32_t c_time;
   uint32_t m_time;
   uint32_t d_time;
@@ -176,15 +176,16 @@ void read_block(uint32_t fs_block, void *buf, uint32_t len);
 #define get_block(i)		((i * fs_sb->inode_size) / fs_block_size)
 
 // find the inode table containing inum
-uint32_t open_inode_table(uint32_t inum);
+uint32_t 		open_inode_table(uint32_t inum);
 
 // read the inode out of the inode_table
-inode_t *get_inode(uint32_t inum, inode_t *inode_table);
+inode_t *		get_inode(uint32_t inum, inode_t *inode_table);
 
 // read an entire inode table into a buffer, and return the pointer
-inode_t *read_inode_table(device_t *dev, uint32_t table_block);
+inode_t *		read_inode_table(device_t *dev, uint32_t table_block);
 
-block_group_desc_t *read_bgd_table(device_t *dev);
-superblock_t *read_superblock(device_t *dev);
+block_group_desc_t *	read_bgd_table(device_t *dev);
+
+superblock_t *		read_superblock(device_t *dev);
 
 #endif
