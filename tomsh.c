@@ -58,17 +58,14 @@ void command_loop()
         if (cmd_i) {
           c_putchar(c);
           cmd_i--;
-
         }
         break;
-      //case 0x33:	// page down
       case KCODE_PAGE_DOWN:
         if (lines_up) {
           lines_up -= c_win_scroll(1);
           scroll = 1;
         }
         break;
-      //case 0x39:	// page up
       case KCODE_PAGE_UP:
         lines_up += c_win_scroll(-1);
         scroll = 1;

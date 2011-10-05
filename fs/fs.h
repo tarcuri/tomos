@@ -15,25 +15,33 @@ typedef struct dir_stream
   dirent_t *	curr_ent;
 } dir_t;
 
-/*
-struct stat
+struct file_ops
 {
-  device_t *	dev;
-  uint32_t	ino;
-  uint16_t	mode;
-  uint16_t	uid;
-  uint16_t	gid;
-  uint16_t	bsize;
-  uint32_t	size;
-  uint32_t	atime;
-  uint32_t	mtime;
-  uint32_t	ctime;
+  int		(*open)(struct vfs_node *node);
+  int		(*close)(struct vfs_node *node);
+  int		(*read)(struct vfs_node *node, uint32_t offset, uint32_t size, uint8_t *buf);
+  int		(*write)(struct vfs_node *node, uint32_t offset, uint32_t size, uint8_t *buf);
+  dir_t *	(*opendir)(struct vfs_node *node);
+  int		(*closedir)(dir_t *dir);
+  dirent_t *	(*readdir)(dir_t *dir);
 };
-*/
 
+struct vfs_node
+{
+  char			name[256];
+  uint32_t		ino;		// inode number
+  uint32_t		mode;		// file permissions mode
+  uint32_t		uid;
+  uint32_t		gid;
+  uint32_t		flags;
+  uint32_t		len;		// length of file in bytes
+  struct file_ops *	op;		// file operation function pointers
+  struct vfs_node *	ptr;		// used for mountpoints and symlinks
+} vfs_node_t;
+
+// leave these for now, but should be repalced by filesystem specific function pointers
 dir_t *		opendir(uint32_t inode_num);
 int		closedir(dir_t *dir);
-
 dirent_t *	readdir(dir_t *dir);
 
 #endif
