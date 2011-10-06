@@ -18,11 +18,13 @@ void ext2_init()
   uint32_t block_groups_i = (fs_sb->total_inodes / fs_sb->inodes_per_group) + 1;
 
   fs_block_groups = (block_groups_b > block_groups_i) ? block_groups_b : block_groups_i;
-  c_printf("[ext2]    %d block groups\n", fs_block_groups);
+  //c_printf("[ext2]    %d block groups\n", fs_block_groups);
 
   // block group descriptor table
   fs_bgd_table = read_bgd_table(hdd);
   fs_dev = hdd;
+
+  fs_inode_table = read_inode_table(fs_dev, fs_bgd_table[0].inode_table_block);
 
   printf("[ext2]    initialization complete\n");
 }
@@ -40,24 +42,81 @@ void read_block(uint32_t fs_block, void *buf, uint32_t len)
   fs_dev->_ctrl(DISK_CMD_READ, (void *) &dr);
 }
 
-uint32_t open_inode_table(uint32_t inum)
+ext2_inode_t *ext2_read_inode(device_t *dev, uint32_t ino)
 {
-  uint32_t group = get_block_group(inum);
+  ext2_inode_t *inode = (ext2_inode_t *) kmalloc(sizeof(ext2_inode_t), 0);
 
-  return fs_bgd_table[group].inode_table_block;
+  // which block group
+  uint32_t group = get_block_group(ino);
+
+  // index the inode table for this group
+  uint32_t index = get_block_index(ino);
+
+  // now read the inode table for the block group
+  ext2_inode_t *itable = read_inode_table(dev, fs_bgd_table[group].inode_table_block);
+
+  memcpy((void *) inode, (void *) itable[index], sizeof(ext2_inode_t));
+
+  kfree(itable);
+
+  return inode;
 }
 
-inode_t *get_inode(uint32_t inum, inode_t *inode_table)
+ext2_dir_t *ext2_opendir(device_t *dev, uint32_t ino)
 {
-  uint32_t index = get_block_index(inum);
-  return &inode_table[index];
+  ext2_dir_t *dir = (ext2_dir_t *) kmalloc(sizeof(ext2_dir_t), 0);
+
+  dir->inode   = read_inode(dev, ino);
+  dir->bufsize = dir->inode->blocks * 512;
+  dir->buffer  = kmalloc(dir->bufsize, 0);
+  dir->current = (ext2_dirent_t *) dir->buffer;
+
+  // read the data blocks
+  void *bufp = dir->buffer;
+  uint32_t nblocks = dir->bufsize / fs_block_size;
+  uint32_t *dblock = dir->inode->dblock_ptr_0;
+
+  int i;
+  for (i = 0; i < nblocks; ++i) {
+    read_block(*dblock++, bufp, 1);
+    bufp = (void *) (((uint32_t)bufp) + 1024);
+  }
+
+  return dir;
 }
 
-// read an entire inode table into a buffer, and return the pointer
-inode_t *read_inode_table(device_t *dev, uint32_t table_block)
+ext2_dirent_t *ext2_readdir(ext2_dir_t *dir, int i)
+{
+  ext2_dirent_t *ent = NULL;
+
+  if (dir->current < (ext2_dirent_t *) (((uint32_t)dir->buffer) + dir->bufsize))
+    ent = dir->current;
+
+  dir->current = (ext2_dirent_t *) (((uint32_t)dir->current) + end->rec_len);
+
+  return ent;
+}
+
+void ext2_closedir(ext2_dir_t *dir)
+{
+  kfree(dir->inode);
+  kfree(dir->buffer);
+  kfree(dir);
+  dir = NULL;
+}
+
+
+
+
+
+//
+// read basic ext2 data structures into memory
+//
+
+ext2_inode_t *read_inode_table(device_t *dev, uint32_t table_block)
 {
   uint32_t table_size = fs_sb->inode_size * fs_sb->inodes_per_group;
-  inode_t *inode_table = (inode_t *) kmalloc(table_size, 0);
+  ext2_inode_t *inode_table = (ext2_inode_t *) kmalloc(table_size, 0);
 
   // transfer 256 sectors at a time
   uint32_t nsectors = table_size / 512;
@@ -87,18 +146,18 @@ inode_t *read_inode_table(device_t *dev, uint32_t table_block)
   return inode_table;
 }
 
-block_group_desc_t *read_bgd_table(device_t *dev)
+ext2_bg_desc_t *read_bgd_table(device_t *dev)
 {
   disk_request_t dr;
 
-  uint32_t bs_bytes = sizeof(block_group_desc_t) * fs_block_groups;
+  uint32_t bs_bytes = sizeof(ext2_bg_desc_t) * fs_block_groups;
 
   dr.cmd = DISK_CMD_READ;
   dr.lba = 2 + (fs_block_size/512);
   dr.num_blocks = (bs_bytes / 512) + ((bs_bytes % 512) ? 1 : 0);
   dr.blocks_complete = 0;
 
-  block_group_desc_t *bgd_table = (block_group_desc_t *) kmalloc(dr.num_blocks * 512, 0);
+  ext2_bg_desc_t *bgd_table = (ext2_bg_desc_t *) kmalloc(dr.num_blocks * 512, 0);
 
   dr.buffer = (void *) bgd_table;
 
@@ -125,6 +184,7 @@ superblock_t *read_superblock(device_t *dev)
   dev->_ctrl(DISK_CMD_READ, (void *) &dr);
 
   // print info
+#if 0 
   c_printf("\nSuperblock Info:\n");
   c_printf("  Total inodes        : %d\n", sb->total_inodes);
   c_printf("  Total blocks        : %d\n", sb->total_blocks);
@@ -137,7 +197,6 @@ superblock_t *read_superblock(device_t *dev)
   c_printf("  Blocks / group      : %d\n", sb->blocks_per_group);
   c_printf("  Fragments / group   : %d\n", sb->frags_per_group);
   c_printf("  Inodes / group      : %d\n", sb->inodes_per_group);
-#if 0 
   c_printf("  Last mount time     : %d\n", sb->last_mount_time);
   c_printf("  Last write time     : %d\n", sb->last_write_time);
   c_printf("  Mounts since check  : %d\n", sb->mounts_since_ccheck);

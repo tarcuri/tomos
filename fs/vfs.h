@@ -4,16 +4,36 @@
 #include "ext2.h"
 #include "dev/device.h"
 
-typedef struct dir_stream
-{
-  inode_t *	inode_table;		// allocated by read_inode_table
-  void *	dblock_buffer;		// temp. hold this inodes data blocks
-  uint32_t	dblock_bufsize;
+typedef void * (*read_inode_func)(device_t *, uint32_t);
 
-  uint32_t	curr_idx;		// current inode index being read
-  inode_t *	curr_inode;
-  dirent_t *	curr_ent;
-} dir_t;
+// common file model: superblock, inode, file, dentry
+typedef struct inode
+{
+  device_t *		dev;
+  uint32_t		ino;
+  uint16_t		mode;
+  uint16_t		uid;
+  uint16_t		gid;
+  uint32_t		a_time;
+  uint32_t		c_time;
+  uint32_t		m_time;
+  uint32_t		d_time;
+  uint32_t		block_size;
+  // inode operations
+} inode_t;
+
+struct superblock
+{
+  device_t *	dev;
+  inode_t *	mounted_inode;		// first inode in this file system
+  inode_t *	covered_inode;
+  uint32_t	block_size;
+  // superblock operations (r/w inodes, superblocks
+  read_inode_func	read_inode;
+};
+
+// file systems will implement their own directory stream, just pass along the handle
+typedef void dir_t;
 
 typedef struct dirent 
 {
@@ -49,9 +69,11 @@ struct vfs_node
 } vfs_node_t;
 
 // data
-struct dhash *vfs_dcache;
+struct superblock *vfs_sb;
 
 // functions
 void vfs_init(void);
+
+int vfs_open(char *name, uint32_t flags);
 
 #endif

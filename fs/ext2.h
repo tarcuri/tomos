@@ -60,7 +60,7 @@
 #define EXT2_FT_SYMLINK		7	// Symbolic Link
 
 // ext2 superblock
-typedef struct superblock
+typedef struct ext2_superblock
 {
   uint32_t total_inodes;
   uint32_t total_blocks;
@@ -94,10 +94,10 @@ typedef struct superblock
   uint32_t first_inode;
   uint16_t inode_size;
   uint8_t  reserved[1024-90];
-} __attribute__((__packed__)) superblock_t;
+} __attribute__((__packed__)) ext2_superblock_t;
 
 // ext2 block group descriptor
-typedef struct block_group_descriptor
+typedef struct ext2_block_group_descriptor
 {
   uint32_t block_usage_block;
   uint32_t inode_usage_block;
@@ -107,10 +107,10 @@ typedef struct block_group_descriptor
   uint16_t num_dirs;
   uint16_t pad;
   uint8_t  reserved[12];
-} block_group_desc_t;
+} ext2_ext2_bg_desc_t;
 
 // ext2 inode
-typedef struct inode
+typedef struct ext2_inode
 {
   uint16_t mode;
   uint16_t uid;
@@ -150,16 +150,32 @@ typedef struct inode
   uint32_t os_specific_2;
   uint32_t os_specific_3;
   uint32_t os_specific_4;
-} __attribute__((__packed__)) inode_t;
+} __attribute__((__packed__)) ext2_inode_t;
 
-// ext2 directory entry
+typedef struct ext2_dirent
+{
+  uint32_t inode;
+  uint16_t rec_len;
+  uint8_t  name_len;
+  uint8_t  file_type;
+  char     name[1];	// size = sizeof(ext2_dirent_t) + strlen(d.name)
+} ext2_dirent_t;
+
+typedef struct ext2_dstream
+{
+  ext2_inode_t *	inode;
+  ext2_dirent_t *	current;	// current entry pointer
+  void *		buffer;		// directory data block buffer
+  uint32_t		bufsize;
+} ext2_dir_t;
 
 // data
-device_t *fs_dev;
-superblock_t *fs_sb;
-uint32_t fs_block_size;
-uint32_t fs_block_groups;
-block_group_desc_t *fs_bgd_table;
+device_t *		fs_dev;
+ext2_superblock_t *	fs_sb;
+ext2_bg_desc_t *	fs_bgd_table;
+ext2_inode_t *		fs_inode_table;
+uint32_t		fs_block_size;
+uint32_t		fs_block_groups;
 
 // functions
 void ext2_init(void);
@@ -167,19 +183,13 @@ void read_block(uint32_t fs_block, void *buf, uint32_t len);
 
 #define get_block_group(inum)	((inum - 1) / fs_sb->inodes_per_group)
 #define get_block_index(inum)	((inum - 1) % fs_sb->inodes_per_group)
-#define get_block(i)		((i * fs_sb->inode_size) / fs_block_size)
-
-// find the inode table containing inum
-uint32_t 		open_inode_table(uint32_t inum);
-
-// read the inode out of the inode_table
-inode_t *		get_inode(uint32_t inum, inode_t *inode_table);
+//#define get_block(i)		((i * fs_sb->inode_size) / fs_block_size)
 
 // read an entire inode table into a buffer, and return the pointer
-inode_t *		read_inode_table(device_t *dev, uint32_t table_block);
+ext2_inode_t *		read_inode_table(device_t *dev, uint32_t table_block);
 
-block_group_desc_t *	read_bgd_table(device_t *dev);
+ext2_bg_desc_t *	read_bgd_table(device_t *dev);
 
-superblock_t *		read_superblock(device_t *dev);
+ext2_superblock_t *	read_superblock(device_t *dev);
 
 #endif

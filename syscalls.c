@@ -50,7 +50,14 @@ int32_t sys_close(context_t *c, uint32_t *args)
 
 int32_t sys_open(context_t *c, uint32_t *args)
 {
-  c_printf("unimplemented call open\n");
+  // this is going to implement VFS open()
+  char *filename = (char *) args[0];
+  int flags = (int) args[1];
+
+  c_printf("> open(%s, %d)\n", filename, flags);
+
+  // search
+
   c->eax = -1;
 }
 

@@ -6,66 +6,44 @@
 #include <string.h>
 
 
+struct superblock *sb_list;
+struct superblock *sb_list_head;
+uint32_t sb_list_size;
+
 void vfs_init()
 {
-  // dentry cache
-  vfs_dcache = (struct dhash *) kmalloc(sizeof(struct dhash), 0);
+  // for now we only have ext2, so read the superblock and bgd table
+  ext2_init();
 
-  // now when should this cache get populated, load a system directory under / ?
+  // dentry cache
+  dcache.table = (uint32_t *) kmalloc(sizeof(uint32_t) * DCACHE_SIZE, 0);
+
+  // 1 superblock for now, use the disk ext2 sb
+  vfs_sb = (struct superblock *) kmalloc(sizeof(struct superblock), 0);
+
+  vfs_sb->dev = fs_dev;
+  vfs_sb->read_inode = (read_inode_func) ext2_read_inode;
 }
 
-
-#if 1
-// TODO: need file type checks! actually, need a whole lot more
-dir_t *opendir(uint32_t inode_num)
+dir_t *vfs_opendir(char *name)
 {
-  uint32_t table_block = open_inode_table(inode_num);
+  // search the dentry cache
+  uint32_t ino = dcache_lookup(name);
 
-  // read in the inode table for this dir
-  dir_t *dir = (dir_t *) kmalloc(sizeof(dir_t), 0);
-
-  dir->inode_table = read_inode_table(fs_dev, table_block);
-
-  dir->curr_idx    = get_block_index(inode_num);
-  dir->curr_inode  = &(dir->inode_table[dir->curr_idx]);
-
-  // read in the directory data blocks
-  dir->dblock_bufsize = dir->curr_inode->blocks * 512;
-  dir->dblock_buffer  = kmalloc(dir->dblock_bufsize, 0);
-  void *bufp = dir->dblock_buffer;
-
-  uint32_t bread = 0;
-  uint32_t nblocks = dir->dblock_bufsize / fs_block_size;
-  uint32_t *dblock = &(dir->curr_inode->dblock_ptr_0);
-  while (bread < nblocks) {
-    read_block(*dblock++, bufp, 1);
-    bread++;
-    bufp = (void *) (((uint32_t)bufp) + 1024);
+  if (ino) {
+    // found it
+  } else {
+    // TODO: need to find inode matching this directory name
+    ino = find_inode(name, 0);
+    dcache_insert(name, ino);
   }
 
-  dir->curr_ent = (dirent_t *) dir->dblock_buffer;
-  return dir;
+  // everything is "mounted" on the save ext2 fs
+  return vfs_sb->opendir(vfs_sb->dev, ino);
 }
 
-int closedir(dir_t *dir)
+uint32_t find_inode(char *name, uint32_t inode)
 {
-  kfree(dir->inode_table);
-  kfree(dir->dblock_buffer);
-  kfree(dir);
-
-  return 0;
+  if (strncmp(name, "/", strlen(name)) == 0)
+    return 2;
 }
-
-// read a single directory entry
-dirent_t *readdir(dir_t *dir)
-{
-  if (dir->curr_ent >= (dirent_t *) (((uint32_t)dir->dblock_buffer) + dir->dblock_bufsize))
-    return NULL;
-
-  dirent_t *to_read = dir->curr_ent;
-  dir->curr_ent = (dirent_t *) (((uint32_t)dir->curr_ent) + dir->curr_ent->rec_len);
-
-  return to_read;
-}
-
-#endif
