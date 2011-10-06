@@ -4,6 +4,8 @@
 #include "dev/device.h"
 #include "dev/disk.h"
 
+#include "vfs.h"
+
 #include <stdint.h>
 
 // TODO: expanded superblock fields present if MAJOR_VERSION >= 1
@@ -151,14 +153,6 @@ typedef struct inode
 } __attribute__((__packed__)) inode_t;
 
 // ext2 directory entry
-typedef struct dirent 
-{
-  uint32_t inode;
-  uint16_t rec_len;
-  uint8_t  name_len;
-  uint8_t  file_type;
-  char     name[256];
-} __attribute__((__packed__)) dirent_t;
 
 // data
 device_t *fs_dev;

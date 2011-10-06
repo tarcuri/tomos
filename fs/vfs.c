@@ -1,10 +1,21 @@
-#include "fs.h"
+#include "vfs.h"
 #include "kernel/heap.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+
+void vfs_init()
+{
+  // dentry cache
+  vfs_dcache = (struct dhash *) kmalloc(sizeof(struct dhash), 0);
+
+  // now when should this cache get populated, load a system directory under / ?
+}
+
+
+#if 1
 // TODO: need file type checks! actually, need a whole lot more
 dir_t *opendir(uint32_t inode_num)
 {
@@ -57,4 +68,4 @@ dirent_t *readdir(dir_t *dir)
   return to_read;
 }
 
-
+#endif

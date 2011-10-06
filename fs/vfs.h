@@ -1,5 +1,5 @@
-#ifndef FS_H
-#define FS_H
+#ifndef VFS_H
+#define VFS_H
 
 #include "ext2.h"
 #include "dev/device.h"
@@ -14,6 +14,15 @@ typedef struct dir_stream
   inode_t *	curr_inode;
   dirent_t *	curr_ent;
 } dir_t;
+
+typedef struct dirent 
+{
+  uint32_t inode;
+  uint16_t rec_len;
+  uint8_t  name_len;
+  uint8_t  file_type;
+  char     name[256];
+} dirent_t;
 
 struct file_ops
 {
@@ -39,9 +48,10 @@ struct vfs_node
   struct vfs_node *	ptr;		// used for mountpoints and symlinks
 } vfs_node_t;
 
-// leave these for now, but should be repalced by filesystem specific function pointers
-dir_t *		opendir(uint32_t inode_num);
-int		closedir(dir_t *dir);
-dirent_t *	readdir(dir_t *dir);
+// data
+struct dhash *vfs_dcache;
+
+// functions
+void vfs_init(void);
 
 #endif
