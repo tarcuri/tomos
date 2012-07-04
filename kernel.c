@@ -22,7 +22,7 @@
 #include "dev/disk.h"
 
 #include "fs/ext2.h"
-#include "fs/fs.h"
+#include "fs/vfs.h"
 
 #include "tomsh.h"
 

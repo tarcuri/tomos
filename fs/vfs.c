@@ -1,5 +1,7 @@
 #include "vfs.h"
+#include "dcache.h"
 #include "kernel/heap.h"
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,7 +41,8 @@ dir_t *vfs_opendir(char *name)
   }
 
   // everything is "mounted" on the save ext2 fs
-  return vfs_sb->opendir(vfs_sb->dev, ino);
+  //return vfs_sb->opendir(vfs_sb->dev, ino);
+  return (dir_t *) 0;
 }
 
 uint32_t find_inode(char *name, uint32_t inode)

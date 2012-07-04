@@ -55,7 +55,7 @@ ext2_inode_t *ext2_read_inode(device_t *dev, uint32_t ino)
   // now read the inode table for the block group
   ext2_inode_t *itable = read_inode_table(dev, fs_bgd_table[group].inode_table_block);
 
-  memcpy((void *) inode, (void *) itable[index], sizeof(ext2_inode_t));
+  memcpy((void *) &inode, (void *) &itable[index], sizeof(ext2_inode_t));
 
   kfree(itable);
 
@@ -92,7 +92,7 @@ ext2_dirent_t *ext2_readdir(ext2_dir_t *dir, int i)
   if (dir->current < (ext2_dirent_t *) (((uint32_t)dir->buffer) + dir->bufsize))
     ent = dir->current;
 
-  dir->current = (ext2_dirent_t *) (((uint32_t)dir->current) + end->rec_len);
+  dir->current = (ext2_dirent_t *) (((uint32_t)dir->current) + ent->rec_len);
 
   return ent;
 }
@@ -166,10 +166,10 @@ ext2_bg_desc_t *read_bgd_table(device_t *dev)
   return bgd_table;
 }
 
-superblock_t *read_superblock(device_t *dev)
+ext2_superblock_t *read_superblock(device_t *dev)
 {
   // superblock is 1024 bytes from the beginning of the volume
-  superblock_t *sb = (superblock_t *) kmalloc(sizeof(superblock_t), 0);
+  ext2_superblock_t *sb = (ext2_superblock_t *) kmalloc(sizeof(ext2_superblock_t), 0);
 
   // device should be ata block device
   disk_request_t dr;

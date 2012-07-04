@@ -107,7 +107,7 @@ typedef struct ext2_block_group_descriptor
   uint16_t num_dirs;
   uint16_t pad;
   uint8_t  reserved[12];
-} ext2_ext2_bg_desc_t;
+} ext2_bg_desc_t;
 
 // ext2 inode
 typedef struct ext2_inode
@@ -191,5 +191,8 @@ ext2_inode_t *		read_inode_table(device_t *dev, uint32_t table_block);
 ext2_bg_desc_t *	read_bgd_table(device_t *dev);
 
 ext2_superblock_t *	read_superblock(device_t *dev);
+
+// vfs read_inode_func
+ext2_inode_t *		ext2_read_inode(device_t *, uint32_t);
 
 #endif

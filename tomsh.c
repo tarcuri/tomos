@@ -9,7 +9,7 @@
 #include "dev/device.h"
 #include "dev/ata.h"
 
-#include "fs/fs.h"
+#include "fs/vfs.h"
 
 #include <stdio.h>
 #include <stdlib.h>

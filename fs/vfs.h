@@ -76,4 +76,6 @@ void vfs_init(void);
 
 int vfs_open(char *name, uint32_t flags);
 
+uint32_t find_inode(char *name, uint32_t inode);
+
 #endif
