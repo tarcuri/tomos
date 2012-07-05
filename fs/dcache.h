@@ -33,7 +33,7 @@ void dcache_insert(const char *s, uint32_t ino)
 
 uint32_t dcache_lookup(const char *s)
 {
-  return dcache.table[hash(s) % DCACHE_SIZE]; 
+  return dcache.table[djb2_hash(s) % DCACHE_SIZE]; 
 }
 
 #endif

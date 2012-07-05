@@ -26,7 +26,8 @@ void ext2_init()
 
   fs_inode_table = read_inode_table(fs_dev, fs_bgd_table[0].inode_table_block);
 
-  printf("[ext2]    initialization complete\n");
+  // interrupt 0x2D is generated when I try to call newlib's printf
+  c_printf("[ext2]    initialization complete\n");
 }
 
 void read_block(uint32_t fs_block, void *buf, uint32_t len)
@@ -66,7 +67,7 @@ ext2_dir_t *ext2_opendir(device_t *dev, uint32_t ino)
 {
   ext2_dir_t *dir = (ext2_dir_t *) kmalloc(sizeof(ext2_dir_t), 0);
 
-  dir->inode   = read_inode(dev, ino);
+  dir->inode   = ext2_read_inode(dev, ino);
   dir->bufsize = dir->inode->blocks * 512;
   dir->buffer  = kmalloc(dir->bufsize, 0);
   dir->current = (ext2_dirent_t *) dir->buffer;

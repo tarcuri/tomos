@@ -36,6 +36,8 @@ typedef struct process_control_block
   // need a stack structure
   stack_t	*stack;
 
+  // list of open files
+
   // TODO: include a notion of current disk requests
   // TODO: include a notion of the current process (which receives IO, etc)
 

@@ -1,6 +1,7 @@
 #include "heap.h"
-
 #include "dev/console.h"
+
+#include <assert.h>
 
 
 // initialize the kernel heap
@@ -112,7 +113,7 @@ void kfree(void *p)
   heap_header_t *header = (heap_header_t *) ((unsigned int)p - sizeof(heap_header_t));
 
   // make sure this memory isn't already free, then free it
-  ASSERT((header->tag_hole & 0x1) == 0);
+  assert((header->tag_hole & 0x1) == 0);
   header->tag_hole = HEAP_MAGIC_TAG_31 | 0x1;
   insert_into_index(header, k_heap);
 }
@@ -152,7 +153,7 @@ static void remove_from_index(unsigned int hole_index, heap_t *heap)
 
 static void insert_into_index(heap_header_t *h, heap_t *heap)
 {
-  ASSERT((heap->index_size + 1) < HEAP_INDEX_SIZE);
+  assert((heap->index_size + 1) < HEAP_INDEX_SIZE);
 
   // sorted by increasing hole size
   int i;

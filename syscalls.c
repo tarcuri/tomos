@@ -56,7 +56,8 @@ int32_t sys_open(context_t *c, uint32_t *args)
 
   c_printf("> open(%s, %d)\n", filename, flags);
 
-  // search
+  // now well have a filename and flags, have vfs_open find the inode
+  vfs_open(filename, flags);
 
   c->eax = -1;
 }
@@ -71,11 +72,12 @@ int32_t sys_read(context_t *c, uint32_t *args)
   // how should this be done? can we wait for keypresses in a syscall?
 
   // need to clear bss
-  int32_t i;
-  c_printf("read(%d, 0x%x, %d) = %d\n", fd, buf, len, i);
-  for (i = 0; i < len; ++i)
-    buf[i] = c_getcode(); 
+  // what?
+  c_printf("read(%d, 0x%x, %d)\n", fd, buf, len);
+//  for (i = 0; i < len; ++i)
+//    buf[i] = c_getcode();
 
+  int32_t i = vfs_read(fd, buf, len);
 
   c->eax = i;
 }

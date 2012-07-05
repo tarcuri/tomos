@@ -6,17 +6,17 @@
 
 #include "syscalls.h"
 
-#include "dev/device.h"
-#include "dev/ata.h"
+//#include "dev/device.h"
+//#include "dev/ata.h"
 
-#include "fs/vfs.h"
+//#include "fs/vfs.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-void ls_dir(int ino);
-void hdd_read(unsigned int lba, void *buf, unsigned int len);
+//void ls_dir(int ino);
+//void hdd_read(unsigned int lba, void *buf, unsigned int len);
 
 // we need many string functions,
 // strstr, strtok, etc
@@ -86,13 +86,14 @@ void command_loop()
       dump_heap_index(k_heap);
     else if (strncmp(command_line, "getpid", 6) == 0)
       c_printf("PID: %d\n", getpid());
-    else if (strncmp(command_line, "ls ", 3) == 0)
-      ls_dir(atoi(&command_line[3]));
+/*    else if (strncmp(command_line, "ls ", 3) == 0)
+      ls_dir(atoi(&command_line[3]));*/
     else if (!scroll && strlen(command_line))
       c_printf("> %s\n", command_line);
   }
 }
 
+/*
 void ls_dir(int ino)
 {
   dir_t *dir = opendir(ino);	// open the root directory
@@ -133,3 +134,4 @@ void hdd_read(unsigned int lba, void *buf, unsigned int len)
 
   kfree(hdd);
 }
+*/

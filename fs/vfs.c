@@ -27,26 +27,27 @@ void vfs_init()
   vfs_sb->read_inode = (read_inode_func) ext2_read_inode;
 }
 
-dir_t *vfs_opendir(char *name)
-{
-  // search the dentry cache
-  uint32_t ino = dcache_lookup(name);
-
-  if (ino) {
-    // found it
-  } else {
-    // TODO: need to find inode matching this directory name
-    ino = find_inode(name, 0);
-    dcache_insert(name, ino);
-  }
-
-  // everything is "mounted" on the save ext2 fs
-  //return vfs_sb->opendir(vfs_sb->dev, ino);
-  return (dir_t *) 0;
-}
-
+// make sure this is a valid file in the filesystem
 uint32_t find_inode(char *name, uint32_t inode)
 {
   if (strncmp(name, "/", strlen(name)) == 0)
     return 2;
+}
+
+// file system interface
+
+int vfs_open(char *name, uint32_t flags)
+{
+  int fd;
+
+  // find the inode, if it exists
+
+  // then it must be stored in the per-process open file list
+
+  return fd;
+}
+
+int vfs_read(int fd, void *buf, uint32_t len)
+{
+  return 0;
 }

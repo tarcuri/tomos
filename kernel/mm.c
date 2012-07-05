@@ -4,6 +4,8 @@
 #include "multiboot.h"
 #include "support.h"
 
+#include <assert.h>
+
 #define CHECK_FLAG(flags,bit)   ((flags) & (1 << (bit)))
 
 // kernel allocation routines

@@ -44,18 +44,7 @@ typedef struct dirent
   char     name[256];
 } dirent_t;
 
-struct file_ops
-{
-  int		(*open)(struct vfs_node *node);
-  int		(*close)(struct vfs_node *node);
-  int		(*read)(struct vfs_node *node, uint32_t offset, uint32_t size, uint8_t *buf);
-  int		(*write)(struct vfs_node *node, uint32_t offset, uint32_t size, uint8_t *buf);
-  dir_t *	(*opendir)(struct vfs_node *node);
-  int		(*closedir)(dir_t *dir);
-  dirent_t *	(*readdir)(dir_t *dir);
-};
-
-struct vfs_node
+typedef struct vfs_node
 {
   char			name[256];
   uint32_t		ino;		// inode number
@@ -68,13 +57,35 @@ struct vfs_node
   struct vfs_node *	ptr;		// used for mountpoints and symlinks
 } vfs_node_t;
 
+struct file_ops
+{
+  int		(*open)(vfs_node_t *node);
+  int		(*read)(vfs_node_t *node, uint32_t offset, uint32_t size, uint8_t *buf);
+  int		(*write)(vfs_node_t *node, uint32_t offset, uint32_t size, uint8_t *buf);
+  int		(*close)(vfs_node_t *node);
+  dir_t *	(*opendir)(vfs_node_t *node);
+  dirent_t *	(*readdir)(dir_t *dir);
+  int		(*closedir)(dir_t *dir);
+};
+
+
+
 // data
 struct superblock *vfs_sb;
 
 // functions
+
 void vfs_init(void);
 
 int vfs_open(char *name, uint32_t flags);
+int vfs_read(int fd, void *buf, uint32_t size);
+int vfs_write(vfs_node_t *n, const void *buf, uint32_t size);
+int vfs_close(vfs_node_t *n);
+
+dir_t * vfs_opendir(vfs_node_t *node);
+dirent_t * vfs_readdir(dir_t *dir);
+int vfs_closedir(dir_t *dir);
+
 
 uint32_t find_inode(char *name, uint32_t inode);
 

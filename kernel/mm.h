@@ -8,6 +8,7 @@
 #define MM_FRAME_DISABLE_BM(idx)	(mm_bit_map[ (idx/8) ] &= (0xff ^ (1 << (idx % 8))))
 
 // define 'allocable' memory
+// this needs to be heavily documented.
 extern unsigned int _memory_ceiling;
 extern unsigned int kernel_start;	// defined in linker script
 extern unsigned int kernel_end;
@@ -26,7 +27,7 @@ unsigned int mm_total_frames;		// total number of frames available
 
 // management functions
 
-#define ASSERT(cond)		{if (!(cond)) { panic("ASSERTION ERROR\n"); } }
+//#define ASSERT(cond)		{if (!(cond)) { panic("ASSERTION ERROR\n"); } }
 
 void mm_init(void);
 void *mm_alloc_frame(void);
