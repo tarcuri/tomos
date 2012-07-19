@@ -10,7 +10,7 @@ void heap_init()
   k_heap = (heap_t *) HEAP_BASE_ADDRESS;
 
   // initialize the index with one big hole
-  k_heap->index = (heap_header_t **) ((unsigned int) k_heap + sizeof(heap_t));
+  k_heap->index = (heap_header_t **) ((unsigned int) k_heap + sizeof(heap_t));	// why am I doing this again? JamesM?
   k_heap->base = ((unsigned int) k_heap + sizeof(heap_t)
                                         + (HEAP_INDEX_SIZE * sizeof(heap_header_t)));
 
@@ -127,6 +127,8 @@ static int find_smallest_hole(unsigned int size, int align, heap_t *heap)
     heap_header_t *h = heap->index[i];
 
     if (h->mem_size >= size) {
+      // NOTE: user wants memory that *he has access to* to be page aligned
+      //       so that the returned header address will NOT be page aligned
       if (align) {
         unsigned int aligned = ((unsigned int) h & 0xFFFFF000) + 0x1000;
         unsigned int aligned_size = h->mem_size - (aligned - (unsigned int) h);

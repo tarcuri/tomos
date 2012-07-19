@@ -56,11 +56,9 @@ void kernel(void* mbd, uint32_t magic, uint32_t other)
   //clock_init();
 
   //_install_isr(0x27, du_handler);
- 
-  mm_grub_multiboot(mbd, 0);
 
   // merge all memory init into the mm module
-  mm_init();
+  mm_init(mbd, 1);
   pg_init();
   heap_init();
 

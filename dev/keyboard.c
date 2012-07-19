@@ -34,6 +34,9 @@ uint16_t kb_wait_code()
   uint16_t c = 0;
 
   // always assume we haven't overflowed
+
+  // need a better way to do this, after all we're
+  // (trying) to write an OS here.
   while (kb_read_idx == kb_write_idx)
 	;
 

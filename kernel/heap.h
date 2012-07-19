@@ -41,6 +41,14 @@ typedef struct heap
 heap_t *k_heap;
 
 // functions
+
+/*
+ * heap_init(void)
+ *
+ * 1. define heap base address 0x4000 bytes beyond the end of the kernel
+ * 2. initialize heap index one past the base address
+ *
+ */
 void heap_init(void);
 void dump_heap_index(heap_t *);
 
