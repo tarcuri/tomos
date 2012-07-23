@@ -38,7 +38,7 @@ typedef struct heap
 } heap_t;
 
 // global data
-heap_t *k_heap;
+heap_t *k_heap = 0;
 
 // functions
 
@@ -52,8 +52,11 @@ heap_t *k_heap;
 void heap_init(void);
 void dump_heap_index(heap_t *);
 
-void *kmalloc(unsigned int size, int align);
-void kfree(void *p);
+// alloc a contiguous region of more, optionally page aligned
+void *alloc(unsigned int size, int align, heap_t *h);
+void free(void *, heap_t *heap);
+
+uint32_t kmalloc(uint32_t size, int align, uint32_t *phys);
 
 static int find_smallest_hole(unsigned int, int, heap_t *);
 static void remove_from_index(unsigned int, heap_t *);

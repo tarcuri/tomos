@@ -52,9 +52,10 @@ void dump_heap_index(heap_t *heap)
   }
 }
 
-void *kmalloc(unsigned int size, int align)
+// TODO: must be able to return a phsyical address!!!
+void *alloc(unsigned int size, int align, heap_t *h)
 {
-  heap_t *heap = k_heap;
+  heap_t *heap = h;
 
   int hole_index = find_smallest_hole(size, align, heap);
 
@@ -108,14 +109,35 @@ void *kmalloc(unsigned int size, int align)
   return (void *) address;
 }
 
-void kfree(void *p)
+void free(void *p, heap_t *heap)
 {
   heap_header_t *header = (heap_header_t *) ((unsigned int)p - sizeof(heap_header_t));
 
   // make sure this memory isn't already free, then free it
   assert((header->tag_hole & 0x1) == 0);
   header->tag_hole = HEAP_MAGIC_TAG_31 | 0x1;
-  insert_into_index(header, k_heap);
+  insert_into_index(header, heap);
+}
+
+/*
+ *
+ *
+ */
+
+uint32_t kmalloc(uint32_t size, int align, uint32_t *phys)
+{
+	// kernel heap should be initialized
+	void *addr = alloc(size, align, k_heap);
+	if (phys) {
+		page_t *page = pg_get_page((uint32_t)addr, 0, pg_k_pdir_base);
+		*phys = page->frame * 0x1000 + ((uint32_t) addr & 0xFFF);
+    }
+    return (uint32_t) addr;
+}
+
+void kfree(void *p)
+{
+	free(p, k_heap);
 }
 
 // private static functions

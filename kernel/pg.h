@@ -1,7 +1,9 @@
 #ifndef PAGING_H
 #define PAGING_H
 
-// now what?
+#include "heap.h"
+
+#include <stdint.h>
 
 // page table entry
 #define PTE_PRESENT	0x00000001	// bit 0 identifys if a page is present in memory
@@ -32,6 +34,10 @@ typedef unsigned int pde_t;
 typedef struct page_directory
 {
   pde_t	tables[1024];
+
+  pde_t tables_phys[1024];
+
+  uint32_t physical_addr;
 } page_directory_t;
 
 typedef struct page_table
@@ -39,14 +45,19 @@ typedef struct page_table
   pte_t pages[1024];
 } page_table_t;
 
-page_directory_t *pg_k_pdir_base;
+page_directory_t *kernel_pg_directory;
 
-page_table_t *pg_k_ptable_base;
+page_table_t *kernel_pg_table;
 
+extern heap_t;
+extern heap_t *k_heap;
 
 // functions
 void pg_init(void);
-void pg_init_proc(void);
+void pg_switch_directory(page_directory_t *dir);
+
+page_directory_t	* pg_clone_directory();
+page_table_t		* pg_clone_table();
 
 void pg_page_fault(int error);
 
