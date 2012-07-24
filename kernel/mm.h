@@ -13,25 +13,28 @@ unsigned int _memory_ceiling;
 extern unsigned int kernel_start;	// defined in linker script
 extern unsigned int kernel_end;
 
+unsigned int mm_highest_allocd;		// highest allocated memory address
+
 unsigned int mm_high_mem_base;		// memory past kernel
 unsigned int mm_high_mem_limit;		// memory limit (size pase base)
-unsigned int mm_kernel_end;		// kernel end address
+unsigned int mm_kernel_end;			// kernel end address
 unsigned int mm_kernel_end_aligned;	// kernel end aligned for 4K boundary
 unsigned int mm_kernel_size;		// kernel size in bytes
 
-unsigned char *mm_bit_map;		// tracks allocated frames
+unsigned char *mm_bit_map;			// tracks allocated frames
 unsigned int mm_bit_map_length;		// bitmap should be mm_total_frames/8 bytes long
 unsigned int mm_allocated_frames;
 unsigned int mm_last_allocated_frame;	// index of the most recently allocated frame
-unsigned int mm_total_frames;		// total number of frames available
+unsigned int mm_total_frames;			// total number of frames available
 
-// management functions
-
-//#define ASSERT(cond)		{if (!(cond)) { panic("ASSERTION ERROR\n"); } }
-
+// functions
 void mm_init(void *mbd, int print);
-void *mm_alloc_frame(void);
-void mm_free_frame(void *);
+
+// allocate a 4KB aligned page frame
+void *mm_alloc_frame(uint32_t idx);
+void mm_set_frame(void *);
+
+// perform grub multiboot initialization
 void mm_grub_multiboot(void *mbd, int print);
 
 

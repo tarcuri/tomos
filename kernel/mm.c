@@ -67,26 +67,23 @@ static unsigned int mm_get_free_frame()
   panic("tomos is out of memory!\n");
 }
 
-// allocate a single page
-void *mm_alloc_frame()
+void mm_set_frame(uint32_t idx)
 {
-  // grab the next free page index
-  unsigned int idx = mm_get_free_frame();
-
   // mark the frame as used
   MM_FRAME_ENABLE_BM(idx);
   mm_allocated_frames++;
 
-  // now return the address of the page
-  return (void *) MM_FRAME_ADDRESS(idx);;
+  if (MM_FRAME_ADDRESS(idx) > mm_highest_allocd)
+    mm_highest_allocd = MM_FRAME_ADDRESS(idx);
 }
 
-void mm_free_frame(void *frame)
+void mm_clear_frame(void *frame)
 {
   // just clear the bit index
   unsigned int idx = ((unsigned int)frame - mm_high_mem_base) / MM_FRAME_SIZE;
 
   MM_FRAME_DISABLE_BM(idx);
+  mm_allocated_frames--;
 }
 
 /*

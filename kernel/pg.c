@@ -8,32 +8,28 @@
 
 void pg_init()
 {
-  // define the page directory on a 4KB boundary after the kernel
+  // Before paging is enabled, we are going to statically allocate a few
+  // page frames for the paging directory. These will never need to be deallocated.
 
   // first define a page directory for the kernel itself
-  kernel_pg_directory   = mm_alloc_frame();
-  kernel_pg_table = mm_alloc_frame();
+  kernel_pg_directory   = mm_alloc_frame();	// TODO: page directory is larger than 4KB
+  memset(kernel_pg_directory, 0, sizeof(page_directory_t));
+  kernel_pg_directory->physical_addr = kernel_pg_directory->tables_phys;	// at this point, we're all physical
 
-  //c_printf("[pg]      kernel page directory initialized at 0x%x\n", kernel_pg_directory);
+  c_printf("[pg]      kernel page directory initialized at 0x%x\n", kernel_pg_directory);
   //c_printf("[pg]      kernel page table initialized at 0x%x\n", kernel_pg_table);
 
-  // intialize (clear) kernel page directory
+  // Map some pages in the kernel heap. This will create page_table_t's
   unsigned int i;
-  for (i = 0; i < 1024; ++i) {
-    kernel_pg_directory->tables[i] = (pde_t) (0 | PDE_WRITABLE);
-  } 
+  for (i = HEAP_BASE_ADDRESS; i < HEAP_BASE_ADDRESS + HEAP_INITIAL_SIZE; i += 0x1000)
+    pg_get_page(i, 1, kernel_pg_directory);
+  
 
-  // identity map the page table to the first 4MB of physical memory
-  for (i = 0; i < 1024; ++i) {
-    kernel_pg_table->pages[i] = (i * 0x1000) | PTE_WRITABLE | PTE_PRESENT;
+  // We need to identity map (phys addir = virt addr) from 0x0 to end of used memory (JamesM)
+  i = 0;
+  while (i < mm_highest_allocd + 0x1000) {
   }
 
-  // allocate an initial page table for the kernel
-
-  // store the table in the directory
-  kernel_pg_directory->tables[0] = (pde_t) ((unsigned int)kernel_pg_table | PDE_WRITABLE | PDE_PRESENT);
-
-  //c_printf("[pg]      inialized %d bytes of memory for kernel paging\n", MM_FRAME_SIZE * 1024);
 
   // install the page fault handler
   _install_isr(INT_VEC_PAGE_FAULT, pg_page_fault);
@@ -56,7 +52,7 @@ void pg_switch_directory(page_directory_t *dir)
 }
 
 // modeled after JamesM's paging
-pte_t *pg_get_page(uint32_t address, int make, page_directory_t *dir)
+page_t *pg_get_page(uint32_t address, int make, page_directory_t *dir)
 {
 	address /= 0x1000;	// turn address into an index?
 
@@ -72,6 +68,7 @@ pte_t *pg_get_page(uint32_t address, int make, page_directory_t *dir)
 			dir->tables[table_idx] = (page_table_t*) kmalloc(sizeof(page_table_t), 1, &t);
 		} else {
 			dir->tables[table_idx] = (page_table_t*) mm_alloc_frame();	// 4KB aligned frame
+			t = dir->tables[table_idx];
 		}
         memset(dir->tables[table_idx], 0, 0x1000);
 		dir->tables_phys[table_idx] = t | PTE_PRESENT | PTE_WRITABLE;
@@ -113,4 +110,30 @@ page_directory_t* pg_clone_directory()
 page_table_t* pg_clone_table()
 {
 
+}
+
+// page frame management
+// allocate a single page frame
+void pg_alloc_frame(page_t *page, int is_kernel, int is_writeable)
+{
+  if (page->frame)
+    return;
+
+  // grab the next free page index
+  unsigned int idx = mm_get_free_frame();
+
+  mm_set_frame(idx);
+  page->present = 1;
+  page->rw = (is_writeable==1) ? 1 : 0;
+  page->user = (is_kernel==1) ? 1 : 0;
+  page->frame = MM_FRAME_ADDRESS(idx);
+}
+
+void pg_free_frame(page_t *page)
+{
+  if (!page->frame_addr) {
+    return;
+  } else {
+    mm_clear_frame(page->frame_addr);
+  }
 }
