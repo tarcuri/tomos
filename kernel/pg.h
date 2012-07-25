@@ -51,9 +51,6 @@ typedef struct page_directory
   uint32_t physical_addr;
 } page_directory_t;
 
-
-
-
 page_directory_t *kernel_pg_directory;
 
 page_table_t *kernel_pg_table;

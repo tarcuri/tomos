@@ -14,7 +14,7 @@ void heap_init()
   k_heap->base = ((unsigned int) k_heap + sizeof(heap_t)
                                         + (HEAP_INDEX_SIZE * sizeof(heap_header_t)));
 
-  k_heap->end = (unsigned int) k_heap->base + 0x100000;
+  k_heap->end = (unsigned int) k_heap->base + HEAP_INITIAL_SIZE;
   k_heap->limit = HEAP_LIMIT_ADDRESS;
 
   k_heap->super = 1;

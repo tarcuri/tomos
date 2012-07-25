@@ -13,6 +13,8 @@ void pg_init()
 
   // first define a page directory for the kernel itself
   kernel_pg_directory   = mm_alloc_frame();	// TODO: page directory is larger than 4KB
+
+
   memset(kernel_pg_directory, 0, sizeof(page_directory_t));
   kernel_pg_directory->physical_addr = kernel_pg_directory->tables_phys;	// at this point, we're all physical
 
@@ -28,8 +30,11 @@ void pg_init()
   // We need to identity map (phys addir = virt addr) from 0x0 to end of used memory (JamesM)
   i = 0;
   while (i < mm_highest_allocd + 0x1000) {
+	pg_alloc_frame(pg_get_page(i, 1, kernel_pg_directory), 0, 0);
+    i += 0x1000;
   }
 
+  // now JamesM allocates all the pages mapped initialially (through the heap)
 
   // install the page fault handler
   _install_isr(INT_VEC_PAGE_FAULT, pg_page_fault);

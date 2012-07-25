@@ -1,6 +1,8 @@
 #ifndef MEMORY_MANAGER_H
 #define MEMORY_MANAGER_H
 
+#include <stdint.h>
+
 // kernel memory manager, allocates space for kernel data structures
 #define MM_FRAME_SIZE			(0x1000)
 #define MM_FRAME_ADDRESS(idx)		(mm_high_mem_base + (idx * MM_FRAME_SIZE))
@@ -9,23 +11,23 @@
 
 // define 'allocable' memory
 // this needs to be heavily documented.
-unsigned int _memory_ceiling;
-extern unsigned int kernel_start;	// defined in linker script
-extern unsigned int kernel_end;
+uint32_t _memory_ceiling;
+extern uint32_t kernel_start;	// defined in linker script
+extern uint32_t kernel_end;
 
-unsigned int mm_highest_allocd;		// highest allocated memory address
+uint32_t mm_highest_allocd;		// highest allocated memory address
 
-unsigned int mm_high_mem_base;		// memory past kernel
-unsigned int mm_high_mem_limit;		// memory limit (size pase base)
-unsigned int mm_kernel_end;			// kernel end address
-unsigned int mm_kernel_end_aligned;	// kernel end aligned for 4K boundary
-unsigned int mm_kernel_size;		// kernel size in bytes
+uint32_t mm_high_mem_base;		// memory past kernel
+uint32_t mm_high_mem_limit;		// memory limit (size pase base)
+uint32_t mm_kernel_end;			// kernel end address
+uint32_t mm_kernel_end_aligned;	// kernel end aligned for 4K boundary
+uint32_t mm_kernel_size;		// kernel size in bytes
 
 unsigned char *mm_bit_map;			// tracks allocated frames
-unsigned int mm_bit_map_length;		// bitmap should be mm_total_frames/8 bytes long
-unsigned int mm_allocated_frames;
-unsigned int mm_last_allocated_frame;	// index of the most recently allocated frame
-unsigned int mm_total_frames;			// total number of frames available
+uint32_t mm_bit_map_length;		// bitmap should be mm_total_frames/8 bytes long
+uint32_t mm_allocated_frames;
+uint32_t mm_last_allocated_frame;	// index of the most recently allocated frame
+uint32_t mm_total_frames;			// total number of frames available
 
 // functions
 void mm_init(void *mbd, int print);
@@ -39,6 +41,6 @@ void mm_grub_multiboot(void *mbd, int print);
 
 
 // private static functions
-static unsigned int mm_get_free_frame(void);
+static uint32_t mm_get_free_frame(void);
 
 #endif

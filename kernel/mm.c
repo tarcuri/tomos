@@ -14,7 +14,7 @@ void mm_init(void *mbd, int print)
 {
   mm_grub_multiboot(mbd, print);
 
-  mm_kernel_end  = (unsigned int) &kernel_end;
+  mm_kernel_end  = (uint32_t) &kernel_end;
   mm_kernel_end_aligned = (mm_kernel_end & 0xFFFFF000) + 0x1000;
   mm_kernel_size = &kernel_end - &kernel_start;
   c_printf("[mm]      kernel_size: %d bytes [end: 0x%x]\n", mm_kernel_size, mm_kernel_end);
@@ -38,10 +38,10 @@ void mm_init(void *mbd, int print)
 
 
 // TODO: keep a pointer to the last allocated bit
-static unsigned int mm_get_free_frame()
+static uint32_t mm_get_free_frame()
 {
-  unsigned int *bit_map = (unsigned int *) mm_bit_map;
-  unsigned int bit_index = 0;
+  uint32_t *bit_map = (uint32_t *) mm_bit_map;
+  uint32_t bit_index = 0;
 
   do {
     // check a 32 bits at a time
@@ -60,11 +60,21 @@ static unsigned int mm_get_free_frame()
 
     bit_index += 32;
     bit_map   += 1;
-  } while ((bit_map - (unsigned int *) mm_bit_map) < mm_bit_map_length);
+  } while ((bit_map - (uint32_t *) mm_bit_map) < mm_bit_map_length);
 
   // uh oh, didn't find a page
   c_printf("[mm]    couldn't find a free page! [%d allocated]\n", bit_index);
   panic("tomos is out of memory!\n");
+}
+
+// can we assume frames aren't fragmented? i.e. all proceeding frames will be free/unused?
+void mm_alloc_frames(uint32_t n)
+{
+  uint32_t frame;
+  int i = 0;
+  for (i = 0; i < n; i++) {
+    frame = mm_get_free_frame();
+  }
 }
 
 void mm_set_frame(uint32_t idx)
@@ -80,7 +90,7 @@ void mm_set_frame(uint32_t idx)
 void mm_clear_frame(void *frame)
 {
   // just clear the bit index
-  unsigned int idx = ((unsigned int)frame - mm_high_mem_base) / MM_FRAME_SIZE;
+  uint32_t idx = ((uint32_t)frame - mm_high_mem_base) / MM_FRAME_SIZE;
 
   MM_FRAME_DISABLE_BM(idx);
   mm_allocated_frames--;
