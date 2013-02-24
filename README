@@ -1,0 +1,10 @@
+$ make bochs
+$ bochs
+    # at the grub prompt
+    kernel 200+SIZE
+    boot
+
+// create a test HDD image
+$ bximage
+$ mkfs.ext2 disk.img
+# mount -t ext2 -o loop disk.img mnt

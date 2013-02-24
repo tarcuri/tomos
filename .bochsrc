@@ -1,5 +1,5 @@
 #config_interface: textconfig
-#display_library: sdl
+display_library: sdl
 #romimage: file=/usr/share/bochs/BIOS-bochs-latest, address=0xf0000
 megs: 32
 #vgaromimage: file=/usr/share/vgabios/vgabios.bin
