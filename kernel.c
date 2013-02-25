@@ -60,10 +60,10 @@ void kernel(void* mbd, uint32_t magic, uint32_t other)
   mm_init(mbd, 1);
   pg_init();
   //heap_init();
-  uint32_t *ptr = (uint32_t *)0xAB000000;
-  uint32_t do_page_fault = *ptr;
-  c_printf("waiting\n");
-  while (1) {}
+  //uint32_t *ptr = (uint32_t *)0xAB000000;
+  //uint32_t do_page_fault = *ptr;
+  //c_printf("waiting\n");
+  //while (1) {}
 
   // hardware and devices
   kb_init();
