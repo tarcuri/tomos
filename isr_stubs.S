@@ -28,7 +28,6 @@ _isr_##vector:					; \
         .globl _isr_##vector                    ; \
 _isr_##vector:                                  ; \
         push    $vector                         ; \
-        pusha                                   ; \
 	jmp	isr_entry
 
 
