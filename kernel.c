@@ -55,12 +55,15 @@ void kernel(void* mbd, uint32_t magic, uint32_t other)
 
   //clock_init();
 
-  //_install_isr(0x27, du_handler);
-
   // merge all memory init into the mm module
+  k_heap = 0;
   mm_init(mbd, 1);
   pg_init();
-  heap_init();
+  //heap_init();
+  uint32_t *ptr = (uint32_t *)0xAB000000;
+  uint32_t do_page_fault = *ptr;
+  c_printf("waiting\n");
+  while (1) {}
 
   // hardware and devices
   kb_init();
@@ -86,7 +89,7 @@ void kmain()
   //c_printf("ANYTHING?\n");
   //stack_dump(current_proc);
   // TODO: interrupts fire for an ATA command only if printf()  is called first...
-  //printf("Press any key to continue...\n");
+  c_printf("Press any key to continue...\n");
   //putchar('?');
   //getchar();
 

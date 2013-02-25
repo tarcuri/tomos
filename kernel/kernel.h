@@ -42,8 +42,6 @@ unsigned int kernel_stack_base;
 struct dt_register gdtr_register;
 struct dt_register idtr_register;
 
-unsigned int _memory_ceiling;
-
 // functions
 void kmain(void);
 

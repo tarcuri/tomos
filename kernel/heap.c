@@ -1,4 +1,5 @@
 #include "heap.h"
+#include "pg.h"
 #include "dev/console.h"
 
 #include <assert.h>
@@ -53,7 +54,7 @@ void dump_heap_index(heap_t *heap)
 }
 
 // TODO: must be able to return a phsyical address!!!
-void *alloc(unsigned int size, int align, heap_t *h)
+void *halloc(unsigned int size, int align, heap_t *h)
 {
   heap_t *heap = h;
 
@@ -109,7 +110,7 @@ void *alloc(unsigned int size, int align, heap_t *h)
   return (void *) address;
 }
 
-void free(void *p, heap_t *heap)
+void hfree(void *p, heap_t *heap)
 {
   heap_header_t *header = (heap_header_t *) ((unsigned int)p - sizeof(heap_header_t));
 
@@ -123,13 +124,24 @@ void free(void *p, heap_t *heap)
  *
  *
  */
+uint32_t kmalloc(uint32_t size)
+{
+  uint32_t t;
+  return kmalloc_p(size, 0, &t);
+}
 
-uint32_t kmalloc(uint32_t size, int align, uint32_t *phys)
+uint32_t kmalloc_a(uint32_t size, int align)
+{
+  uint32_t t;
+  return kmalloc_p(size, align, &t);
+}
+
+uint32_t kmalloc_p(uint32_t size, int align, uint32_t *phys)
 {
 	// kernel heap should be initialized
-	void *addr = alloc(size, align, k_heap);
+	void *addr = halloc(size, align, k_heap);
 	if (phys) {
-		page_t *page = pg_get_page((uint32_t)addr, 0, pg_k_pdir_base);
+		page_t *page = pg_get_page((uint32_t)addr, 0, kernel_pg_directory);
 		*phys = page->frame * 0x1000 + ((uint32_t) addr & 0xFFF);
     }
     return (uint32_t) addr;
@@ -137,7 +149,7 @@ uint32_t kmalloc(uint32_t size, int align, uint32_t *phys)
 
 void kfree(void *p)
 {
-	free(p, k_heap);
+	hfree(p, k_heap);
 }
 
 // private static functions

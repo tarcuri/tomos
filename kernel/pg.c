@@ -10,37 +10,27 @@ void pg_init()
 {
   // Before paging is enabled, we are going to statically allocate a few
   // page frames for the paging directory. These will never need to be deallocated.
-
-  // first define a page directory for the kernel itself
-  kernel_pg_directory   = mm_alloc_frame();	// TODO: page directory is larger than 4KB
-
-
+  kernel_pg_directory   = (page_directory_t *)mm_place_kalloc(sizeof(page_directory_t), 1); 
   memset(kernel_pg_directory, 0, sizeof(page_directory_t));
-  kernel_pg_directory->physical_addr = kernel_pg_directory->tables_phys;	// at this point, we're all physical
 
   c_printf("[pg]      kernel page directory initialized at 0x%x\n", kernel_pg_directory);
-  //c_printf("[pg]      kernel page table initialized at 0x%x\n", kernel_pg_table);
-
-  // Map some pages in the kernel heap. This will create page_table_t's
-  unsigned int i;
-  for (i = HEAP_BASE_ADDRESS; i < HEAP_BASE_ADDRESS + HEAP_INITIAL_SIZE; i += 0x1000)
-    pg_get_page(i, 1, kernel_pg_directory);
   
+  first_page = 1;
 
   // We need to identity map (phys addir = virt addr) from 0x0 to end of used memory (JamesM)
-  i = 0;
-  while (i < mm_highest_allocd + 0x1000) {
+  uint32_t i = 0;
+  uint32_t pre_allocd_mem = mm_highest_allocd;
+  c_printf("about to map %d frames\n", pre_allocd_mem / 0x1000);
+  while (i < pre_allocd_mem) {
 	pg_alloc_frame(pg_get_page(i, 1, kernel_pg_directory), 0, 0);
     i += 0x1000;
   }
-
-  // now JamesM allocates all the pages mapped initialially (through the heap)
 
   // install the page fault handler
   _install_isr(INT_VEC_PAGE_FAULT, pg_page_fault);
 
   // now tell the CPU to enable paging
-  pg_switch_directory();
+  pg_switch_directory(kernel_pg_directory);
 
   c_printf("[pg]      CPU paging initialized\n");
 }
@@ -48,7 +38,7 @@ void pg_init()
 // initialize cr3, enable page bit in cr0
 void pg_switch_directory(page_directory_t *dir)
 {
-  asm volatile ("mov %0, %%cr3"     :: "r"(kernel_pg_directory));
+  asm volatile ("mov %0, %%cr3"     :: "r"(&dir->tables_phys));
 
   unsigned int cr0;
   asm volatile ("mov %%cr0, %0"	    : "=r"(cr0));
@@ -70,13 +60,15 @@ page_t *pg_get_page(uint32_t address, int make, page_directory_t *dir)
 		// won't work - we'd need the pre-heap placement allocation like JamesM's
 		// can we just alloc a page using the (physical) memory manager (mm)?
 		if (k_heap) {
-			dir->tables[table_idx] = (page_table_t*) kmalloc(sizeof(page_table_t), 1, &t);
+			dir->tables[table_idx] = (page_table_t*) kmalloc_p(sizeof(page_table_t), 1, &t);
 		} else {
-			dir->tables[table_idx] = (page_table_t*) mm_alloc_frame();	// 4KB aligned frame
+			dir->tables[table_idx] = (page_table_t*) mm_place_kalloc(sizeof(page_table_t), 1);
 			t = dir->tables[table_idx];
 		}
         memset(dir->tables[table_idx], 0, 0x1000);
-		dir->tables_phys[table_idx] = t | PTE_PRESENT | PTE_WRITABLE;
+        // i though we want to clear the supervisor bit for kernel mode?
+		dir->tables_phys[table_idx] = t | PDE_PRESENT | PDE_WRITABLE | PDE_SUPERVISOR;
+        c_printf("table_phys: 0x%x\n", t | PDE_PRESENT | PDE_WRITABLE | PDE_SUPERVISOR);
 		return &dir->tables[table_idx]->pages[address % 1024];
     }
 	return 0;
@@ -126,19 +118,25 @@ void pg_alloc_frame(page_t *page, int is_kernel, int is_writeable)
 
   // grab the next free page index
   unsigned int idx = mm_get_free_frame();
+  if (first_page) {
+    c_printf("page 0: idx: %d\n", idx);
+    first_page = 0;
+  }
 
   mm_set_frame(idx);
   page->present = 1;
   page->rw = (is_writeable==1) ? 1 : 0;
-  page->user = (is_kernel==1) ? 1 : 0;
-  page->frame = MM_FRAME_ADDRESS(idx);
+  page->user = (is_kernel==1) ? 0 : 1;
+  page->frame = idx;
 }
 
 void pg_free_frame(page_t *page)
 {
-  if (!page->frame_addr) {
+  if (!page->frame) {
     return;
   } else {
-    mm_clear_frame(page->frame_addr);
+    mm_clear_frame(page->frame);
   }
 }
+
+

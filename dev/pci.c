@@ -83,7 +83,7 @@ pci_detect_devices()
 {
   unsigned short bus, slot, func;
 
-  //pci_list_head = (pci_dev_t *) kmalloc(sizeof(pci_dev_t), 0);
+  //pci_list_head = (pci_dev_t *) kmalloc(sizeof(pci_dev_t));
   pci_list_head   = 0;
   pci_dev_t *dev  = 0;
   pci_dev_t *prev = 0;
@@ -97,8 +97,9 @@ pci_detect_devices()
       // test function 0, then 1-7 iff it is a multifunctional device
       for (func = 0; func < 8; ++func) {
         unsigned short vendor = pci_read_config_word(bus, slot, func, 0);
+        uint32_t phys;
         if (vendor != 0xFFFF) {
-          dev = (pci_dev_t *) kmalloc(sizeof(pci_dev_t), 0);
+          dev = (pci_dev_t *) kmalloc_p(sizeof(pci_dev_t), 0, &phys);
 
           dev->bus  = bus;
           dev->slot = slot;

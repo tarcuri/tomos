@@ -45,7 +45,7 @@ void read_block(uint32_t fs_block, void *buf, uint32_t len)
 
 ext2_inode_t *ext2_read_inode(device_t *dev, uint32_t ino)
 {
-  ext2_inode_t *inode = (ext2_inode_t *) kmalloc(sizeof(ext2_inode_t), 0);
+  ext2_inode_t *inode = (ext2_inode_t *) kmalloc(sizeof(ext2_inode_t));
 
   // which block group
   uint32_t group = get_block_group(ino);
@@ -65,11 +65,11 @@ ext2_inode_t *ext2_read_inode(device_t *dev, uint32_t ino)
 
 ext2_dir_t *ext2_opendir(device_t *dev, uint32_t ino)
 {
-  ext2_dir_t *dir = (ext2_dir_t *) kmalloc(sizeof(ext2_dir_t), 0);
+  ext2_dir_t *dir = (ext2_dir_t *) kmalloc(sizeof(ext2_dir_t));
 
   dir->inode   = ext2_read_inode(dev, ino);
   dir->bufsize = dir->inode->blocks * 512;
-  dir->buffer  = kmalloc(dir->bufsize, 0);
+  dir->buffer  = kmalloc(dir->bufsize);
   dir->current = (ext2_dirent_t *) dir->buffer;
 
   // read the data blocks
@@ -117,7 +117,7 @@ void ext2_closedir(ext2_dir_t *dir)
 ext2_inode_t *read_inode_table(device_t *dev, uint32_t table_block)
 {
   uint32_t table_size = fs_sb->inode_size * fs_sb->inodes_per_group;
-  ext2_inode_t *inode_table = (ext2_inode_t *) kmalloc(table_size, 0);
+  ext2_inode_t *inode_table = (ext2_inode_t *) kmalloc(table_size);
 
   // transfer 256 sectors at a time
   uint32_t nsectors = table_size / 512;
@@ -158,7 +158,7 @@ ext2_bg_desc_t *read_bgd_table(device_t *dev)
   dr.num_blocks = (bs_bytes / 512) + ((bs_bytes % 512) ? 1 : 0);
   dr.blocks_complete = 0;
 
-  ext2_bg_desc_t *bgd_table = (ext2_bg_desc_t *) kmalloc(dr.num_blocks * 512, 0);
+  ext2_bg_desc_t *bgd_table = (ext2_bg_desc_t *) kmalloc(dr.num_blocks * 512);
 
   dr.buffer = (void *) bgd_table;
 
@@ -170,7 +170,7 @@ ext2_bg_desc_t *read_bgd_table(device_t *dev)
 ext2_superblock_t *read_superblock(device_t *dev)
 {
   // superblock is 1024 bytes from the beginning of the volume
-  ext2_superblock_t *sb = (ext2_superblock_t *) kmalloc(sizeof(ext2_superblock_t), 0);
+  ext2_superblock_t *sb = (ext2_superblock_t *) kmalloc(sizeof(ext2_superblock_t));
 
   // device should be ata block device
   disk_request_t dr;

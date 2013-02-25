@@ -38,7 +38,7 @@ void mm_init(void *mbd, int print)
 
 
 // TODO: keep a pointer to the last allocated bit
-static uint32_t mm_get_free_frame()
+uint32_t mm_get_free_frame()
 {
   uint32_t *bit_map = (uint32_t *) mm_bit_map;
   uint32_t bit_index = 0;
@@ -67,14 +67,25 @@ static uint32_t mm_get_free_frame()
   panic("tomos is out of memory!\n");
 }
 
-// can we assume frames aren't fragmented? i.e. all proceeding frames will be free/unused?
-void mm_alloc_frames(uint32_t n)
+
+void *mm_alloc_frame()
 {
-  uint32_t frame;
+  return mm_alloc_n_frames(1);
+}
+
+// can we assume frames aren't fragmented? i.e. all proceeding frames will be free/unused?
+void *mm_alloc_n_frames(uint32_t n)
+{
+  uint32_t idx = 0;
   int i = 0;
   for (i = 0; i < n; i++) {
+    uint32_t frame;
     frame = mm_get_free_frame();
+    mm_set_frame(frame);
+    if (i == 0)
+      idx = frame;
   }
+  return (void *) MM_FRAME_ADDRESS(idx);
 }
 
 void mm_set_frame(uint32_t idx)
@@ -95,6 +106,24 @@ void mm_clear_frame(void *frame)
   MM_FRAME_DISABLE_BM(idx);
   mm_allocated_frames--;
 }
+
+// CAUTION: only to be used before paging
+uint32_t mm_place_kalloc(uint32_t size, int align)
+{
+  // if not already page-aligned
+  if (align == 1 && (mm_high_mem_base & 0xFFFFF000)) {
+    mm_high_mem_base &= 0xFFFFF000;
+    mm_high_mem_base += 0x1000;
+  } 
+  uint32_t tmp = mm_high_mem_base;
+  mm_high_mem_base += size;
+  mm_highest_allocd = mm_high_mem_base;
+  // update these params
+  mm_high_mem_limit = _memory_ceiling - mm_high_mem_base;
+  mm_total_frames	= mm_high_mem_limit / 4096;
+  return tmp;
+}
+
 
 /*
  *

@@ -18,10 +18,10 @@ void vfs_init()
   ext2_init();
 
   // dentry cache
-  dcache.table = (uint32_t *) kmalloc(sizeof(uint32_t) * DCACHE_SIZE, 0);
+  dcache.table = (uint32_t *) kmalloc(sizeof(uint32_t) * DCACHE_SIZE);
 
   // 1 superblock for now, use the disk ext2 sb
-  vfs_sb = (struct superblock *) kmalloc(sizeof(struct superblock), 0);
+  vfs_sb = (struct superblock *) kmalloc(sizeof(struct superblock));
 
   vfs_sb->dev = fs_dev;
   vfs_sb->read_inode = (read_inode_func) ext2_read_inode;

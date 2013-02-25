@@ -55,12 +55,14 @@ page_directory_t *kernel_pg_directory;
 
 page_table_t *kernel_pg_table;
 
-extern heap_t;
-extern heap_t *k_heap;
+//extern heap_t;
+int first_page;
 
 // functions
 void pg_init(void);
 void pg_switch_directory(page_directory_t *dir);
+
+page_t *pg_get_page(uint32_t address, int make, page_directory_t *dir);
 
 page_directory_t	* pg_clone_directory();
 page_table_t		* pg_clone_table();
@@ -69,6 +71,5 @@ void pg_alloc_frame(page_t *page, int is_kernel, int is_writeable);
 void pg_free_frame(page_t *page);
 
 void pg_page_fault(int error);
-
 
 #endif

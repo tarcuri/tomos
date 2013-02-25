@@ -19,7 +19,8 @@ void kb_init()
   // other processes will get their own
 
   // duh, using the same frame as the heap
-  kb_active_buffer = (uint16_t *) kmalloc(KEYBOARD_BUFSIZE, 0);
+  uint32_t phys;
+  kb_active_buffer = (uint16_t *) kmalloc_p(KEYBOARD_BUFSIZE, 0, &phys);
 
   kb_write_idx = 0;
   kb_read_idx = 0;

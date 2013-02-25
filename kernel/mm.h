@@ -33,14 +33,18 @@ uint32_t mm_total_frames;			// total number of frames available
 void mm_init(void *mbd, int print);
 
 // allocate a 4KB aligned page frame
-void *mm_alloc_frame(uint32_t idx);
-void mm_set_frame(void *);
+void *mm_alloc_frame(void);
+void *mm_alloc_n_frames(uint32_t n);
+void mm_set_frame(uint32_t idx);
+
+uint32_t mm_place_kalloc(uint32_t size, int align);
 
 // perform grub multiboot initialization
 void mm_grub_multiboot(void *mbd, int print);
 
 
-// private static functions
-static uint32_t mm_get_free_frame(void);
+// private static functions (why?)
+// static uint32_t mm_get_free_frame(void);
+uint32_t mm_get_free_frame(void);
 
 #endif
