@@ -62,17 +62,18 @@ void kernel(void* mbd, uint32_t magic, uint32_t other)
   //heap_init();
   //uint32_t *ptr = (uint32_t *)0xAB000000;
   //uint32_t do_page_fault = *ptr;
-  //c_printf("waiting\n");
-  //while (1) {}
 
   // hardware and devices
-  kb_init();
-  pci_init();
+  //kb_init();
+  //pci_init();
 
   // TODO: still get int 82h if interrupts aren't already enabled
-  proc_init();
+  //proc_init();
   syscall_init();
-  ata_init();
+  //ata_init();
+
+  c_printf("waiting\n");
+  while (1) {}
 
   //asm volatile ("sti");
   //c_printf("EFLAGS: %x\n", get_eflags());
