@@ -58,17 +58,22 @@ void kernel(void* mbd, uint32_t magic, uint32_t other)
   // merge all memory init into the mm module
   k_heap = 0;
   mm_init(mbd, 1);
-  pg_init();
-  //heap_init();
+  pg_init(); // pg.c enables the heap
+
+  // test page fault
   //uint32_t *ptr = (uint32_t *)0xAB000000;
   //uint32_t do_page_fault = *ptr;
+
+  // test heap
+  //void *mem = halloc(20, 0, k_heap);
+  //c_printf("mem addr: 0x%x\n", mem);
 
   // hardware and devices
   //kb_init();
   //pci_init();
 
-  // TODO: still get int 82h if interrupts aren't already enabled
-  //proc_init();
+  // system calls reference processes, and processes require heap.
+  proc_init();
   syscall_init();
   //ata_init();
 

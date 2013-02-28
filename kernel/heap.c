@@ -8,7 +8,7 @@
 // initialize the kernel heap
 void heap_init()
 {
-  k_heap = (heap_t *) HEAP_BASE_ADDRESS;
+  k_heap = (heap_t *) k_heap_loc;
 
   // initialize the index with one big hole
   k_heap->index = (heap_header_t **) ((unsigned int) k_heap + sizeof(heap_t));	// why am I doing this again? JamesM?

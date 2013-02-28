@@ -7,7 +7,8 @@
 
 #include <stdint.h>
 
-#define HEAP_BASE_ADDRESS	(unsigned int)(&kernel_end + 0x4000)
+//#define HEAP_BASE_ADDRESS	(unsigned int)(&kernel_end + 0x4000)
+#define HEAP_BASE_ADDRESS	(unsigned int)(&mm_highest_allocd + 0x1000)
 #define HEAP_INITIAL_SIZE	0x100000
 #define HEAP_LIMIT_ADDRESS	0x00400000	// expandable to 4MB
 #define HEAP_INDEX_SIZE		0x1000		// 4096 holes
@@ -39,6 +40,8 @@ typedef struct heap
 
 // global data
 heap_t *k_heap;
+
+unsigned int k_heap_loc;
 
 // functions
 

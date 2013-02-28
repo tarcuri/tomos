@@ -14,17 +14,26 @@ void pg_init()
   memset(kernel_pg_directory, 0, sizeof(page_directory_t));
 
   c_printf("[pg]      kernel page directory initialized at 0x%x\n", kernel_pg_directory);
-  
-  first_page = 1;
+
+  // need to map in the kernel heap
+  uint32_t i = 0;
+  k_heap_loc = HEAP_BASE_ADDRESS;
+  for (i = k_heap_loc; i < k_heap_loc + HEAP_INITIAL_SIZE; i += 0x1000)
+    pg_get_page(i, 1, kernel_pg_directory);
 
   // We need to identity map (phys addir = virt addr) from 0x0 to end of used memory (JamesM)
-  uint32_t i = 0;
+  // After this we can't increase the placement address, need to enable heap.
   uint32_t pre_allocd_mem = mm_highest_allocd;
   c_printf("about to map %d frames\n", pre_allocd_mem / 0x1000);
+  i = 0;
   while (i < pre_allocd_mem) {
 	pg_alloc_frame(pg_get_page(i, 1, kernel_pg_directory), 0, 0);
     i += 0x1000;
   }
+
+  // allocate the heap pages mapped in earlier
+  for (i = k_heap_loc; i < k_heap_loc + HEAP_INITIAL_SIZE; i += 0x1000)
+    pg_alloc_frame(pg_get_page(i, 1, kernel_pg_directory), 0, 0);
 
   // install the page fault handler
   _install_isr(INT_VEC_PAGE_FAULT, pg_page_fault);
@@ -33,6 +42,9 @@ void pg_init()
   pg_switch_directory(kernel_pg_directory);
 
   c_printf("[pg]      CPU paging initialized\n");
+
+  // now initialize the heap
+  heap_init();
 }
 
 // initialize cr3, enable page bit in cr0
@@ -118,10 +130,6 @@ void pg_alloc_frame(page_t *page, int is_kernel, int is_writeable)
 
   // grab the next free page index
   unsigned int idx = mm_get_free_frame();
-  if (first_page) {
-    c_printf("page 0: idx: %d\n", idx);
-    first_page = 0;
-  }
 
   mm_set_frame(idx);
   page->present = 1;
