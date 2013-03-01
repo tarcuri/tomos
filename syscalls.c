@@ -143,10 +143,9 @@ int32_t sys_execve(context_t *c, uint32_t *args)
 // increases program data space (needed by malloc)
 int32_t sys_sbrk(context_t *c, uint32_t *args)
 {
-  uint32_t *p = (uint32_t *) kmalloc(args[0]);
-
-  //c_printf("sbrk(%d) = 0x%x\n", args[0], p);
-  c->eax = (uint32_t) p;
+  c_printf("sbrk(%d)\n", args[0]);
+  
+  c->eax = 0;
 }
 
 int32_t sys_stat(context_t *c, uint32_t *args)

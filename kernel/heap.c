@@ -126,19 +126,16 @@ void hfree(void *p, heap_t *heap)
  */
 uint32_t kmalloc(uint32_t size)
 {
-  uint32_t t;
-  return kmalloc_p(size, 0, &t);
+  return kmalloc_p(size, 0, 0);
 }
 
 uint32_t kmalloc_a(uint32_t size, int align)
 {
-  uint32_t t;
-  return kmalloc_p(size, align, &t);
+  return kmalloc_p(size, align, 0);
 }
 
 uint32_t kmalloc_p(uint32_t size, int align, uint32_t *phys)
 {
-	// kernel heap should be initialized
 	void *addr = halloc(size, align, k_heap);
 	if (phys) {
 		page_t *page = pg_get_page((uint32_t)addr, 0, kernel_pg_directory);

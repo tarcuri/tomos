@@ -68,22 +68,25 @@ void kernel(void* mbd, uint32_t magic, uint32_t other)
   //void *mem = halloc(20, 0, k_heap);
   //c_printf("mem addr: 0x%x\n", mem);
 
-  // hardware and devices
-  //kb_init();
-  //pci_init();
 
   // system calls reference processes, and processes require heap.
   proc_init();
-  syscall_init();
-  //ata_init();
 
-  c_printf("waiting\n");
-  while (1) {}
+  // hardware and devices
+  kb_init();
+  pci_init();
+  ata_init();
+
+  syscall_init();
+
+  //c_printf("waiting\n");
+  //while (1) {}
 
   //asm volatile ("sti");
   //c_printf("EFLAGS: %x\n", get_eflags());
   //c_getcode();
   //c_printf("\nSystem initialization complete!\n");
+
   // at this point proc should have initlialized a pcb for the kernel,
   // when we return loader.S should jmp to isr_restore which will inialize a
   // new context and stack for the kernel and jump down to main
@@ -93,7 +96,7 @@ void kernel(void* mbd, uint32_t magic, uint32_t other)
 void kmain()
 {
   //c_printf("ANYTHING?\n");
-  //stack_dump(current_proc);
+  stack_dump(current_proc);
   // TODO: interrupts fire for an ATA command only if printf()  is called first...
   c_printf("Press any key to continue...\n");
   //putchar('?');
@@ -101,6 +104,6 @@ void kmain()
 
   //c_printf("EFLAGS: %x\n", get_eflags());
 
-  ext2_init();
+  //ext2_init();
   command_loop();
 }

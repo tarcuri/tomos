@@ -79,6 +79,7 @@ void ata_init()
   // clear nIEN
   __outb(ata_ctrl_reg | ATA_CTRL_R_DEVICE, 0x0);
 
+  c_printf("[ata]     ATA driver initialized\n");
 }
 
 

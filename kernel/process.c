@@ -7,7 +7,7 @@ void proc_init()
   next_pid = 1;
 
   // create a PCB for the kernel
-  pcb_t *kernel_pcb = (pcb_t *) kmalloc(sizeof(pcb_t));
+  pcb_t *kernel_pcb = (pcb_t *) kmalloc_a(sizeof(pcb_t));
 
   kernel_pcb->stack = (stack_t *) kmalloc(sizeof(stack_t));
 
