@@ -53,6 +53,7 @@ unsigned int k_heap_loc;
  *
  */
 void heap_init(void);
+void heap_expand(uint32_t bytes, heap_t *h);
 void dump_heap_index(heap_t *);
 
 // alloc a contiguous region of more, optionally page aligned

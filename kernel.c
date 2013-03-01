@@ -27,6 +27,7 @@
 #include "tomsh.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 
 // initial kernel entry point
 void kernel(void* mbd, uint32_t magic, uint32_t other)
@@ -96,11 +97,13 @@ void kernel(void* mbd, uint32_t magic, uint32_t other)
 void kmain()
 {
   //c_printf("ANYTHING?\n");
-  stack_dump(current_proc);
+  //stack_dump(current_proc);
   // TODO: interrupts fire for an ATA command only if printf()  is called first...
-  c_printf("Press any key to continue...\n");
+  //c_printf("Press any key to continue...\n");
   //putchar('?');
   //getchar();
+
+  void *m = malloc(10);
 
   //c_printf("EFLAGS: %x\n", get_eflags());
 

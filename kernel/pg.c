@@ -80,7 +80,6 @@ page_t *pg_get_page(uint32_t address, int make, page_directory_t *dir)
         memset(dir->tables[table_idx], 0, 0x1000);
         // i though we want to clear the supervisor bit for kernel mode?
 		dir->tables_phys[table_idx] = t | PDE_PRESENT | PDE_WRITABLE | PDE_SUPERVISOR;
-        c_printf("table_phys: 0x%x\n", t | PDE_PRESENT | PDE_WRITABLE | PDE_SUPERVISOR);
 		return &dir->tables[table_idx]->pages[address % 1024];
     }
 	return 0;

@@ -43,6 +43,28 @@ void heap_init()
   k_heap->index_size = 1;
 }
 
+void heap_expand(uint32_t bytes, heap_t *heap)
+{
+  uint32_t newaddr = heap->end + bytes;
+  if (newaddr & 0xFFFFF000 != 0) {
+    newaddr &= 0xFFFFF000;
+    newaddr += 0x1000;
+  }
+
+  if (newaddr > heap->limit)
+    panic("heap expanded too much!");
+
+  uint32_t newsize = newaddr - heap->base;
+  uint32_t oldsize = heap->end - heap->base;
+  uint32_t i = oldsize;
+  while (i < newsize) {
+    pg_alloc_frame(pg_get_page(heap->base + i, 1, kernel_pg_directory),
+                   (heap->super) ? 1 : 0, (heap->write) ? 1 : 0);
+    i += 0x1000;
+  }
+  heap->end = newaddr;
+}
+
 void dump_heap_index(heap_t *heap)
 {
   int i;

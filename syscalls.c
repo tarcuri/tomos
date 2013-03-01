@@ -9,6 +9,7 @@ extern int32_t errno;
 #include "dev/console.h"
 
 #include "kernel/process.h"
+#include "kernel/heap.h"
 
 void syscall_init()
 {
@@ -143,9 +144,11 @@ int32_t sys_execve(context_t *c, uint32_t *args)
 // increases program data space (needed by malloc)
 int32_t sys_sbrk(context_t *c, uint32_t *args)
 {
-  c_printf("sbrk(%d)\n", args[0]);
+  uint32_t prev_brk = k_heap->end;
+  heap_expand(args[0], k_heap);
   
-  c->eax = 0;
+  c_printf("sbrk(%d) = 0x%x\n", args[0], prev_brk);
+  c->eax = prev_brk;
 }
 
 int32_t sys_stat(context_t *c, uint32_t *args)
