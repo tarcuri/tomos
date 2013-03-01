@@ -17,6 +17,7 @@
 #define NUM_SYSCALLS	10
 
 #define INT_VEC_SYSCALL	0x80
+static unsigned int __attribute__((used)) INT_VEC_SYS_CALL = 0x80;
 
 // system call numbers
 #define SYS_exit	1
