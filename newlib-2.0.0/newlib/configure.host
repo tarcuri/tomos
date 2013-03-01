@@ -419,6 +419,9 @@ case "${host}" in
   h8500-*-elf*)
 	sys_dir=h8500hms
 	;;
+  i[3-7]86-*-tomos*)
+    sys_dir=tomos
+    ;;
   i[34567]86-*-rdos*)
 	sys_dir=rdos
 	newlib_cflags="${newlib_cflags} -DMISSING_SYSCALL_NAMES"
