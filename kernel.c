@@ -104,7 +104,10 @@ void kmain()
   //getchar();
 
   void *m = malloc(10);
-
+  c_printf("malloc'd: 0x%x\n", m);
+  *(int *)m = 10;
+  c_printf("m_val: %d\n", *(int *)m);
+  printf("hello\n");
   //c_printf("EFLAGS: %x\n", get_eflags());
 
   //ext2_init();
