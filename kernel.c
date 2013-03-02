@@ -110,6 +110,10 @@ void kmain()
 
   printf("pid: %d\n", getpid());
   printf("hello newlib\n");
+  int num = 0;
+  if (current_proc->pid == 2)
+    scanf("%d", &num);
+  printf("num: %d\n", num);
   //sys_sbrk(10);
   //printf("hello\n");
   //c_printf("EFLAGS: %x\n", get_eflags());
