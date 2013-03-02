@@ -108,7 +108,7 @@ void kmain()
   *(int *)m = 10;
   c_printf("m_val: %d\n", *(int *)m);
 
-  c_printf("pid: %d\n", getpid());
+  printf("pid: %d\n", getpid());
   printf("hello newlib\n");
   //sys_sbrk(10);
   //printf("hello\n");

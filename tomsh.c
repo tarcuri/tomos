@@ -22,13 +22,15 @@
 // strstr, strtok, etc
 void command_loop()
 {
+  printf("entered the command loop\n");
   strncpy(prompt, "tomsh $", 8);
   int scroll = 0;
   int lines_up = 0;
 
   while (1) {
     if (!scroll) {
-      c_printf("%s ", prompt);
+      printf("%s ", prompt);
+      fflush(stdout);
     }
 
     uint16_t c;
