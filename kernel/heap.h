@@ -8,7 +8,7 @@
 #include <stdint.h>
 
 //#define HEAP_BASE_ADDRESS	(unsigned int)(&kernel_end + 0x4000)
-#define HEAP_BASE_ADDRESS	(unsigned int)(&mm_highest_allocd + 0x1000)
+#define HEAP_BASE_ADDRESS	(unsigned int)(mm_highest_allocd + 0x1000)
 #define HEAP_INITIAL_SIZE	0x100000
 #define HEAP_LIMIT_ADDRESS	0x01000000	// expandable to 16MB
 #define HEAP_INDEX_SIZE		0x1000		// 4096 holes

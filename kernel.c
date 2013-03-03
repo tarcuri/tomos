@@ -102,7 +102,12 @@ void kmain()
   //c_printf("Press any key to continue...\n");
   //putchar('?');
   //getchar();
+  c_printf("testing allocators\n");
+  uint32_t args[1] = {2000000};
+  void *m = sys_sbrk(current_proc, args);
+  first_page = 2;
 
+/*
   void *m = malloc(10);
   c_printf("malloc'd: 0x%x\n", m);
   *(int *)m = 10;
@@ -117,7 +122,7 @@ void kmain()
   //sys_sbrk(10);
   //printf("hello\n");
   //c_printf("EFLAGS: %x\n", get_eflags());
-
+*/
   //ext2_init();
   command_loop();
 }

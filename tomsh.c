@@ -23,6 +23,8 @@
 void command_loop()
 {
   printf("entered the command loop\n");
+  c_printf("waiting\n");
+  while(1);
   strncpy(prompt, "tomsh $", 8);
   int scroll = 0;
   int lines_up = 0;
