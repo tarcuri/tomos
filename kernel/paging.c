@@ -44,6 +44,24 @@ void pg_init()
   asm volatile ("movl %%cr0, %0" : "=r"(cr0));
   cr0 |= X86_CR0_PAGING;
   asm volatile ("movl %0, %%cr0" : : "r"(cr0));
+
+  // now get the virtual address of the page directory
+  asm volatile ("movl %%cr3, %0" : "=r"(k_page_directory));
+}
+
+int get_phys_addr(uint32_t va, uint32_t *pa)
+{
+  uint32_t virtual_pg = va / 0x1000;
+  uint32_t pt_idx = PG_DIR_IDX(virtual_pg);
+
+  if (k_page_directory[pt_idx] == 0)
+    return 0;   // not allocated yet
+
+  uint32_t *pt = k_page_directory[pt_idx];
+  if (pt[virtual_pg] != 0) {
+    if (pa) *pa = pt[virtual_pg] & 0xFFFFF000;
+    return 1;
+  }
 }
 
 void pg_page_fault(uint32_t error)

@@ -161,6 +161,8 @@ uint32_t kmalloc_p(uint32_t size, int align, uint32_t *phys)
 	void *addr = halloc(size, align, k_heap);
 	if (phys) {
 		//page_t *page = pg_get_page((uint32_t)addr, 0, kernel_pg_directory);
+        get_phys_addr(addr, &phys);
+
 		//*phys = page->frame * 0x1000 + ((uint32_t) addr & 0xFFF);
     }
     return (uint32_t) addr;
