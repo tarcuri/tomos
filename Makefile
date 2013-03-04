@@ -9,9 +9,9 @@ LD = ${TOOLS}/i586-pc-tomos-ld
 CFLAGS = -g -nostdlib -nostartfiles -nodefaultlibs -fno-builtin -fno-hosted
 AFLAGS =
 
-LIB_SRC = support.c syscalls.c kernel/interrupt.c kernel/mm.c kernel/pg.c kernel/heap.c \
+LIB_SRC = support.c syscalls.c kernel/interrupt.c kernel/mm.c kernel/paging.c kernel/heap.c \
           kernel/process.c tomsh.c
-LIB_OBJ = support.o syscalls.o interrupt.o mm.o pg.o heap.o process.o tomsh.o
+LIB_OBJ = support.o syscalls.o interrupt.o mm.o paging.o heap.o process.o tomsh.o
 
 DRV_SRC = ./dev/keyboard.c ./dev/console.c ./dev/clock.c ./dev/pci.c ./dev/ata.c
 DRV_OBJ = keyboard.o console.o clock.o pci.o ata.o
@@ -28,7 +28,7 @@ libs: ${LIB_SRC}
 	${CC} ${CFLAGS} -I${BASEDIR} -o interrupt.o -c kernel/interrupt.c
 	${CC} ${CFLAGS} -I${BASEDIR} -o heap.o -c kernel/heap.c
 	${CC} ${CFLAGS} -I${BASEDIR} -o mm.o -c kernel/mm.c
-	${CC} ${CFLAGS} -I${BASEDIR} -o pg.o -c kernel/pg.c
+	${CC} ${CFLAGS} -I${BASEDIR} -o paging.o -c kernel/paging.c
 	${CC} ${CFLAGS} -I${BASEDIR} -o stack.o -c kernel/stack.c
 	${CC} ${CFLAGS} -I${BASEDIR} -o process.o -c kernel/process.c
 	${CC} ${CFLAGS}	-I${BASEDIR} -o syscalls.o -c syscalls.c

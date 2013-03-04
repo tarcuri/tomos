@@ -5,7 +5,7 @@
 
 #include "kernel/interrupt.h"
 #include "kernel/mm.h"
-#include "kernel/pg.h"
+#include "kernel/paging.h"
 #include "kernel/heap.h"
 #include "kernel/process.h"
 
@@ -105,7 +105,6 @@ void kmain()
   c_printf("testing allocators\n");
   uint32_t args[1] = {2000000};
   void *m = sys_sbrk(current_proc, args);
-  first_page = 2;
 
 /*
   void *m = malloc(10);
