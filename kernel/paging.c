@@ -15,8 +15,6 @@ void pg_init()
   memset(k_page_directory, 0, 0x1000);
   uint32_t physical_addr = (uint32_t) k_page_directory;
 
-  // map in the heap?
-
   // create the base page table
   k_page_directory[0] = mm_place_kalloc(0x1000, 1) | PG_PRESENT | PG_WRITE;
   uint32_t *pt = (uint32_t *) (k_page_directory[0] & 0xFFFFF000);
@@ -37,6 +35,10 @@ void pg_init()
 
   // The last table loops back on the directory itself.
   k_page_directory[1023] = (uint32_t) k_page_directory | PG_PRESENT | PG_WRITE;
+
+  // now enable the heap
+  k_heap_loc = (mm_highest_allocd + 0x1000) & 0xFFFFF000;
+  heap_init();
 
   asm volatile ("movl %0, %%cr3"    : : "r"(k_page_directory));
 
