@@ -4,8 +4,6 @@
 
 #include <assert.h>
 
-
-// initialize the kernel heap
 void heap_init()
 {
   k_heap = (heap_t *) k_heap_loc;
@@ -21,7 +19,7 @@ void heap_init()
   k_heap->super = 1;
   k_heap->write = 1;
 
-  c_printf("[heap]    kernel heap initialized:\n");
+  c_printf("[heap]    kernel heap initialized at 0x%x\n", k_heap_loc);
 
   // create the initial hole
   heap_header_t *header = (heap_header_t *) k_heap->base;
@@ -59,7 +57,7 @@ void heap_expand(uint32_t bytes, heap_t *heap)
   uint32_t i = oldsize;
   while (i < newsize) {
     page_t *pg = get_page(heap->base + i, kpd);
-    c_printf("new page: %x\n", pg);
+    //c_printf("new page: 0x%x\n", (uint32_t *) pg);
     //pg_alloc_frame(pg_get_page(heap->base + i, 1, kpd),
     //               (heap->super) ? 1 : 0, (heap->write) ? 1 : 0);
     i += 0x1000;
@@ -77,7 +75,6 @@ void dump_heap_index(heap_t *heap)
   }
 }
 
-// TODO: must be able to return a phsyical address!!!
 void *halloc(unsigned int size, int align, heap_t *h)
 {
   heap_t *heap = h;
@@ -160,14 +157,11 @@ uint32_t kmalloc_a(uint32_t size, int align)
 
 uint32_t kmalloc_p(uint32_t size, int align, uint32_t *phys)
 {
-	void *addr = halloc(size, align, k_heap);
+	uint32_t *addr = (uint32_t *) halloc(size, align, k_heap);
 	if (phys) {
-		//page_t *page = pg_get_page((uint32_t)addr, 0, kpd);
-        get_phys_addr(addr, &phys);
-
-		//*phys = page->frame * 0x1000 + ((uint32_t) addr & 0xFFF);
+        get_phys_addr(addr, phys);
     }
-    return (uint32_t) addr;
+    return addr;
 }
 
 void kfree(void *p)

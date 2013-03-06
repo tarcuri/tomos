@@ -24,6 +24,8 @@ void pg_init()
     pt[i] = i*0x1000 | PG_PRESENT | PG_WRITE;
   }
 
+  c_printf("id mapped up to: 0x%x\n", pt[1023]);
+
   // assign the second-last table and zero it (JamesM)
   kpd[1022] = mm_place_kalloc(0x1000, 1) | PG_PRESENT | PG_WRITE;
   pt = (uint32_t *) (kpd[1022] & 0xFFFFF000);
@@ -40,7 +42,8 @@ void pg_init()
   heap_init();
 
   switch_directory(kpd);
-
+  c_printf("heap loc: 0x%x\n", k_heap_loc);
+  c_printf("phys: 0x%x\n", get_page(k_heap_loc, kpd));
   // now get the virtual address of the page directory
 }
 
@@ -67,7 +70,8 @@ page_t get_page(uint32_t va, page_directory_t *dir)
   if (dir[pt_idx] == 0) {
     uint32_t phys;
     dir[pt_idx] = kmalloc_p(0x1000, 1, &phys);
-    pt = dir[pt_idx] = phys | PG_PRESENT | PG_WRITE;
+    dir[pt_idx] = phys | PG_PRESENT | PG_WRITE;
+    pt = dir[pd_idx] & 0xFFFFF000;
   } else {
     pt = dir[pt_idx];
   }
@@ -92,5 +96,7 @@ int get_phys_addr(uint32_t va, uint32_t *pa)
 
 void pg_page_fault(uint32_t error)
 {
+  c_printf("page fault: %d\n", error);
 
+  panic("PAGE FAULT");
 }
