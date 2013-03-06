@@ -1,23 +1,22 @@
 #include "paging.h"
 #include "mm.h"
+#include "heap.h"
 #include "x86.h"
 
 #include <stdlib.h>
-
-page_directory_t *k_page_directory = 0;
 
 void pg_init()
 {
   _install_isr(INT_VEC_PAGE_FAULT, pg_page_fault);
 
   // first create a kernel page directory
-  k_page_directory = (page_directory_t *) mm_place_kalloc(0x1000, 1);
-  memset(k_page_directory, 0, 0x1000);
-  uint32_t physical_addr = (uint32_t) k_page_directory;
+  kpd = (page_directory_t *) mm_place_kalloc(0x1000, 1);
+  memset(kpd, 0, 0x1000);
+  uint32_t physical_addr = (uint32_t) kpd;
 
   // create the base page table
-  k_page_directory[0] = mm_place_kalloc(0x1000, 1) | PG_PRESENT | PG_WRITE;
-  uint32_t *pt = (uint32_t *) (k_page_directory[0] & 0xFFFFF000);
+  kpd[0] = mm_place_kalloc(0x1000, 1) | PG_PRESENT | PG_WRITE;
+  uint32_t *pt = (uint32_t *) (kpd[0] & 0xFFFFF000);
 
   // identity map the first 4 MB
   uint32_t i;
@@ -26,29 +25,54 @@ void pg_init()
   }
 
   // assign the second-last table and zero it (JamesM)
-  k_page_directory[1022] = mm_place_kalloc(0x1000, 1) | PG_PRESENT | PG_WRITE;
-  pt = (uint32_t *) (k_page_directory[1022] & 0xFFFFF000);
+  kpd[1022] = mm_place_kalloc(0x1000, 1) | PG_PRESENT | PG_WRITE;
+  pt = (uint32_t *) (kpd[1022] & 0xFFFFF000);
   memset(pt, 0, 0x1000);
 
   // The last entry of the second-last table is the directory itself.
-  pt[1023] = (uint32_t) k_page_directory | PG_PRESENT | PG_WRITE;
+  pt[1023] = (uint32_t) kpd | PG_PRESENT | PG_WRITE;
 
   // The last table loops back on the directory itself.
-  k_page_directory[1023] = (uint32_t) k_page_directory | PG_PRESENT | PG_WRITE;
+  kpd[1023] = (uint32_t) kpd | PG_PRESENT | PG_WRITE;
 
   // now enable the heap
   k_heap_loc = (mm_highest_allocd + 0x1000) & 0xFFFFF000;
   heap_init();
 
-  asm volatile ("movl %0, %%cr3"    : : "r"(k_page_directory));
+  switch_directory(kpd);
+
+  // now get the virtual address of the page directory
+}
+
+page_directory_t *switch_directory(page_directory_t *pd)
+{
+  asm volatile ("movl %0, %%cr3"    : : "r"(pd));
 
   uint32_t cr0;
   asm volatile ("movl %%cr0, %0" : "=r"(cr0));
   cr0 |= X86_CR0_PAGING;
   asm volatile ("movl %0, %%cr0" : : "r"(cr0));
 
-  // now get the virtual address of the page directory
-  asm volatile ("movl %%cr3, %0" : "=r"(k_page_directory));
+  page_directory_t *old_pd = 0;
+  asm volatile ("movl %%cr3, %0" : "=r"(old_pd));
+  return old_pd;
+}
+
+page_t get_page(uint32_t va, page_directory_t *dir)
+{
+  page_table_t *pt;
+  uint32_t virtual_pg = va / 0x1000;
+  uint32_t pt_idx = PG_DIR_IDX(virtual_pg);
+
+  if (dir[pt_idx] == 0) {
+    uint32_t phys;
+    dir[pt_idx] = kmalloc_p(0x1000, 1, &phys);
+    pt = dir[pt_idx] = phys | PG_PRESENT | PG_WRITE;
+  } else {
+    pt = dir[pt_idx];
+  }
+
+  return (page_t) &pt[virtual_pg % 1024];
 }
 
 int get_phys_addr(uint32_t va, uint32_t *pa)
@@ -56,10 +80,10 @@ int get_phys_addr(uint32_t va, uint32_t *pa)
   uint32_t virtual_pg = va / 0x1000;
   uint32_t pt_idx = PG_DIR_IDX(virtual_pg);
 
-  if (k_page_directory[pt_idx] == 0)
+  if (kpd[pt_idx] == 0)
     return 0;   // not allocated yet
 
-  uint32_t *pt = k_page_directory[pt_idx];
+  uint32_t *pt = kpd[pt_idx];
   if (pt[virtual_pg] != 0) {
     if (pa) *pa = pt[virtual_pg] & 0xFFFFF000;
     return 1;
