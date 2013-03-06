@@ -78,7 +78,7 @@ page_t get_page(uint32_t va, page_directory_t *dir)
     pt = (page_table_t *) (dir[pt_idx] & 0xFFFFF000);
   }
 
-  return (page_t) &pt[virtual_pg % 1024];
+  return (page_t) pt[virtual_pg % 1024];
 }
 
 int get_phys_addr(uint32_t va, uint32_t *pa)
