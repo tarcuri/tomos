@@ -19,7 +19,7 @@ typedef uint32_t page_directory_t;
 page_directory_t *kpd;
 
 // functions
-void pg_init(void);
+void pg_init(void); 
 void pg_page_fault(uint32_t error);
 
 /*
