@@ -39,7 +39,7 @@ void pg_init()
 
   // now enable the heap
   k_heap_loc = (mm_highest_allocd + 0x1000) & 0xFFFFF000;
-  //heap_init();
+  heap_init();
 
   switch_directory(kpd);
   // after switching on paging, kpd[0] seems to be increased be 32
@@ -97,7 +97,10 @@ void alloc_frame(page_t *pg, int kernel, int write)
 
 void pg_page_fault(uint32_t error)
 {
-  c_printf("page fault: %d\n", error);
+  unsigned int fault_addr;
+  asm volatile("mov %%cr2, %0" : "=r"(fault_addr));
+
+  c_printf("\n  PAGE FAULT: 0x%x\n", fault_addr);
 
   panic("PAGE FAULT");
 }
