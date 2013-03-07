@@ -80,6 +80,21 @@ uint32_t get_phys_addr(uint32_t va)
   return ((uint32_t) pg | (uint32_t) PG_PAGE_OFFSET(va));
 }
 
+void alloc_frame(page_t *pg, int kernel, int write)
+{
+  uint32_t frame = (uint32_t) pg & 0xFFFFF000;
+  if (frame) {
+    // already allocated
+    return;
+  } else {
+    frame = mm_get_free_frame();
+    mm_set_frame(frame);
+    frame |= (kernel ? 0 : PG_USER) | (write ? PG_WRITE : 0);
+    *pg = frame;
+    return;
+  }
+}
+
 void pg_page_fault(uint32_t error)
 {
   c_printf("page fault: %d\n", error);

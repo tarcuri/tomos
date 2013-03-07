@@ -41,7 +41,7 @@ void pg_page_fault(uint32_t error);
 void switch_directory(page_directory_t *pd);
 
 page_t *get_page(uint32_t va);
-//void alloc_frame(page_t *p, int kernel, int write);
 uint32_t get_phys_addr(uint32_t va);
+void alloc_frame(page_t *pg, int kernel, int write);
 
 #endif

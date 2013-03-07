@@ -56,10 +56,7 @@ void heap_expand(uint32_t bytes, heap_t *heap)
   uint32_t oldsize = heap->end - heap->base;
   uint32_t i = oldsize;
   while (i < newsize) {
-    page_t *pg = get_page(heap->base + i);
-    c_printf("page for 0x%x @ 0x%x\n", heap->base + i, pg);
-    //pg_alloc_frame(pg_get_page(heap->base + i, 1, kpd),
-    //               (heap->super) ? 1 : 0, (heap->write) ? 1 : 0);
+    alloc_frame(get_page(heap->base + i), heap->super, heap->write);
     i += 0x1000;
   }
   heap->end = newaddr;
