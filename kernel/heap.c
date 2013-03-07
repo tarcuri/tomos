@@ -56,8 +56,8 @@ void heap_expand(uint32_t bytes, heap_t *heap)
   uint32_t oldsize = heap->end - heap->base;
   uint32_t i = oldsize;
   while (i < newsize) {
-    page_t *pg = (page_t *) get_page(heap->base + i, kpd);
-    //c_printf("new page: 0x%x\n", (uint32_t *) pg);
+    page_t *pg = get_page(heap->base + i);
+    c_printf("page for 0x%x @ 0x%x\n", heap->base + i, pg);
     //pg_alloc_frame(pg_get_page(heap->base + i, 1, kpd),
     //               (heap->super) ? 1 : 0, (heap->write) ? 1 : 0);
     i += 0x1000;
@@ -159,7 +159,7 @@ uint32_t kmalloc_p(uint32_t size, int align, uint32_t *phys)
 {
 	uint32_t addr = (uint32_t) halloc(size, align, k_heap);
 	if (phys) {
-        get_phys_addr(addr, phys);
+        phys = get_phys_addr(addr);
     }
     return addr;
 }

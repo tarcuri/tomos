@@ -45,55 +45,39 @@ void pg_init()
   // after switching on paging, kpd[0] seems to be increased be 32
   // kpd[0]:0x23d003 -> kpd[0]:23d023
   c_printf("heap loc: 0x%x\n", k_heap_loc);
-  c_printf("phys: 0x%x\n", get_page(k_heap_loc, kpd));
+  c_printf("phys: 0x%x\n", get_phys_addr(k_heap_loc));
   // now get the virtual address of the page directory
 }
 
-page_directory_t *switch_directory(page_directory_t *pd)
+void switch_directory(page_directory_t *pd)
 {
+  current_pd = pd;
   asm volatile ("movl %0, %%cr3"    : : "r"(pd));
 
   uint32_t cr0;
   asm volatile ("movl %%cr0, %0" : "=r"(cr0));
   cr0 |= X86_CR0_PAGING;
   asm volatile ("movl %0, %%cr0" : : "r"(cr0));
-
-  page_directory_t *old_pd = 0;
-  //asm volatile ("movl %%cr3, %0" : "=r"(old_pd));
-  return old_pd;
 }
 
-page_t get_page(uint32_t va, page_directory_t *dir)
+// this returns the page referenced by va,
+// not the actuall address offset within that page
+page_t *get_page(uint32_t va)
 {
   page_table_t *pt;
-  uint32_t virtual_pg = va / 0x1000;
-  uint32_t pt_idx = PG_DIR_IDX(virtual_pg);
+  uint32_t pde, pte;
 
-  if (dir[pt_idx] == 0) {
-    uint32_t phys;
-    dir[pt_idx] = kmalloc_p(0x1000, 1, &phys);
-    dir[pt_idx] = phys | PG_PRESENT | PG_WRITE;
-    pt = (page_table_t *) (dir[pt_idx] & 0xFFFFF000);
-  } else {
-    pt = (page_table_t *) (dir[pt_idx] & 0xFFFFF000);
-  }
+  pde = (uint32_t) current_pd[PG_DIR_OFFSET(va)];
+  pt = (page_table_t *) (pde & 0xFFFFF000);
+  pte = pt[PG_TABLE_OFFSET(va)];
 
-  return (page_t) pt[virtual_pg % 1024];
+  return (page_t *) (pte & 0xFFFFF000);
 }
 
-int get_phys_addr(uint32_t va, uint32_t *pa)
+uint32_t get_phys_addr(uint32_t va)
 {
-  uint32_t virtual_pg = va / 0x1000;
-  uint32_t pt_idx = PG_DIR_IDX(virtual_pg);
-
-  if (kpd[pt_idx] == 0)
-    return 0;   // not allocated yet
-
-  uint32_t *pt = kpd[pt_idx] & 0xFFFFF000;
-  if (pt[virtual_pg] != 0) {
-    if (pa) *pa = pt[virtual_pg] & 0xFFFFF000;
-    return 1;
-  }
+  page_t *pg = get_page(va);
+  return ((uint32_t) pg | (uint32_t) PG_PAGE_OFFSET(va));
 }
 
 void pg_page_fault(uint32_t error)

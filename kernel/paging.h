@@ -7,8 +7,12 @@
 #define PG_WRITE   0x02
 #define PG_USER    0x04
 
-#define PG_DIR_IDX(x) ((uint32_t)x/1024)
-#define PG_TABLE_IDX(x) ((uint32_t)x%1024)
+// bits 31:22 are the page directory index
+#define PG_DIR_OFFSET(x)       ((uint32_t) ((x >> 22) & 0x3FF))
+// bits 21:12 are the page table index
+#define PG_TABLE_OFFSET(x)     ((uint32_t) ((x >> 12) & 0x3FF))
+// bits 11:0 are the page offset
+#define PG_PAGE_OFFSET(x)      ((uint32_t) (x & 0xFFF))
 
 typedef uint32_t page_t;
 
@@ -17,6 +21,7 @@ typedef uint32_t page_table_t;
 typedef uint32_t page_directory_t;
 
 page_directory_t *kpd;
+page_directory_t *current_pd;
 
 // functions
 void pg_init(void); 
@@ -33,10 +38,10 @@ void pg_page_fault(uint32_t error);
  * — Bits 1:0 are 0.
  */
 
-page_directory_t *switch_directory(page_directory_t *pd);
+void switch_directory(page_directory_t *pd);
 
-page_t get_page(uint32_t va, page_directory_t *dir);
+page_t *get_page(uint32_t va);
 //void alloc_frame(page_t *p, int kernel, int write);
-int get_phys_addr(uint32_t va, uint32_t *pa);
+uint32_t get_phys_addr(uint32_t va);
 
 #endif
