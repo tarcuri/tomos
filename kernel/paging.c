@@ -88,14 +88,16 @@ uint32_t get_phys_addr(uint32_t va)
 
 void alloc_frame(page_t *pg, int kernel, int write)
 {
-  uint32_t frame = (uint32_t) *pg & 0xFFFFF000;
+  uint32_t frame = ((uint32_t)*pg) & 0xFFFFF000;
   if (frame) {
     // already allocated
     return;
   } else {
     frame = mm_get_free_frame();
     mm_set_frame(frame);
-    frame |= (kernel ? 0 : PG_USER) | (write ? PG_WRITE : 0);
+    frame = MM_FRAME_ADDRESS(frame) | (kernel ? 0 : PG_USER)
+                                    | (write ? PG_WRITE : 0)
+                                    | PG_PRESENT;
     *pg = (page_t) frame;
     return;
   }
@@ -112,10 +114,10 @@ void page_fault(uint32_t error)
 
   c_printf(" PAGE FAULT AT 0x%x - ", fault_addr);
   if (!present) {
+    if (write)
+      c_printf("WRITE ");
     c_printf("NOT PRESENT\n");
-    page_t *pg = get_page(fault_addr);
-    if (!pg) {
-    }
+    alloc_frame(get_page(fault_addr), 1, 1);
     return;
   }
 
