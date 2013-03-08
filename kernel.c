@@ -61,9 +61,6 @@ void kernel(void* mbd, uint32_t magic, uint32_t other)
   mm_init(mbd, 1);
   pg_init(); // pg.c enables the heap
 
-  // test page fault
-  //uint32_t *ptr = (uint32_t *)0xAB000000;
-  //uint32_t do_page_fault = *ptr;
 
   // test heap
   //void *mem = halloc(20, 0, k_heap);
@@ -96,13 +93,17 @@ void kernel(void* mbd, uint32_t magic, uint32_t other)
 
 void kmain()
 {
+  // test page fault
+  uint32_t *ptr = (uint32_t *)0xAB000000;
+  uint32_t do_page_fault = *ptr;
+
   //c_printf("ANYTHING?\n");
   //stack_dump(current_proc);
   // TODO: interrupts fire for an ATA command only if printf()  is called first...
   //c_printf("Press any key to continue...\n");
   //putchar('?');
   //getchar();
-  c_printf("testing allocators\n");
+  c_printf("heap->end: 0x%x\n", get_page(k_heap->end));
   uint32_t args[1] = {2000000};
   void *m = sys_sbrk(current_proc, args);
 

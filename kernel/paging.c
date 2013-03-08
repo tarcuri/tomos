@@ -7,7 +7,7 @@
 
 void pg_init()
 {
-  _install_isr(INT_VEC_PAGE_FAULT, pg_page_fault);
+  _install_isr(INT_VEC_PAGE_FAULT, page_fault);
 
   // first create a kernel page directory
   kpd = (page_directory_t *) mm_place_kalloc(0x1000, 1);
@@ -65,24 +65,30 @@ void switch_directory(page_directory_t *pd)
 page_t *get_page(uint32_t va)
 {
   page_table_t *pt;
+  page_directory_t *pd;
   uint32_t pde, pte;
 
   pde = (uint32_t) current_pd[PG_DIR_OFFSET(va)];
+  if (!pde) {
+    pd = (page_directory_t *) kmalloc_a(0x1000, 1);
+    current_pd[PG_DIR_OFFSET(va)] = (page_directory_t) ((uint32_t)pd | PG_PRESENT | PG_WRITE);
+    pde = (uint32_t) current_pd[PG_DIR_OFFSET(va)];
+  }
   pt = (page_table_t *) (pde & 0xFFFFF000);
-  pte = pt[PG_TABLE_OFFSET(va)];
+  pt[PG_TABLE_OFFSET(va)] = (uint32_t)pt[PG_TABLE_OFFSET(va)] | PG_PRESENT | PG_WRITE;
 
-  return (page_t *) (pte & 0xFFFFF000);
+  return (page_t *) &pt[PG_TABLE_OFFSET(va)];
 }
 
 uint32_t get_phys_addr(uint32_t va)
 {
   page_t *pg = get_page(va);
-  return ((uint32_t) pg | (uint32_t) PG_PAGE_OFFSET(va));
+  return ((uint32_t) *pg | PG_PAGE_OFFSET(va));
 }
 
 void alloc_frame(page_t *pg, int kernel, int write)
 {
-  uint32_t frame = (uint32_t) pg & 0xFFFFF000;
+  uint32_t frame = (uint32_t) *pg & 0xFFFFF000;
   if (frame) {
     // already allocated
     return;
@@ -90,17 +96,28 @@ void alloc_frame(page_t *pg, int kernel, int write)
     frame = mm_get_free_frame();
     mm_set_frame(frame);
     frame |= (kernel ? 0 : PG_USER) | (write ? PG_WRITE : 0);
-    *pg = frame;
+    *pg = (page_t) frame;
     return;
   }
 }
 
-void pg_page_fault(uint32_t error)
+void page_fault(uint32_t error)
 {
   unsigned int fault_addr;
   asm volatile("mov %%cr2, %0" : "=r"(fault_addr));
 
-  c_printf("\n  PAGE FAULT: 0x%x\n", fault_addr);
+  uint32_t present = (error & PG_PRESENT) ? 1 : 0;
+  uint32_t supervisor = (error & PG_USER) ? 0 : 1;
+  uint32_t write = (error & PG_WRITE) ? 1 : 0;
+
+  c_printf(" PAGE FAULT AT 0x%x - ", fault_addr);
+  if (!present) {
+    c_printf("NOT PRESENT\n");
+    page_t *pg = get_page(fault_addr);
+    if (!pg) {
+    }
+    return;
+  }
 
   panic("PAGE FAULT");
 }
