@@ -76,53 +76,14 @@ void kernel(void* mbd, uint32_t magic, uint32_t other)
   ata_init();
 
   syscall_init();
-
-  //c_printf("waiting\n");
-  //while (1) {}
-
-  //asm volatile ("sti");
-  //c_printf("EFLAGS: %x\n", get_eflags());
-  //c_getcode();
-  //c_printf("\nSystem initialization complete!\n");
+  vfs_init();
 
   // at this point proc should have initlialized a pcb for the kernel,
   // when we return loader.S should jmp to isr_restore which will inialize a
   // new context and stack for the kernel and jump down to main
-  //kmain();
 }
 
 void kmain()
 {
-  // test page fault
-  uint32_t *ptr = (uint32_t *)0xAB000000;
-  uint32_t do_page_fault = *ptr;
-
-  //c_printf("ANYTHING?\n");
-  //stack_dump(current_proc);
-  // TODO: interrupts fire for an ATA command only if printf()  is called first...
-  //c_printf("Press any key to continue...\n");
-  //putchar('?');
-  //getchar();
-  c_printf("heap->end: 0x%x\n", get_page(k_heap->end));
-  uint32_t args[1] = {2000000};
-  void *m = sys_sbrk(current_proc, args);
-
-/*
-  void *m = malloc(10);
-  c_printf("malloc'd: 0x%x\n", m);
-  *(int *)m = 10;
-  c_printf("m_val: %d\n", *(int *)m);
-
-  printf("pid: %d\n", getpid());
-  printf("hello newlib\n");
-  int num = 0;
-  if (current_proc->pid == 2)
-    scanf("%d", &num);
-  printf("num: %d\n", num);
-  //sys_sbrk(10);
-  //printf("hello\n");
-  //c_printf("EFLAGS: %x\n", get_eflags());
-*/
-  //ext2_init();
   command_loop();
 }

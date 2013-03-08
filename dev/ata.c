@@ -18,7 +18,7 @@ uint32_t ata_ctrl_reg = ATA_PRI_CONTROL_REG;
  */
 device_t *ata_open()
 {
-  device_t *d = (device_t *) kmalloc(sizeof(device_t), 0);
+  device_t *d = (device_t *) kmalloc(sizeof(device_t));
 
   d->type   = DEVICE_BLOCK;
   d->_read  = 0;
