@@ -24,8 +24,6 @@ void pg_init()
     pt[i] = i*0x1000 | PG_PRESENT | PG_WRITE;
   }
 
-  c_printf("id mapped up to: 0x%x\n", pt[1023]);
-
   // assign the second-last table and zero it (JamesM)
   kpd[1022] = mm_place_kalloc(0x1000, 1) | PG_PRESENT | PG_WRITE;
   pt = (uint32_t *) (kpd[1022] & 0xFFFFF000);
@@ -42,11 +40,7 @@ void pg_init()
   heap_init();
 
   switch_directory(kpd);
-  // after switching on paging, kpd[0] seems to be increased be 32
-  // kpd[0]:0x23d003 -> kpd[0]:23d023
-  c_printf("heap loc: 0x%x\n", k_heap_loc);
-  c_printf("phys: 0x%x\n", get_phys_addr(k_heap_loc));
-  // now get the virtual address of the page directory
+  c_printf("[pg]      paging initialized\n");
 }
 
 void switch_directory(page_directory_t *pd)

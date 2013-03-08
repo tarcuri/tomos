@@ -49,12 +49,6 @@ void proc_init()
   kernel_pcb->context->ebp = (uint32_t) ret;
   kernel_esp = (uint32_t *) kernel_pcb->context;
 
-  c_printf("ESP initialized at 0x%x\n", kernel_esp);
-
-  //uint32_t eflags;
-  //asm volatile ("pushfl; popl %0" : "=r"(eflags));
-  //c_printf("current eflags: 0x%x\n", eflags);
-  c_printf("original EFLAGS: %x\n", get_eflags());
   kernel_pcb->context->eflags = 0x2 | 0x200;
 
   // kernel entry point
@@ -62,6 +56,5 @@ void proc_init()
 
   current_proc = kernel_pcb;
 
-  //c_printf("[proc]    kernel process intialized\n");
-  //c_printf("stack: 0x%x -> 0x%x\n", kernel_pcb->stack, (uint32_t)kernel_pcb->stack + (4*STACK_SIZE));
+  c_printf("[proc]    kernel process intialized\n");
 }
