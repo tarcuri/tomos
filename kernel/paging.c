@@ -8,6 +8,7 @@
 void pg_init()
 {
   _install_isr(INT_VEC_PAGE_FAULT, page_fault);
+  _install_isr(INT_VEC_GENERAL_PROTECTION, protection_fault);
 
   // first create a kernel page directory
   kpd = (page_directory_t *) mm_place_kalloc(0x1000, 1);
@@ -116,4 +117,18 @@ void page_fault(uint32_t error)
   }
 
   panic("PAGE FAULT");
+}
+
+void protection_fault(uint32_t error)
+{
+  // faulting address should be the return address from the stack
+  uint32_t fault_addr, cs;
+
+  asm volatile ("movl   4(%%esp), %0" : "=r"(fault_addr));
+  asm volatile ("movw   8(%%esp), %0" : "=r"(cs));
+
+  c_printf(" GENERAL PROTECTION FAULT: %x\n", error);
+  c_printf(" FAULTING ADDRESS: %x:%x\n", cs, fault_addr);
+
+  panic("GPF");
 }

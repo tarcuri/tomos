@@ -61,21 +61,8 @@ void kernel(void* mbd, uint32_t magic, uint32_t other)
   mm_init(mbd, 1);
   pg_init(); // pg.c enables the heap
 
-  // system calls reference processes, and processes require heap.
+  // we must return to kmain immediately after proc_init
   proc_init();
-
-  // hardware and devices
-  kb_init();
-  pci_init();
-  ata_init();
-
-  // at this point interrupts are disabled, ata_identify_device enables them on return
-  print_eflags();
-  //ata_identify_device();
-
-  syscall_init();
-  printf("initializing virtual filesystem\n");
-  vfs_init();
 
   // at this point proc should have initlialized a pcb for the kernel,
   // when we return loader.S should jmp to isr_restore which will inialize a
@@ -84,5 +71,16 @@ void kernel(void* mbd, uint32_t magic, uint32_t other)
 
 void kmain()
 {
+  // hardware and devices
+  kb_init();
+  pci_init();
+  ata_init();
+
+  asm volatile ("sti");
+
+  syscall_init();
+  vfs_init();
+
+  c_printf("@ kmain()\n");
   command_loop();
 }

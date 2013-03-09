@@ -26,6 +26,7 @@ page_directory_t *current_pd;
 // functions
 void pg_init(void); 
 void page_fault(uint32_t error);
+void protection_fault(uint32_t error);
 
 /*
  * From Intel, Vol 3.
