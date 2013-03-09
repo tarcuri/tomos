@@ -1,4 +1,5 @@
 #include "support.h"
+#include "x86.h"
 
 #include "kernel/process.h"
 
@@ -17,6 +18,28 @@ uint32_t get_eflags()
   uint32_t eflags;
   asm volatile ("pushf; popl %0" : "=g"(eflags));
   return eflags;
+}
+
+void print_eflags()
+{
+   uint32_t eflags = get_eflags();
+   c_printf("\nEFLAGS(0x%x): ", eflags);
+   if (eflags & X86_EFLAGS_CF)
+     c_printf(" CF");
+   if (eflags & X86_EFLAGS_PF)
+     c_printf(" PF");
+   if (eflags & X86_EFLAGS_AF)
+     c_printf(" AF");
+   if (eflags & X86_EFLAGS_ZF)
+     c_printf(" ZF");
+   if (eflags & X86_EFLAGS_SF)
+     c_printf(" SF");
+   if (eflags & X86_EFLAGS_TF)
+     c_printf(" TF");
+   if (eflags & X86_EFLAGS_IF)
+     c_printf(" IF");
+
+   c_printf("\n");
 }
 
 /*

@@ -61,12 +61,6 @@ void kernel(void* mbd, uint32_t magic, uint32_t other)
   mm_init(mbd, 1);
   pg_init(); // pg.c enables the heap
 
-
-  // test heap
-  //void *mem = halloc(20, 0, k_heap);
-  //c_printf("mem addr: 0x%x\n", mem);
-
-
   // system calls reference processes, and processes require heap.
   proc_init();
 
@@ -75,7 +69,12 @@ void kernel(void* mbd, uint32_t magic, uint32_t other)
   pci_init();
   ata_init();
 
+  // at this point interrupts are disabled, ata_identify_device enables them on return
+  print_eflags();
+  //ata_identify_device();
+
   syscall_init();
+  printf("initializing virtual filesystem\n");
   vfs_init();
 
   // at this point proc should have initlialized a pcb for the kernel,

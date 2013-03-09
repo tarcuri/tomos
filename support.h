@@ -6,6 +6,7 @@
 void panic(char *reason);
 
 uint32_t get_eflags(void);
+void print_eflags(void);
 
 unsigned char __inb(unsigned int port);
 unsigned short __inw(unsigned int port);
