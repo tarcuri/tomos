@@ -76,11 +76,11 @@ ext2_dir_t *ext2_opendir(device_t *dev, uint32_t ino)
   // read the data blocks
   void *bufp = dir->buffer;
   uint32_t nblocks = dir->bufsize / fs_block_size;
-  uint32_t *dblock = dir->inode->dblock_ptr_0;
+  uint32_t dblock = dir->inode->dblock_ptr_0;
 
   int i;
   for (i = 0; i < nblocks; ++i) {
-    read_block(*dblock++, bufp, 1);
+    read_block(dblock++, bufp, 1);
     bufp = (void *) (((uint32_t)bufp) + 1024);
   }
 
