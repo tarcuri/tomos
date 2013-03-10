@@ -83,6 +83,7 @@ void kmain()
   syscall_init();
   vfs_init();
 
+  test_ata();
   test_ext2();
 
   c_printf("@ kmain()\n");
@@ -94,12 +95,14 @@ void test_ata()
   disk_request_t *dr = kmalloc(sizeof(disk_request_t));
 
   dr->cmd = DISK_CMD_READ;
-  dr->lba = 0;
-  dr->num_blocks = 3;
+  dr->lba = 2;
+  dr->num_blocks = 2;
   dr->blocks_complete = 0;
   dr->buffer = kmalloc(0x2000);
 
-  ata_read_multiple(dr);
+  //ata_read_multiple(dr);
+  device_t *hd = ata_open();
+  hd->_ctrl(DISK_CMD_READ, dr);
   printf("read %d blocks\n", dr->blocks_complete);
 
   int i;

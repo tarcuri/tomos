@@ -130,6 +130,7 @@ ext2_inode_t *read_inode_table(device_t *dev, uint32_t table_block)
   disk_request_t dr;
   dr.cmd = DISK_CMD_READ;
   dr.lba = (table_block * 2);
+  c_printf("reading LBA %d\n", dr.lba);
   while (sect_transferred < nsectors) {
     dr.num_blocks = (nsect_to_read == 256) ? 0 : nsect_to_read;
     dr.blocks_complete = 0;
@@ -186,7 +187,7 @@ ext2_superblock_t *read_superblock(device_t *dev)
   dev->_ctrl(DISK_CMD_READ, (void *) &dr);
 
   // print info
-#if 0 
+#if 1 
   c_printf("\nSuperblock Info:\n");
   c_printf("  Total inodes        : %d\n", sb->total_inodes);
   c_printf("  Total blocks        : %d\n", sb->total_blocks);
@@ -222,9 +223,8 @@ ext2_superblock_t *read_superblock(device_t *dev)
 
 void test_ext2()
 {
-  device_t *hdd = ata_open();
-
-  ext2_dir_t *dir = ext2_opendir(hdd, 2);
+  c_printf("@ test_ext2()\n");
+  ext2_dir_t *dir = ext2_opendir(fs_dev, 2);
 
   char name[256];
   ext2_dirent_t *ent;

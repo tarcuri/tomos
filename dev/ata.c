@@ -99,7 +99,7 @@ void ata_isr(int32_t vector, int32_t code)
       status = ata_alt_status(0);
       while (status & ATA_STATUS_BUSY)
         status = ata_alt_status(5);
-  
+
       if (status & ATA_STATUS_DRQ) {
         uint16_t *buf = (uint16_t *) ((uint32_t)current_disk_request->buffer
                                + (current_disk_request->blocks_complete * DISK_BLOCK_SIZE));
@@ -118,9 +118,20 @@ void ata_isr(int32_t vector, int32_t code)
           current_disk_request = 0;
         }
       } else {
-        current_disk_request->status = DISK_STATUS_IO_ERROR;
-        c_printf("ATA error: DRQ not set for read: 0x%x\n", ata_alt_status(5));
-        panic("ATA ERROR"); 
+        if (status & 0x1) {
+          current_disk_request->status = DISK_STATUS_IO_ERROR;
+          uint8_t err_reg = __inb(ata_cmd_reg | ATA_CMD_R_ERROR);
+          c_printf("ATA ERROR: 0x%x\n", err_reg);
+          if (err_reg & 0x02) c_printf(" NM");
+          if (err_reg & 0x04) c_printf(" ABRT");
+          if (err_reg & 0x08) c_printf(" MCR");
+          if (err_reg & 0x10) c_printf(" IDNF");
+          if (err_reg & 0x20) c_printf(" MC");
+          if (err_reg & 0x40) c_printf(" UNC");
+          c_printf("\n");
+        } else {
+          c_printf("no DRQ, but not ERR bit set\n");
+        }
       }
   
       break;
