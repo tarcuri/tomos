@@ -87,7 +87,7 @@ ext2_dir_t *ext2_opendir(device_t *dev, uint32_t ino)
   return dir;
 }
 
-ext2_dirent_t *ext2_readdir(ext2_dir_t *dir, int i)
+ext2_dirent_t *ext2_readdir(ext2_dir_t *dir)
 {
   ext2_dirent_t *ent = NULL;
 
@@ -225,8 +225,16 @@ void test_ext2()
 {
   c_printf("@ test_ext2()\n");
   ext2_dir_t *dir = ext2_opendir(fs_dev, 2);
+  c_printf("opened directory %s\n", dir->current->name);
 
   char name[256];
-  ext2_dirent_t *ent;
-  c_printf("opened directory %s\n", dir->current->name);
+  ext2_dirent_t *ent = ext2_readdir(dir);
+  while (ent) {
+    memcpy(name, ent->name, ent->name_len);
+    name[ent->name_len] = '\0';
+    c_printf("file: %s\n", name);
+    ent = ext2_readdir(dir);
+    memcpy(name, 0, 256);
+  }
+
 }
