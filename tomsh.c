@@ -7,7 +7,7 @@
 #include "syscalls.h"
 
 //#include "dev/device.h"
-//#include "dev/ata.h"
+#include "dev/ata.h"
 
 //#include "fs/vfs.h"
 
@@ -88,6 +88,8 @@ void command_loop()
       dump_heap_index(k_heap);
     else if (strncmp(command_line, "getpid", 6) == 0)
       c_printf("PID: %d\n", getpid());
+    else if (strncmp(command_line, "idhdd", 5) == 0)
+      ata_identify_device();
 /*    else if (strncmp(command_line, "ls ", 3) == 0)
       ls_dir(atoi(&command_line[3]));*/
     else if (!scroll && strlen(command_line))

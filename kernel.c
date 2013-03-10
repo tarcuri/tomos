@@ -29,6 +29,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+void test_ata();
+
 // initial kernel entry point
 void kernel(void* mbd, uint32_t magic, uint32_t other)
 {
@@ -83,4 +85,27 @@ void kmain()
 
   c_printf("@ kmain()\n");
   command_loop();
+}
+
+void test_ata()
+{
+  disk_request_t *dr = kmalloc(sizeof(disk_request_t));
+
+  dr->cmd = DISK_CMD_READ;
+  dr->lba = 0;
+  dr->num_blocks = 3;
+  dr->blocks_complete = 0;
+  dr->buffer = kmalloc(0x2000);
+
+  ata_read_multiple(dr);
+  printf("read %d blocks\n", dr->blocks_complete);
+
+  int i;
+  char *buf = (char *) dr->buffer;
+  char b[DISK_BLOCK_SIZE + 1];
+  b[DISK_BLOCK_SIZE] = '\0';
+  for (i = 0; i < dr->blocks_complete; i++) {
+    strncpy(b, buf[i*DISK_BLOCK_SIZE], DISK_BLOCK_SIZE);
+    printf("    %s\n", b);
+  }
 }
