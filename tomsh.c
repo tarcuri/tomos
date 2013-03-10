@@ -8,6 +8,7 @@
 
 //#include "dev/device.h"
 #include "dev/ata.h"
+#include "fs/ext2.h"
 
 //#include "fs/vfs.h"
 

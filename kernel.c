@@ -83,6 +83,8 @@ void kmain()
   syscall_init();
   vfs_init();
 
+  test_ext2();
+
   c_printf("@ kmain()\n");
   command_loop();
 }

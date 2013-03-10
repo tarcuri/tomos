@@ -3,6 +3,7 @@
 #include "dev/ata.h"
 
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
 
 void ext2_init()
@@ -54,9 +55,9 @@ ext2_inode_t *ext2_read_inode(device_t *dev, uint32_t ino)
   uint32_t index = get_block_index(ino);
 
   // now read the inode table for the block group
-  ext2_inode_t *itable = read_inode_table(dev, fs_bgd_table[group].inode_table_block);
+  const ext2_inode_t *itable = read_inode_table(dev, fs_bgd_table[group].inode_table_block);
 
-  memcpy((void *) &inode, (void *) &itable[index], sizeof(ext2_inode_t));
+  memcpy((void *) inode, (void *) &itable[index], sizeof(ext2_inode_t));
 
   kfree(itable);
 
@@ -215,4 +216,17 @@ ext2_superblock_t *read_superblock(device_t *dev)
 #endif
 
   return sb;
+}
+
+// TEST FUNCTIONS
+
+void test_ext2()
+{
+  device_t *hdd = ata_open();
+
+  ext2_dir_t *dir = ext2_opendir(hdd, 2);
+
+  char name[256];
+  ext2_dirent_t *ent;
+  c_printf("opened directory %s\n", dir->current->name);
 }
