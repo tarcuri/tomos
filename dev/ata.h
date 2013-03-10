@@ -69,6 +69,7 @@ void ata_read_multiple(disk_request_t *);
 void ata_write_multiple(disk_request_t *);
 
 uint8_t ata_alt_status(uint32_t);
+void ata_error_info(void);
 void ata_identify_device(void);
 void ata_print_device_info(uint16_t *);
 

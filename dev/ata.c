@@ -119,16 +119,7 @@ void ata_isr(int32_t vector, int32_t code)
         }
       } else {
         if (status & 0x1) {
-          current_disk_request->status = DISK_STATUS_IO_ERROR;
-          uint8_t err_reg = __inb(ata_cmd_reg | ATA_CMD_R_ERROR);
-          c_printf("ATA ERROR: 0x%x\n", err_reg);
-          if (err_reg & 0x02) c_printf(" NM");
-          if (err_reg & 0x04) c_printf(" ABRT");
-          if (err_reg & 0x08) c_printf(" MCR");
-          if (err_reg & 0x10) c_printf(" IDNF");
-          if (err_reg & 0x20) c_printf(" MC");
-          if (err_reg & 0x40) c_printf(" UNC");
-          c_printf("\n");
+          ata_error_info();
         } else {
           c_printf("no DRQ, but not ERR bit set\n");
         }
@@ -144,7 +135,7 @@ void ata_isr(int32_t vector, int32_t code)
   }
 
   if (ata_alt_status(0) & ATA_STATUS_ERROR)
-    c_printf("ATA ERROR: 0x%x\n", __inb(ata_cmd_reg | ATA_CMD_R_ERROR));
+    ata_error_info();
   
   __outb(PIC_MASTER_CMD_PORT, PIC_EOI);
   __outb(PIC_SLAVE_CMD_PORT, PIC_EOI);
@@ -161,6 +152,20 @@ uint8_t ata_alt_status(uint32_t poll)
     status = __inb(ata_ctrl_reg | ATA_CTRL_R_ALT_STATUS);
   }
   return status;
+}
+
+void ata_error_info()
+{
+  current_disk_request->status = DISK_STATUS_IO_ERROR;
+  uint8_t err_reg = __inb(ata_cmd_reg | ATA_CMD_R_ERROR);
+  c_printf("ATA ERROR: 0x%x\n", err_reg);
+  if (err_reg & 0x02) c_printf(" NM");
+  if (err_reg & 0x04) c_printf(" ABRT");
+  if (err_reg & 0x08) c_printf(" MCR");
+  if (err_reg & 0x10) c_printf(" IDNF");
+  if (err_reg & 0x20) c_printf(" MC");
+  if (err_reg & 0x40) c_printf(" UNC");
+  c_printf("\n");
 }
 
 /*
@@ -198,7 +203,7 @@ void ata_read_multiple(disk_request_t *dr)
     //c_printf("ALT_STATUS: 0x%x\n", ata_alt_status(0));
     
     if (ata_alt_status(0) & ATA_STATUS_ERROR) {
-      c_printf("ATA ERROR: 0x%x\n", ata_alt_status(0));
+      ata_error_info();
       panic("ATA error\n");
     }
   }
