@@ -240,6 +240,8 @@ void ls_dir(uint32_t ino)
     ent = ext2_readdir(dir);
     memcpy(name, 0, 256);
   }
+
+  ext2_closedir(dir);
 }
 
 void cat_file(uint32_t ino)
@@ -262,6 +264,7 @@ void cat_file(uint32_t ino)
       printf("%c", blk[j]);
     bufp = ((uint32_t)bufp + 1024);
   }
+  kfree(buf);
 
   printf("\n");
 }
