@@ -130,7 +130,6 @@ ext2_inode_t *read_inode_table(device_t *dev, uint32_t table_block)
   disk_request_t dr;
   dr.cmd = DISK_CMD_READ;
   dr.lba = (table_block * 2);
-  c_printf("reading LBA %d\n", dr.lba);
   while (sect_transferred < nsectors) {
     dr.num_blocks = (nsect_to_read == 256) ? 0 : nsect_to_read;
     dr.blocks_complete = 0;
@@ -221,20 +220,24 @@ ext2_superblock_t *read_superblock(device_t *dev)
 
 // TEST FUNCTIONS
 
-void test_ext2()
+void ls_dir(uint32_t ino)
 {
-  c_printf("@ test_ext2()\n");
-  ext2_dir_t *dir = ext2_opendir(fs_dev, 2);
-  c_printf("opened directory %s\n", dir->current->name);
+  ext2_dir_t *dir = ext2_opendir(fs_dev, ino);
+  ext2_dirent_t *ent = ext2_readdir(dir);
 
   char name[256];
-  ext2_dirent_t *ent = ext2_readdir(dir);
   while (ent) {
     memcpy(name, ent->name, ent->name_len);
     name[ent->name_len] = '\0';
-    c_printf("file: %s\n", name);
+
+    ext2_inode_t *inode = ext2_read_inode(fs_dev, ent->inode);
+    uint16_t mode = inode->mode;
+    if (0x4000 & mode) printf("d ");
+    if (0x8000 & mode) printf("- ");
+
+    printf("%04d  %s\n", ent->inode, name);
+
     ent = ext2_readdir(dir);
     memcpy(name, 0, 256);
   }
-
 }

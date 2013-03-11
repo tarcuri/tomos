@@ -112,7 +112,7 @@ typedef struct ext2_block_group_descriptor
 // ext2 inode
 typedef struct ext2_inode
 {
-  uint16_t mode;
+  uint16_t mode;    // bits 15:12 are the type
   uint16_t uid;
 
   uint32_t size_low;
@@ -181,7 +181,7 @@ uint32_t		fs_block_groups;
 void ext2_init(void);
 void read_block(uint32_t fs_block, void *buf, uint32_t len);
 
-void test_ext2(void);
+void ls_dir(uint32_t ino);
 
 #define get_block_group(inum)	((inum - 1) / fs_sb->inodes_per_group)
 #define get_block_index(inum)	((inum - 1) % fs_sb->inodes_per_group)
