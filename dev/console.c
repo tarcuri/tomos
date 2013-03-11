@@ -255,7 +255,10 @@ void c_write(const char *str, int len)
 
 void c_putchar(const char c)
 {
-  c_putchar_at(curr_x, curr_y, (unsigned int) c);
+  if (c == '\t')
+    c_printf("    ");
+  else
+    c_putchar_at(curr_x, curr_y, (unsigned int) c);
 }
 
 void c_putchar_at(unsigned int x, unsigned int y, unsigned int c)
