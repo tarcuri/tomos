@@ -93,11 +93,11 @@ void command_loop()
       ata_identify_device();
     else if (strncmp(command_line, "test_ata", 8) == 0)
       test_ata();
-    else if (strncmp(command_line, "ls ", 3) == 0) {
-      uint32_t ino = atoi(&command_line[3]);
-      c_printf("ino %d\n", ino);
-      ls_dir(ino);
-    } else if (!scroll && strlen(command_line))
+    else if (strncmp(command_line, "ls ", 3) == 0)
+      ls_dir(atoi(&command_line[3]));
+    else if (strncmp(command_line, "cat ", 4) == 0)
+      cat_file(atoi(&command_line[4]));
+    else if (!scroll && strlen(command_line))
       c_printf("> %s\n", command_line);
 
     memcpy(command_line, 0, 512);

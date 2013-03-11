@@ -182,6 +182,7 @@ void ext2_init(void);
 void read_block(uint32_t fs_block, void *buf, uint32_t len);
 
 void ls_dir(uint32_t ino);
+void cat_file(uint32_t ino);
 
 #define get_block_group(inum)	((inum - 1) / fs_sb->inodes_per_group)
 #define get_block_index(inum)	((inum - 1) % fs_sb->inodes_per_group)

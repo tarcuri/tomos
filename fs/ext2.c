@@ -241,3 +241,27 @@ void ls_dir(uint32_t ino)
     memcpy(name, 0, 256);
   }
 }
+
+void cat_file(uint32_t ino)
+{
+  ext2_inode_t *inode = ext2_read_inode(fs_dev, ino);
+
+ 
+  int bufsize = inode->blocks * 512;
+  void *buf = kmalloc(bufsize);
+  void *bufp = buf;
+  uint32_t nblocks = bufsize / fs_block_size;
+  uint32_t dblock = inode->dblock_ptr_0;
+
+  int i, c = 0;
+  for (i = 0; i < nblocks; i++) {
+    read_block(dblock++, bufp, 1);
+    int j;
+    char *blk = (char *)bufp;
+    for (j = 0; j < 1024 && c < inode->size_low; j++, c++)
+      printf("%c", blk[j]);
+    bufp = ((uint32_t)bufp + 1024);
+  }
+
+  printf("\n");
+}
