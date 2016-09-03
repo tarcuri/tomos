@@ -65,7 +65,7 @@ vbox: tomos
 	dd if=tomos.img of=floppy.img conv=notrunc
 
 qemu: tomos
-	dd if=tomos.img of=qemu-disk.raw conv=notrunc
+	dd if=tomos.img of=fd.img conv=notrunc
 
 clean:
 	rm *.o *.bin

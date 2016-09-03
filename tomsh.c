@@ -85,20 +85,31 @@ void command_loop()
     }
 
 
-    if (strncmp(command_line, "dispheap", 8) == 0)
+    if (strncmp(command_line, "dispheap", 8) == 0) {
       dump_heap_index(k_heap);
-    else if (strncmp(command_line, "getpid", 6) == 0)
+    } else if (strncmp(command_line, "getpid", 6) == 0) {
       c_printf("PID: %d\n", getpid());
-    else if (strncmp(command_line, "idhdd", 5) == 0)
+    } else if (strncmp(command_line, "idhdd", 5) == 0) {
       ata_identify_device();
-    else if (strncmp(command_line, "test_ata", 8) == 0)
+    } else if (strncmp(command_line, "test_ata", 8) == 0) {
       test_ata();
-    else if (strncmp(command_line, "ls ", 3) == 0)
+    } else if (strncmp(command_line, "ls ", 3) == 0) {
       ls_dir(atoi(&command_line[3]));
-    else if (strncmp(command_line, "cat ", 4) == 0)
+    } else if (strncmp(command_line, "cat ", 4) == 0) {
       cat_file(atoi(&command_line[4]));
-    else if (!scroll && strlen(command_line))
+		} else if (strncmp(command_line, "help", 4) == 0) {
+		  c_printf("tomsh commands:\n");
+			c_printf("\tdispheap\n");
+			c_printf("\tgetpid\n");
+			c_printf("\tidhdd\n");
+			c_printf("\ttestata\n");
+			c_printf("\tls\n");
+			c_printf("\tcat\n");
+    } else if (!scroll && strlen(command_line)) {
       c_printf("> %s\n", command_line);
+		} else {
+			c_printf("type \"help\" for a list of commands.\n");
+		}
 
     memcpy(command_line, 0, 512);
   }
