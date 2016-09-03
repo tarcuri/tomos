@@ -4,6 +4,12 @@ $ bochs
     kernel 200+SIZE
     boot
 
+SIZE is the kernel size in blocks. For example, for a kernel that is 333289 bytes:
+
+333289/512 = 650.955078125
+
+Therefore use SIZE=651
+
 // create a test HDD image
 $ bximage
 $ mkfs.ext2 disk.img
