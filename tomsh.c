@@ -53,10 +53,10 @@ void command_loop()
 
         c_putchar('\n');
         break;
-      case 0x1B:	// escape
+      case 0x1B:  // escape
         // nothing yet
         break; 
-      case '\b':	// backspace
+      case '\b':  // backspace
         // none for now
         if (cmd_i) {
           c_putchar(c);
@@ -97,19 +97,19 @@ void command_loop()
       ls_dir(atoi(&command_line[3]));
     } else if (strncmp(command_line, "cat ", 4) == 0) {
       cat_file(atoi(&command_line[4]));
-		} else if (strncmp(command_line, "help", 4) == 0) {
-		  c_printf("tomsh commands:\n");
-			c_printf("\tdispheap\n");
-			c_printf("\tgetpid\n");
-			c_printf("\tidhdd\n");
-			c_printf("\ttestata\n");
-			c_printf("\tls\n");
-			c_printf("\tcat\n");
+    } else if (strncmp(command_line, "help", 4) == 0) {
+      c_printf("tomsh commands:\n");
+      c_printf("\tdispheap\n");
+      c_printf("\tgetpid\n");
+      c_printf("\tidhdd\n");
+      c_printf("\ttestata\n");
+      c_printf("\tls\n");
+      c_printf("\tcat\n");
     } else if (!scroll && strlen(command_line)) {
       c_printf("> %s\n", command_line);
-		} else {
-			c_printf("type \"help\" for a list of commands.\n");
-		}
+    } else {
+      c_printf("type \"help\" for a list of commands.\n");
+    }
 
     memcpy(command_line, 0, 512);
   }
