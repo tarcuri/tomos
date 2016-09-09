@@ -55,8 +55,8 @@ tomos: libs drivers
 	${LD} -T linker.ld -o tomos.bin loader.o kernel.o isr_stubs.o syscall_stubs.o \
 			     ${LIB_OBJ} ${DRV_OBJ} stack.o ext2.o vfs.o \
                              ./lib/libc.a ./lib/libm.a ./lib/libnosys.a ./lib/libg.a
-	ls -l tomos.bin | awk '{print int($$5/512)}' | xargs printf '\ntomos is at least %d blocks in size\n'
 	cat stage1 stage2 pad tomos.bin > tomos.img
+	ls -l tomos.bin | awk '{print int($$5/512)}' | xargs printf '\n>>> tomos is at least %d blocks in size\n\n'
 
 bochs: tomos
 	dd if=tomos.img of=fd.img conv=notrunc

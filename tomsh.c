@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 //void ls_dir(int ino);
 //void hdd_read(unsigned int lba, void *buf, unsigned int len);
