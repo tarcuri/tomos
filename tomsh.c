@@ -3,6 +3,7 @@
 #include "tomsh.h"
 #include "kernel/mm.h"
 #include "kernel/heap.h"
+#include "kernel/time.h"
 
 #include "syscalls.h"
 
@@ -102,12 +103,16 @@ void command_loop()
         ino = atoi(&command_line[3]);
       c_printf("ls %d\n", ino);
       ls_dir(ino);
+    } else if (strncmp(command_line, "gettime", 7) == 0) {
+      unsigned long long int t = rdtsc();
+      printf("time: %llu\n", t);
     } else if (strncmp(command_line, "cat ", 4) == 0) {
       cat_file(atoi(&command_line[4]));
     } else if (strncmp(command_line, "help", 4) == 0) {
       c_printf("tomsh commands:\n");
       c_printf("\tdispheap\n");
       c_printf("\tgetpid\n");
+      c_printf("\tgettime\n");
       c_printf("\tidhdd\n");
       c_printf("\ttestata\n");
       c_printf("\tprint_superblock\n");
