@@ -201,4 +201,6 @@ ext2_inode_t *		ext2_read_inode(device_t *, uint32_t);
 ext2_dir_t *ext2_opendir(device_t *dev, uint32_t ino);
 ext2_dirent_t *ext2_readdir(ext2_dir_t *dir);
 
+void print_superblock_info();
+
 #endif

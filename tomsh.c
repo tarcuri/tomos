@@ -93,8 +93,14 @@ void command_loop()
       ata_identify_device();
     } else if (strncmp(command_line, "test_ata", 8) == 0) {
       test_ata();
-    } else if (strncmp(command_line, "ls ", 3) == 0) {
-      ls_dir(atoi(&command_line[3]));
+    } else if (strncmp(command_line, "print_superblock", 16) == 0) {
+      print_superblock_info();
+    } else if (strncmp(command_line, "ls", 2) == 0) {
+      int ino = 2;
+      if (strlen(command_line) > 3)
+        ino = atoi(&command_line[3]);
+      c_printf("ls %d\n", ino);
+      ls_dir(ino);
     } else if (strncmp(command_line, "cat ", 4) == 0) {
       cat_file(atoi(&command_line[4]));
     } else if (strncmp(command_line, "help", 4) == 0) {
@@ -103,6 +109,7 @@ void command_loop()
       c_printf("\tgetpid\n");
       c_printf("\tidhdd\n");
       c_printf("\ttestata\n");
+      c_printf("\tprint_superblock\n");
       c_printf("\tls\n");
       c_printf("\tcat\n");
     } else if (!scroll && strlen(command_line)) {
