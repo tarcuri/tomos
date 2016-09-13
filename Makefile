@@ -16,6 +16,9 @@ LIB_OBJ = support.o syscalls.o interrupt.o mm.o paging.o heap.o process.o time.o
 DRV_SRC = ./dev/keyboard.c ./dev/console.c ./dev/clock.c ./dev/pci.c ./dev/ata.c
 DRV_OBJ = keyboard.o console.o clock.o pci.o ata.o
 
+APP_SRC = ./apps/hello_tomos.c
+APP_OBJ = hello_tomos.o
+
 # TODO: generate depfiles
 
 BASEDIR=${PWD}
@@ -44,6 +47,14 @@ drivers: ${DRV_SRC}
 	${CC} ${CFLAGS} -I. -o ata.o -c ./dev/ata.c
 	${CC} ${CFLAGS} -I. -o ext2.o -c ./fs/ext2.c
 	${CC} ${CFLAGS} -I. -o vfs.o -c ./fs/vfs.c
+
+hello_tomos.o: apps/hello_tomos.c
+	${CC} ${CFLAGS} -I. -o hello_tomos.o -c ./apps/hello_tomos.c
+
+hello_tomos: hello_tomos.o
+	${LD} -o hello_tomos hello_tomos.o ./lib/libc.a ./lib/libm.a ./lib/libnosys.a ./lib/libg.a
+
+applications: hello_tomos
 
 # tomos
 tomos: libs drivers
