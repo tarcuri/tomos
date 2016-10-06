@@ -83,7 +83,8 @@ static void kb_scancode(uint8_t code)
     shift = 1;
     break;
 
-  case 0xAA:
+  case 0xAA:            // left shift released
+  case 0xB6:            // right shift released
     shift = 0;
     break;
 
