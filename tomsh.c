@@ -4,6 +4,7 @@
 #include "kernel/mm.h"
 #include "kernel/heap.h"
 #include "kernel/time.h"
+#include "kernel/user.h"
 
 #include "syscalls.h"
 
@@ -108,10 +109,20 @@ void command_loop()
       printf("time: %llu\n", t);
     } else if (strncmp(command_line, "cat ", 4) == 0) {
       cat_file(atoi(&command_line[4]));
+    } else if (strncmp(command_line, "users", 5) == 0) {
+      struct user *u;
+      if (!user_list) {
+        printf("no users in system\n");
+      } else {
+        for (u = user_list; u; u = u->next) {
+          printf("%d - %s [%s]\n", u->uid, u->name, u->realname);
+        }
+      }
     } else if (strncmp(command_line, "help", 4) == 0) {
       c_printf("tomsh commands:\n");
       c_printf("\tdispheap\n");
       c_printf("\tgetpid\n");
+      c_printf("\tusers\n");
       c_printf("\tgettime\n");
       c_printf("\tidhdd\n");
       c_printf("\ttestata\n");
