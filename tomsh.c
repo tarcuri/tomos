@@ -118,6 +118,14 @@ void command_loop()
           printf("%d - %s [%s]\n", u->uid, u->name, u->realname);
         }
       }
+    } else if (strncmp(command_line, "adduser ", 8) == 0) {
+      strtok(command_line, " ");
+      char *name = strtok(NULL, " ");
+      char *realname = strtok(NULL, "\"");
+      if (name && realname) {
+        printf("adding user: %s [%s]\n", name, realname);
+        add_user(name, realname);
+      }
     } else if (strncmp(command_line, "help", 4) == 0) {
       c_printf("tomsh commands:\n");
       c_printf("\tdispheap\n");
