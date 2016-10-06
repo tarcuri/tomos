@@ -66,6 +66,6 @@ pcb_t *current_proc;
 
 void proc_init(void);
 
-int create_process(uint16_t owner_uid, void (*proc)(void *data));
+int create_process(uint16_t owner_uid, int (*proc)(void *data));
 
 #endif

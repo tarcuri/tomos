@@ -123,8 +123,11 @@ void command_loop()
       char *name = strtok(NULL, " ");
       char *realname = strtok(NULL, "\"");
       if (name && realname) {
-        printf("adding user: %s [%s]\n", name, realname);
-        add_user(name, realname);
+        if (add_user(name, realname) == USER_EXISTS) {
+          printf("user %s already exists\n", name);
+        } else {
+          printf("added user: %s [%s]\n", name, realname);
+        }
       }
     } else if (strncmp(command_line, "help", 4) == 0) {
       c_printf("tomsh commands:\n");

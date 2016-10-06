@@ -6,6 +6,10 @@
 #define MAX_USERNAME    16
 #define MAX_REAL_NAME   64
 
+#define USER_EXISTS     -1
+#define USER_LIST_EMPTY -2
+#define USER_NOT_FOUND  -3
+
 struct user {
         struct user *next;
         struct user *prev;
@@ -18,5 +22,8 @@ struct user {
 struct user *user_list;
 
 int add_user(char *name, char *realname);
+
+struct user *get_user(uint16_t uid);
+int get_uid(char *name);
 
 #endif

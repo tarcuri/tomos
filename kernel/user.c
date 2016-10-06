@@ -6,6 +6,14 @@ extern next_uid;
 
 int add_user(char *name, char *realname)
 {
+        if (user_list) {
+                struct user *c;
+                for (c = user_list; c; c = c->next) {
+                        if (strcmp(name, c->name) == 0)
+                                return USER_EXISTS;
+                }
+        }
+
         struct user *u = kmalloc(sizeof(struct user));
         u->next     = NULL;
         u->prev     = NULL;
@@ -28,4 +36,32 @@ int add_user(char *name, char *realname)
         }
 
         return u->uid;
+}
+
+struct user *get_user(uint16_t uid)
+{
+        if (!user_list)
+                return NULL;
+
+        struct user *u;
+        for (u = user_list; u; u = u->next) {
+                if (u->uid == uid)
+                        return u;
+        }
+
+        return NULL;
+}
+
+int get_uid(char *name)
+{
+        if (!user_list)
+                return USER_LIST_EMPTY;
+
+        struct user *u;
+        for (u = user_list; u; u = u->next) {
+                if (strcmp(name, u->name) == 0)
+                        return u->uid;
+        }
+
+        return USER_NOT_FOUND;
 }
