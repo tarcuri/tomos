@@ -8,6 +8,7 @@
 #include "kernel/paging.h"
 #include "kernel/heap.h"
 #include "kernel/process.h"
+#include "kernel/user.h"
 
 #include "syscalls.h"
 
@@ -28,6 +29,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+
+uint16_t next_uid;
 
 void test_ata();
 
@@ -82,6 +85,9 @@ void kmain()
 
   syscall_init();
   vfs_init();
+
+  next_uid = 1;
+  add_user("root", "root");
 
   c_printf("@ kmain()\n");
   command_loop();

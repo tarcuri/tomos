@@ -45,8 +45,12 @@ typedef struct process_control_block
   struct proccess_control_block *next;
   struct proccess_control_block *prev;
 
+  // process id
   uint16_t	pid;
+  // parent process id
   uint16_t	ppid;
+  // process owner user id
+  uint16_t      uid;
 
   unsigned char		status;		// can use a bit here to identify privledge level
 } __attribute__((__packed__)) pcb_t;
@@ -60,7 +64,8 @@ uint32_t *kernel_esp;
 
 pcb_t *current_proc;
 
-// functions
 void proc_init(void);
+
+int create_process(uint16_t owner_uid, void (*proc)(void *data));
 
 #endif

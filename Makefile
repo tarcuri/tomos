@@ -10,8 +10,9 @@ CFLAGS = -g -nostdlib -nostartfiles -nodefaultlibs -fno-builtin -fno-hosted
 AFLAGS =
 
 LIB_SRC = support.c syscalls.c kernel/interrupt.c kernel/mm.c kernel/paging.c \
-          kernel/heap.c kernel/process.c kernel/time.c tomsh.c
-LIB_OBJ = support.o syscalls.o interrupt.o mm.o paging.o heap.o process.o time.o tomsh.o
+          kernel/heap.c kernel/process.c kernel/time.c kernel/user.c tomsh.c
+LIB_OBJ = support.o syscalls.o interrupt.o mm.o paging.o heap.o process.o \
+	  time.o user.o tomsh.o
 
 DRV_SRC = ./dev/keyboard.c ./dev/console.c ./dev/clock.c ./dev/pci.c ./dev/ata.c
 DRV_OBJ = keyboard.o console.o clock.o pci.o ata.o
@@ -34,6 +35,7 @@ libs: ${LIB_SRC}
 	${CC} ${CFLAGS} -I${BASEDIR} -o paging.o -c kernel/paging.c
 	${CC} ${CFLAGS} -I${BASEDIR} -o stack.o -c kernel/stack.c
 	${CC} ${CFLAGS} -I${BASEDIR} -o process.o -c kernel/process.c
+	${CC} ${CFLAGS} -I${BASEDIR} -o user.o -c kernel/user.c
 	${CC} ${CFLAGS} -I${BASEDIR} -o time.o -c kernel/time.c
 	${CC} ${CFLAGS}	-I${BASEDIR} -o syscalls.o -c syscalls.c
 	${CC} ${CFLAGS} -I. -o tomsh.o -c tomsh.c
