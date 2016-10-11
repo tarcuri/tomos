@@ -84,6 +84,8 @@ void kmain()
   syscall_init();
   vfs_init();
 
+  timer_init();
+
   int apic_supported = check_apic();
   printf("APIC: ");
   if (apic_supported) {
