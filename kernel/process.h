@@ -42,8 +42,8 @@ typedef struct process_control_block
   // TODO: include a notion of the current process (which receives IO, etc)
 
   // for now, the PCB itself will be a list node
-  struct proccess_control_block *next;
-  struct proccess_control_block *prev;
+  struct process_control_block *next;
+  struct process_control_block *prev;
 
   // process id
   uint16_t	pid;

@@ -2,6 +2,8 @@
 #include "kernel.h"
 #include "dev/console.h"
 
+#include <unistd.h>     // for _exit call
+
 void proc_init()
 {
   next_pid = 1;
@@ -36,12 +38,12 @@ void proc_init()
 
   // now store the segment registers on the stack to be later popped
   // by isr_restore
-  kernel_pcb->context->cs = 0x08;
-  kernel_pcb->context->ds = 0x10;
-  kernel_pcb->context->es = 0x10;
-  kernel_pcb->context->fs = 0x10;
-  kernel_pcb->context->gs = 0x10;
-  kernel_pcb->context->ss = 0x18;
+  kernel_pcb->context->cs = GDT_LINEAR;
+  kernel_pcb->context->ds = GDT_CODE;
+  kernel_pcb->context->es = GDT_CODE;
+  kernel_pcb->context->fs = GDT_CODE;
+  kernel_pcb->context->gs = GDT_CODE;
+  kernel_pcb->context->ss = GDT_STACK;
 
   //c_printf("KERNEL STACK TOP   : 0x%x\n", kernel_pcb->stack);
   //c_printf("KERNEL STACK BOTTOM: 0x%x\n", kernel_pcb->stack + 1);
@@ -57,4 +59,53 @@ void proc_init()
   current_proc = kernel_pcb;
 
   c_printf("[proc]    kernel process intialized\n");
+}
+
+int create_process(uint16_t owner_uid, int (*proc)(void *data))
+{
+        context_t *context;
+        uint32_t *ret;
+
+        pcb_t *pcb = (pcb_t *) kmalloc(sizeof(pcb_t));
+
+        pcb->stack = (stack_t *) kmalloc(sizeof(stack_t));
+
+        memset(pcb, '\0', sizeof(pcb_t));
+        memset(pcb->stack, '\0', sizeof(stack_t));
+
+        pcb->uid = owner_uid;
+        pcb->pid = next_pid++;
+        pcb->ppid = 1;  // kernel parent process
+
+        // insert into list
+        pcb_t *list = pcb_list;
+        while (list->next)
+                list = list->next;
+
+        list->next = pcb;
+        pcb->prev  = list;
+
+        // TODO: push [void *data] parameters onto stack
+
+        // place a (fake) return address to cause the user process to "return"
+        // to the exit system call; however, we probably need our own exit call
+        // leaves a longword at the bottom of stack containing 0
+        ret = ((uint32_t *)(pcb->stack + 1)) - 2;
+        *ret = (uint32_t) _exit;
+
+        pcb->context = ((context_t *) ret) - 1;
+
+        pcb->context->ss = GDT_STACK;
+        pcb->context->gs = GDT_DATA;
+        pcb->context->fs = GDT_DATA;
+        pcb->context->es = GDT_DATA;
+        pcb->context->ds = GDT_DATA;
+        pcb->context->cs = GDT_CODE;
+
+        // sp2 defined 0x2 | 0x200 as DEFAULT_EFLAGS
+        pcb->context->eflags = 0x2 | 0x200;
+
+        pcb->context->eip = (uint32_t) proc;
+
+        return pcb->pid;
 }
