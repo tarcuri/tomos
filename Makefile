@@ -37,7 +37,6 @@ libs: ${LIB_SRC}
 	${CC} ${CFLAGS} -I${BASEDIR} -o stack.o -c kernel/stack.c
 	${CC} ${CFLAGS} -I${BASEDIR} -o process.o -c kernel/process.c
 	${CC} ${CFLAGS} -I${BASEDIR} -o user.o -c kernel/user.c
-	${CC} ${CFLAGS} -I${BASEDIR} -o cpu.o -c kernel/cpu.c
 	${CC} ${CFLAGS} -I${BASEDIR} -o timer.o -c kernel/timer.c
 	${CC} ${CFLAGS}	-I${BASEDIR} -o syscalls.o -c syscalls.c
 	${CC} ${CFLAGS} -I. -o tomsh.o -c tomsh.c
