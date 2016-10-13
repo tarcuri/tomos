@@ -89,7 +89,8 @@ void kmain()
   next_uid = 1;
   add_user("root", "root");
 
-  c_printf("@ kmain()\n");
+  timer_init();
+
   command_loop();
 }
 

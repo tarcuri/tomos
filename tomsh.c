@@ -3,8 +3,8 @@
 #include "tomsh.h"
 #include "kernel/mm.h"
 #include "kernel/heap.h"
-#include "kernel/time.h"
 #include "kernel/user.h"
+#include "kernel/timer.h"
 
 #include "syscalls.h"
 
@@ -105,8 +105,7 @@ void command_loop()
       c_printf("ls %d\n", ino);
       ls_dir(ino);
     } else if (strncmp(command_line, "gettime", 7) == 0) {
-      unsigned long long int t = rdtsc();
-      printf("time: %llu\n", t);
+      printf("%d\n", get_time()); 
     } else if (strncmp(command_line, "cat ", 4) == 0) {
       cat_file(atoi(&command_line[4]));
     } else if (strncmp(command_line, "users", 5) == 0) {
