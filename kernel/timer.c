@@ -17,7 +17,7 @@ void timer_init(void)
 
         _install_isr(INT_VEC_TIMER, timer_isr);
 
-        c_printf("[timer]   PIC timer initializedn\n");
+        c_printf("[timer]   PIT timer initializedn\n");
 }
 
 void timer_isr(int vector, int code)

@@ -8,7 +8,6 @@
 #include "kernel/paging.h"
 #include "kernel/heap.h"
 #include "kernel/process.h"
-#include "kernel/apic.h"
 
 #include "syscalls.h"
 
@@ -85,14 +84,6 @@ void kmain()
   vfs_init();
 
   timer_init();
-
-  int apic_supported = check_apic();
-  printf("APIC: ");
-  if (apic_supported) {
-    printf("supported\n");
-  } else {
-    printf("unsupported\n");
-  }
 
   c_printf("\n");
   command_loop();
