@@ -43,7 +43,7 @@ void proc_init()
   kernel_pcb->context->es = GDT_CODE;
   kernel_pcb->context->fs = GDT_CODE;
   kernel_pcb->context->gs = GDT_CODE;
-  kernel_pcb->context->ss = GDT_STACK;
+  kernel_pcb->context->ss = GDT_DATA;
 
   //c_printf("KERNEL STACK TOP   : 0x%x\n", kernel_pcb->stack);
   //c_printf("KERNEL STACK BOTTOM: 0x%x\n", kernel_pcb->stack + 1);
