@@ -75,12 +75,18 @@ void timer_isr(int vector, int code)
 {
         ++system_time;
 
+        /*
         struct timer *t;
         for (t = proc_sleep_timers; t; t = t->next) {
                 t->current = system_time;
                 if (t->current - t->start >= t->delay) {
                         // timer expired, notify process
                 }
+        }
+        */
+
+        if (system_time % 100 == 0) {
+                dispatch();
         }
 
         __outb(PIC_MASTER_CMD_PORT, PIC_EOI);

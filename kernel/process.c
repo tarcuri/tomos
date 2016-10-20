@@ -1,5 +1,6 @@
 #include "process.h"
 #include "kernel.h"
+#include "scheduler.h"
 #include "dev/console.h"
 
 #include <unistd.h>     // for _exit call
@@ -106,6 +107,8 @@ int create_process(uint16_t owner_uid, int (*proc)(void *data))
         pcb->context->eflags = 0x2 | 0x200;
 
         pcb->context->eip = (uint32_t) proc;
+
+        schedule(pcb);
 
         return pcb->pid;
 }

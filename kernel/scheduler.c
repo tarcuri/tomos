@@ -8,8 +8,12 @@ int schedule(pcb_t *p)
 // works IFF called from interrupt context (timer_isr)
 void dispatch(void)
 {
-        pcb_t *p = current_proc;
+        pcb_t *p, *n;
 
-        current_proc = (pcb_t *) pop_q(&ready_queue);
-        schedule(p);
+        n = (pcb_t *) pop_q(&ready_queue);
+        if (n) {
+                p = current_proc;
+                current_proc = n;
+                schedule(p);
+        }
 }

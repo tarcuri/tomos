@@ -16,7 +16,7 @@ void push_q(queue *q, void *data)
 
 void *pop_q(queue **q)
 {
-        void *data;
+        void *data = NULL;
 
         if (q && *q) {
                 data = (*q)->data;

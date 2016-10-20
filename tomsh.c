@@ -19,11 +19,17 @@
 #include <string.h>
 #include <unistd.h>
 
-//void ls_dir(int ino);
-//void hdd_read(unsigned int lba, void *buf, unsigned int len);
+void test_proc_1(void *data)
+{
+        int i = 0;
+        for (;;) {
+                if (i % 1000 == 0)
+                        printf("P1: %d\n", i);
 
-// we need many string functions,
-// strstr, strtok, etc
+                i++;
+        }
+}
+
 void command_loop()
 {
   printf("entered the command loop\n");
@@ -127,6 +133,13 @@ void command_loop()
         } else {
           printf("added user: %s [%s]\n", name, realname);
         }
+      }
+    } else if (strncmp(command_line, "run", 3) == 0) {
+      strtok(command_line, " ");
+      char *proc_owner = strtok(NULL,  " ");
+      char *proc_name = strtok(NULL, " ");
+      if (proc_owner && proc_name) {
+
       }
     } else if (strncmp(command_line, "help", 4) == 0) {
       c_printf("tomsh commands:\n");
