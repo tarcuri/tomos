@@ -5,6 +5,8 @@
 
 #define HEAP_MAGIC_TAG_31	0x1A4BC8D6
 
+#define NULL                    0
+
 #include <stdint.h>
 
 //#define HEAP_BASE_ADDRESS	(unsigned int)(&kernel_end + 0x4000)
