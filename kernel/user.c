@@ -38,6 +38,8 @@ int add_user(char *name, char *realname)
         return u->uid;
 }
 
+
+
 struct user *get_user(uint16_t uid)
 {
         if (!user_list)
@@ -52,15 +54,17 @@ struct user *get_user(uint16_t uid)
         return NULL;
 }
 
-int get_uid(char *name)
+int get_uid(char *username, uint16_t *uid)
 {
         if (!user_list)
                 return USER_LIST_EMPTY;
 
         struct user *u;
         for (u = user_list; u; u = u->next) {
-                if (strcmp(name, u->name) == 0)
-                        return u->uid;
+                if (strcmp(u->name, username) == 0) {
+                        *uid = u->uid;
+                        return 0;
+                }
         }
 
         return USER_NOT_FOUND;

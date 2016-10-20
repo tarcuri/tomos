@@ -24,6 +24,6 @@ struct user *user_list;
 int add_user(char *name, char *realname);
 
 struct user *get_user(uint16_t uid);
-int get_uid(char *name);
+int get_uid(char *username, uint16_t *uid);
 
 #endif
