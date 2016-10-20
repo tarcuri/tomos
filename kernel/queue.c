@@ -16,11 +16,14 @@ void push_q(queue *q, void *data)
 
 void *pop_q(queue **q)
 {
+        struct q_node *t;
         void *data = NULL;
 
         if (q && *q) {
-                data = (*q)->data;
-                q = (*q)->next;
+                t = *q;
+                data = t->data;
+                q = t->next;
+                kfree(t);
         }
 
         return data;
