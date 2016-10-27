@@ -2,7 +2,10 @@
 
 int schedule(pcb_t *p)
 {
-        push_q(&ready_queue, p);
+        if (p->status == READY)
+                push_q(&ready_queue, p);
+        else if (p->status == SLEEP)
+                push_q(&sleep_queue, p);
 }
 
 // works IFF called from interrupt context (timer_isr)
