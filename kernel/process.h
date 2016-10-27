@@ -5,6 +5,10 @@
 
 #include <stdint.h>
 
+#define READY        1
+#define SLEEP        2
+#define IO_WAIT      3
+
 // adapted from RIT CS project
 // order must be consistent with isr_stubs.S
 typedef struct context {
@@ -50,9 +54,9 @@ typedef struct process_control_block
   // parent process id
   uint16_t	ppid;
   // process owner user id
-  uint16_t      uid;
-
-  unsigned char		status;		// can use a bit here to identify privledge level
+  uint16_t  uid;
+  // process state
+  uint16_t  status;
 } __attribute__((__packed__)) pcb_t;
 
 
