@@ -58,7 +58,9 @@ void proc_init()
   kernel_pcb->context->eip = (uint32_t) kmain;
 
   current_proc = kernel_pcb;
-
+  
+  kernel_pcb->status = READY;
+  
   ready_queue = NULL;
 
   c_printf("[proc]    kernel process intialized\n");
@@ -121,6 +123,8 @@ int create_process(uint16_t owner_uid, int (*proc)(void))
         pcb->context->eflags = 0x2 | 0x200;
 
         pcb->context->eip = (uint32_t) proc;
+  
+        pcb->status = READY;
 
         schedule(pcb);
 
