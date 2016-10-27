@@ -22,12 +22,8 @@
 
 int test_proc_1(void)
 {
-        int i = 0;
         for (;;) {
-                if (i % 1000 == 0)
-                        printf("P1: %d\n", i);
-
-                i++;
+                add_sleep_timer(50);
         }
 
         return 0;

@@ -14,7 +14,6 @@ void dispatch(void)
         if (n) {
                 p = current_proc;
                 c_printf("dispatching pcb %p\n", n);
-                c_printf("n->context->eip = 0x%x\n", n->context->eip);
                 current_proc = n;
                 schedule(p);
         }

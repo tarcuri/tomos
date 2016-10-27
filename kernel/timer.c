@@ -1,4 +1,5 @@
 #include "timer.h"
+#include "scheduler.h"
 #include "interrupt.h"
 #include "heap.h"
 #include "x86.h"
@@ -29,6 +30,8 @@ void add_sleep_timer(uint32_t delay)
                 t->prev = h;
                 h->next = t;
         }
+
+        push_q(&sleep_queue, current_proc);
 
         asm volatile ("sti");
 }
