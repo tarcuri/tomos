@@ -23,7 +23,13 @@
 int test_proc_1(void)
 {
         for (;;) {
-                add_sleep_timer(50);
+                printf("test_proc_1: starting timer\n");
+                struct timer *t = sleep_timer(50);
+
+                while (!t->expired)
+                  ;
+
+                printf("back in test_proc_1\n");
         }
 
         return 0;

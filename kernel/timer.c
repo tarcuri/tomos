@@ -9,7 +9,7 @@ uint32_t get_time(void)
         return system_time;
 }
 
-void add_sleep_timer(uint32_t delay)
+struct timer *sleep_timer(uint32_t delay)
 {
         asm volatile ("cli");
         
@@ -18,6 +18,7 @@ void add_sleep_timer(uint32_t delay)
         t->delay = delay;
         t->start = system_time;
         t->next = NULL;
+        t->expired = 0;
         t->proc = current_proc;
 
         if (!proc_sleep_timers) {
@@ -36,6 +37,8 @@ void add_sleep_timer(uint32_t delay)
         schedule(current_proc);
 
         asm volatile ("sti");
+
+        return t;
 }
 
 void del_sleep_timer(struct timer *t)
@@ -84,12 +87,12 @@ void timer_isr(int vector, int code)
                 t->current = system_time;
                 if (t->current - t->start >= t->delay) {
                         t->proc->status = READY;
+                        t->expired = 1;
                         schedule(t->proc);
-                        del_sleep_timer(t);
                 }
         }
 
-        if (system_time % 100 == 0) {
+        if (system_time % 10 == 0) {
                 dispatch();
         }
 
