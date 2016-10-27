@@ -8,7 +8,7 @@ struct q_node {
 
 typedef struct q_node queue;
 
-void push_q(queue *q, void *data);
+void push_q(queue **q, void *data);
 void *pop_q(queue **q);
 
 #endif

@@ -9,6 +9,7 @@
 #include "kernel/heap.h"
 #include "kernel/process.h"
 #include "kernel/user.h"
+#include "kernel/queue.h"
 
 #include "syscalls.h"
 

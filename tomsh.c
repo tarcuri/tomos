@@ -5,6 +5,7 @@
 #include "kernel/heap.h"
 #include "kernel/user.h"
 #include "kernel/timer.h"
+#include "kernel/kernel.h"
 
 #include "syscalls.h"
 
@@ -19,7 +20,7 @@
 #include <string.h>
 #include <unistd.h>
 
-void test_proc_1(void *data)
+int test_proc_1(void)
 {
         int i = 0;
         for (;;) {
@@ -28,6 +29,8 @@ void test_proc_1(void *data)
 
                 i++;
         }
+
+        return 0;
 }
 
 void command_loop()
@@ -139,7 +142,15 @@ void command_loop()
       char *proc_owner = strtok(NULL,  " ");
       char *proc_name = strtok(NULL, " ");
       if (proc_owner && proc_name) {
-
+        if (strncmp(proc_name, "test_proc_1", 11) == 0) {
+          uint16_t uid;
+          if (!get_uid(proc_owner, &uid)) {
+            int pid = create_process(uid, test_proc_1);
+            printf("spawned %s (%d)\n", proc_name, pid);
+          } else {
+            printf("couldn't lookup uid for %s\n", proc_owner);
+          }
+        }
       }
     } else if (strncmp(command_line, "help", 4) == 0) {
       c_printf("tomsh commands:\n");

@@ -59,19 +59,29 @@ void proc_init()
 
   current_proc = kernel_pcb;
 
+  ready_queue = NULL;
+
   c_printf("[proc]    kernel process intialized\n");
 }
 
-int create_process(uint16_t owner_uid, int (*proc)(void *data))
+int create_process(uint16_t owner_uid, int (*proc)(void))
 {
         context_t *context;
         uint32_t *ret;
 
         pcb_t *pcb = (pcb_t *) kmalloc(sizeof(pcb_t));
-
-        pcb->stack = (stack_t *) kmalloc(sizeof(stack_t));
+        if (pcb == 0) {
+                printf("create_process: couldn't allocate a new pcb\n");
+                return -1;
+        }
 
         memset(pcb, '\0', sizeof(pcb_t));
+
+        pcb->stack = (stack_t *) kmalloc(sizeof(stack_t));
+        if (pcb->stack == 0) {
+                printf("create_process: couldn't allocate a stack\n");
+                return -1;
+        }
         memset(pcb->stack, '\0', sizeof(stack_t));
 
         pcb->uid = owner_uid;
@@ -86,8 +96,6 @@ int create_process(uint16_t owner_uid, int (*proc)(void *data))
         list->next = pcb;
         pcb->prev  = list;
 
-        // TODO: push [void *data] parameters onto stack
-
         // place a (fake) return address to cause the user process to "return"
         // to the exit system call; however, we probably need our own exit call
         // leaves a longword at the bottom of stack containing 0
@@ -96,12 +104,18 @@ int create_process(uint16_t owner_uid, int (*proc)(void *data))
 
         pcb->context = ((context_t *) ret) - 1;
 
-        pcb->context->ss = GDT_STACK;
-        pcb->context->gs = GDT_DATA;
-        pcb->context->fs = GDT_DATA;
-        pcb->context->es = GDT_DATA;
-        pcb->context->ds = GDT_DATA;
-        pcb->context->cs = GDT_CODE;
+        /* 
+         * need to review how I configured the GDT so that this is different from
+         * the sp2 code, which uses different selectors.
+         */
+        pcb->context->ss = GDT_DATA;
+        pcb->context->gs = GDT_CODE;
+        pcb->context->fs = GDT_CODE;
+        pcb->context->es = GDT_CODE;
+        pcb->context->ds = GDT_CODE;
+        pcb->context->cs = GDT_LINEAR;
+        
+        pcb->context->ebp = (uint32_t) ret;
 
         // sp2 defined 0x2 | 0x200 as DEFAULT_EFLAGS
         pcb->context->eflags = 0x2 | 0x200;
