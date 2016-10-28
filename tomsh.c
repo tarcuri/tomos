@@ -22,14 +22,13 @@
 
 int test_proc_1(void)
 {
+        struct timer *t = (struct timer *) kmalloc(sizeof(struct timer));
         for (;;) {
-                printf("test_proc_1: starting timer\n");
-                struct timer *t = sleep_timer(50);
-
-                while (!t->expired)
-                  ;
-
-                printf("back in test_proc_1\n");
+                //printf("test_proc_1: starting timer (%d)\n", get_time());
+                t->delay = 50;
+                start_timer(t);
+                printf("back in test_proc_1 (%d)\n", get_time());
+                remove_timer(t);
         }
 
         return 0;

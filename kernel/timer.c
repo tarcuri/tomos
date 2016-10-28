@@ -9,13 +9,10 @@ uint32_t get_time(void)
         return system_time;
 }
 
-struct timer *sleep_timer(uint32_t delay)
+void start_timer(struct timer *t)
 {
         asm volatile ("cli");
         
-        struct timer *t = (struct timer *) kmalloc(sizeof(struct timer));
-        
-        t->delay = delay;
         t->start = system_time;
         t->next = NULL;
         t->expired = 0;
@@ -38,10 +35,13 @@ struct timer *sleep_timer(uint32_t delay)
 
         asm volatile ("sti");
 
-        return t;
+        asm volatile ("int  %0" : : "N" (INT_VEC_TIMER) : "cc", "memory");
+
+        while (!t->expired)
+          ;
 }
 
-void del_sleep_timer(struct timer *t)
+void remove_timer(struct timer *t)
 {
         asm volatile ("cli");
 
@@ -58,7 +58,6 @@ void del_sleep_timer(struct timer *t)
                 if (proc_sleep_timers == h)
                         proc_sleep_timers = h->next;
 
-                kfree(t);
                 break;
         }
 

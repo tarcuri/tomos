@@ -21,8 +21,8 @@ uint32_t system_time;
 
 uint32_t get_time(void);
 
-struct timer *sleep_timer(uint32_t delay);
-void del_sleep_timer(struct timer *t);
+void start_timer(struct timer *t);
+void remove_timer(struct timer *t);
 
 void timer_isr(int vector, int code);
 
