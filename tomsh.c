@@ -20,6 +20,9 @@
 #include <string.h>
 #include <unistd.h>
 
+char tp1_output[128];
+char tp2_output[128];
+
 int test_proc_1(void)
 {
         struct timer *t = (struct timer *) kmalloc(sizeof(struct timer));
@@ -27,12 +30,26 @@ int test_proc_1(void)
                 //printf("test_proc_1: starting timer (%d)\n", get_time());
                 t->delay = 50;
                 start_timer(t);
-                printf("back in test_proc_1 (%d)\n", get_time());
+                snprintf(tp1_output, 128, "test_proc_1 (%d)\n", get_time());
                 remove_timer(t);
         }
 
         return 0;
 }
+
+int test_proc_2(void)
+{
+        struct timer *t = (struct timer *) kmalloc(sizeof(struct timer));
+        for (;;) {
+                t->delay = 50;
+                start_timer(t);
+                snprintf(tp2_output, 128, "test_proc_2 (%d)\n", get_time());
+                remove_timer(t);
+        }
+
+        return 0;
+}
+
 
 void command_loop()
 {
@@ -151,8 +168,21 @@ void command_loop()
           } else {
             printf("couldn't lookup uid for %s\n", proc_owner);
           }
+        } else if (strncmp(proc_name, "test_proc_2", 11) == 0) {
+          uint16_t uid;
+          if (!get_uid(proc_owner, &uid)) {
+            int pid = create_process(uid, test_proc_2);
+            printf("spawned %s (%d)\n", proc_name, pid);
+          } else {
+            printf("couldn't lookup uid for %s\n", proc_owner);
+          }
         }
+
       }
+    } else if (strncmp(command_line, "get tp1", 7) == 0) {
+      printf("%s\n", tp1_output);
+    } else if (strncmp(command_line, "get tp2", 7) == 0) {
+      printf("%s\n", tp2_output);
     } else if (strncmp(command_line, "help", 4) == 0) {
       c_printf("tomsh commands:\n");
       c_printf("\tdispheap\n");

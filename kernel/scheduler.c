@@ -18,7 +18,7 @@ void dispatch(void)
         n = (pcb_t *) pop_q(&ready_queue);
         if (n) {
                 p = current_proc;
-                c_printf("dispatching proc %d\n", n->pid);
+                //c_printf("dispatching proc %d\n", n->pid);
                 current_proc = n;
                 schedule(p);
         }
