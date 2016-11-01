@@ -190,9 +190,10 @@ void command_loop()
       }
     } else if (strncmp(command_line, "ps", 2) == 0) {
       pcb_t *p;
-      printf("PID\tUID\tCOMMAND\n");
+      printf("%3s\t%3s\t%5s\t%s\n", "PID", "UID", "TIME", "COMMAND");
       for (p = get_pcb_list(); p; p = p->next) {
-              printf("%2d\t %2d\t %s\n", p->pid, p->uid, p->cmd);
+              printf("%2d\t %2d\t %5d\t%s\n",
+                              p->pid, p->uid, p->time_slices, p->cmd);
       }
     } else if (strncmp(command_line, "get tp1", 7) == 0) {
       printf("%s\n", tp1_output);

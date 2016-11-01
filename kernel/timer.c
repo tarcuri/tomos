@@ -96,5 +96,7 @@ void timer_isr(int vector, int code)
                 dispatch();
         }
 
+        current_proc->time_slices++;
+
         __outb(PIC_MASTER_CMD_PORT, PIC_EOI);
 }

@@ -62,6 +62,8 @@ void proc_init()
   current_proc = kernel_pcb;
   
   kernel_pcb->status = READY;
+
+  kernel_pcb->time_slices = 0;
   
   ready_queue = NULL;
 
@@ -129,6 +131,8 @@ int create_process(uint16_t owner_uid, char *cmd, int (*proc)(void))
         pcb->context->eip = (uint32_t) proc;
   
         pcb->status = READY;
+
+        pcb->time_slices = 0;
 
         schedule(pcb);
 

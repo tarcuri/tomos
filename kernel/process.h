@@ -57,6 +57,8 @@ typedef struct process_control_block
   uint16_t  uid;
   // process state
   uint16_t  status;
+
+  uint32_t time_slices;
 } __attribute__((__packed__)) pcb_t;
 
 
