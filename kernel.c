@@ -10,6 +10,7 @@
 #include "kernel/process.h"
 #include "kernel/user.h"
 #include "kernel/queue.h"
+#include "kernel/timer.h"
 
 #include "syscalls.h"
 
@@ -18,7 +19,6 @@
 #include "dev/device.h"
 #include "dev/keyboard.h"
 #include "dev/console.h"
-#include "dev/clock.h"
 #include "dev/pci.h"
 #include "dev/ata.h"
 #include "dev/disk.h"
@@ -92,7 +92,15 @@ void kmain()
 
   timer_init();
 
-  command_loop();
+  create_process(0, "tomsh", command_loop);
+
+  struct timer *t = (struct timer *) kmalloc(sizeof(struct timer));
+  while (1) {
+    t->delay = 50;
+    start_timer(t);
+    printf(".");
+    remove_timer(t);
+  }
 }
 
 void test_ata()

@@ -20,7 +20,7 @@ void proc_init()
   kernel_pcb->pid  = next_pid++;
   kernel_pcb->ppid = 0;
 
-  snprintf(kernel_pcb->cmd, 6, "tomsh");
+  snprintf(kernel_pcb->cmd, 5, "idle");
 
   // stick it in the list...or not?
   pcb_list = kernel_pcb;
