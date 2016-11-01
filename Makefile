@@ -9,10 +9,10 @@ LD = ${TOOLS}/i586-pc-tomos-ld
 CFLAGS = -g -nostdlib -nostartfiles -nodefaultlibs -fno-builtin -fno-hosted
 AFLAGS =
 
-LIB_SRC = support.c syscalls.c kernel/interrupt.c kernel/mm.c kernel/paging.c \
-          kernel/heap.c kernel/process.c kernel/scheduler.c kernel/timer.c \
-	  kernel/user.c kernel/queue.c tomsh.c
-LIB_OBJ = support.o syscalls.o interrupt.o mm.o paging.o heap.o process.o \
+LIB_SRC = support.c syscalls.c kernel/cpu.c kernel/interrupt.c kernel/mm.c \
+	  kernel/paging.c kernel/heap.c kernel/process.c kernel/scheduler.c \
+	  kernel/timer.c kernel/user.c kernel/queue.c tomsh.c
+LIB_OBJ = support.o syscalls.o cpu.o interrupt.o mm.o paging.o heap.o process.o \
 	  scheduler.o timer.o user.o queue.o tomsh.o
 
 DRV_SRC = ./dev/keyboard.c ./dev/console.c ./dev/clock.c ./dev/pci.c ./dev/ata.c

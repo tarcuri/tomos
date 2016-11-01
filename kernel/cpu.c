@@ -8,6 +8,13 @@ inline void cpuid(int code, uint32_t* a, uint32_t* d)
                         : "ebx", "ecx");
 }
 
+inline uint64_t rdtsc(void)
+{
+        uint64_t ret;
+        asm volatile ("rdtsc" : "=A" (ret));
+        return ret;
+}
+
 int cpu_has_msr(void)
 {
         uint32_t a, d; // eax, edx

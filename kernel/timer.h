@@ -18,6 +18,7 @@ struct timer {
 
 struct timer *proc_sleep_timers;
 uint32_t system_time;
+uint64_t tsc;
 
 uint32_t get_time(void);
 

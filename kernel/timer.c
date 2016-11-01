@@ -3,6 +3,7 @@
 #include "interrupt.h"
 #include "heap.h"
 #include "x86.h"
+#include "cpu.h"
 
 uint32_t get_time(void)
 {
