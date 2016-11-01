@@ -5,9 +5,7 @@
 
 #include <stdint.h>
 
-#define READY        1
-#define SLEEP        2
-#define IO_WAIT      3
+enum process_status {READY, SLEEP, IO_WAIT, TERMINATE};
 
 // adapted from RIT CS project
 // order must be consistent with isr_stubs.S
@@ -49,6 +47,8 @@ typedef struct process_control_block
   struct process_control_block *next;
   struct process_control_block *prev;
 
+  char cmd[64];
+
   // process id
   uint16_t	pid;
   // parent process id
@@ -70,6 +70,8 @@ pcb_t *current_proc;
 
 void proc_init(void);
 
-int create_process(uint16_t owner_uid, int (*proc)(void));
+int create_process(uint16_t owner_uid, char *cmd, int (*proc)(void));
+void kill_process(uint16_t pid);
+pcb_t *get_pcb_list(void);
 
 #endif

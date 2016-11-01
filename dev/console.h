@@ -100,7 +100,6 @@ unsigned short	c_getcode(void);
 
 // input
 #define CIO_IN_BUFSIZE	1024
-#define READY           0x1
 #define EOT             '\04'
 
 static unsigned char c_scan_code[ 2 ][ 128 ] = {

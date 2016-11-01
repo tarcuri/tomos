@@ -9,7 +9,6 @@
 
 #define KEYBOARD_DATA   0x60
 #define KEYBOARD_STATUS 0x64
-#define READY           0x1
 #define EOT             '\04'
 
 // define an active input handle

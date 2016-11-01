@@ -20,6 +20,8 @@ void proc_init()
   kernel_pcb->pid  = next_pid++;
   kernel_pcb->ppid = 0;
 
+  snprintf(kernel_pcb->cmd, 6, "tomsh");
+
   // stick it in the list...or not?
   pcb_list = kernel_pcb;
 
@@ -66,7 +68,7 @@ void proc_init()
   c_printf("[proc]    kernel process intialized\n");
 }
 
-int create_process(uint16_t owner_uid, int (*proc)(void))
+int create_process(uint16_t owner_uid, char *cmd, int (*proc)(void))
 {
         context_t *context;
         uint32_t *ret;
@@ -89,6 +91,8 @@ int create_process(uint16_t owner_uid, int (*proc)(void))
         pcb->uid = owner_uid;
         pcb->pid = next_pid++;
         pcb->ppid = 1;  // kernel parent process
+
+        memcpy(pcb->cmd, cmd, strlen(cmd) + 1);
 
         // insert into list
         pcb_t *list = pcb_list;
@@ -129,4 +133,21 @@ int create_process(uint16_t owner_uid, int (*proc)(void))
         schedule(pcb);
 
         return pcb->pid;
+}
+
+void kill_process(uint16_t pid)
+{
+        pcb_t *pcb;
+        for (pcb = pcb_list; pcb; pcb = pcb->next) {
+                if (pcb->pid == pid) {
+                        pcb->status = TERMINATE;
+                        schedule(pcb);
+                        break;
+                }
+        }
+}
+
+pcb_t *get_pcb_list(void)
+{
+        return pcb_list;
 }

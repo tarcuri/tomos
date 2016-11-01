@@ -2,12 +2,32 @@
 
 int schedule(pcb_t *p)
 {
-        if (p->status == READY)
+        if (p->status == READY) {
                 push_q(&ready_queue, p);
-                /*
-        else if (p->status == SLEEP)
-                push_q(&sleep_queue, p);
-                */
+        } else if (p->status == TERMINATE) {
+                uint16_t pid = p->pid;
+
+                asm volatile ("cli");
+
+                pcb_t *pcb;
+                for (pcb = pcb_list; pcb; pcb = pcb->next) {
+                        if (pcb == p) {
+                                if (pcb->prev)
+                                        (pcb->prev)->next = pcb->next;
+                                if (pcb->next)
+                                        (pcb->next)->prev = pcb->prev;
+                                break;
+                        }
+                }
+
+                kfree(p->context);
+                kfree(p->stack);
+                kfree(p);
+
+                asm volatile ("sti");
+
+                printf("\nterminated process (%d)\n", pid);
+        }
 }
 
 // works IFF called from interrupt context (timer_isr)

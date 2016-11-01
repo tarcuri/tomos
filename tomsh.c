@@ -163,7 +163,7 @@ void command_loop()
         if (strncmp(proc_name, "test_proc_1", 11) == 0) {
           uint16_t uid;
           if (!get_uid(proc_owner, &uid)) {
-            int pid = create_process(uid, test_proc_1);
+            int pid = create_process(uid, "test_proc_1", test_proc_1);
             printf("spawned %s (%d)\n", proc_name, pid);
           } else {
             printf("couldn't lookup uid for %s\n", proc_owner);
@@ -171,13 +171,28 @@ void command_loop()
         } else if (strncmp(proc_name, "test_proc_2", 11) == 0) {
           uint16_t uid;
           if (!get_uid(proc_owner, &uid)) {
-            int pid = create_process(uid, test_proc_2);
+            int pid = create_process(uid, "test_proc_2", test_proc_2);
             printf("spawned %s (%d)\n", proc_name, pid);
           } else {
             printf("couldn't lookup uid for %s\n", proc_owner);
           }
         }
 
+      }
+    } else if (strncmp(command_line, "kill ", 5) == 0) {
+      strtok(command_line, " ");
+      char *pid_str = strtok(NULL, " ");
+      if (!pid_str)
+        continue;
+      uint16_t pid;
+      if (sscanf(pid_str, "%d", &pid)) {
+        kill_process(pid);
+      }
+    } else if (strncmp(command_line, "ps", 2) == 0) {
+      pcb_t *p;
+      printf("PID\tUID\tCOMMAND\n");
+      for (p = get_pcb_list(); p; p = p->next) {
+              printf("%2d\t %2d\t %s\n", p->pid, p->uid, p->cmd);
       }
     } else if (strncmp(command_line, "get tp1", 7) == 0) {
       printf("%s\n", tp1_output);
