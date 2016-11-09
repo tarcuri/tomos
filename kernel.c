@@ -96,10 +96,10 @@ void kmain()
 
   struct timer *t = (struct timer *) kmalloc(sizeof(struct timer));
   while (1) {
-    t->delay = 50;
-    start_timer(t);
-    printf(".");
-    remove_timer(t);
+    //t->delay = 50;
+    //start_timer(t);
+    //printf(".");
+    //remove_timer(t);
   }
 }
 

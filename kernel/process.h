@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 
-enum process_status {READY, SLEEP, IO_WAIT, TERMINATE};
+enum process_status {READY, SLEEP, KB_WAIT, IO_WAIT, TERMINATE};
 
 // adapted from RIT CS project
 // order must be consistent with isr_stubs.S

@@ -92,10 +92,12 @@ void timer_isr(int vector, int code)
                 }
         }
 
+                dispatch();
+                /*
         if (system_time % 10 == 0) {
                 dispatch();
         }
-
+*/
         current_proc->time_slices++;
 
         __outb(PIC_MASTER_CMD_PORT, PIC_EOI);

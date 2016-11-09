@@ -4,6 +4,7 @@
 
 #include "dev/console.h"
 #include "kernel/heap.h"
+#include "kernel/scheduler.h"
 
 // eventually, this will know the pid of the current process, and its state
 void kb_init()
@@ -35,6 +36,9 @@ uint16_t kb_wait_code()
   uint16_t c = 0;
 
   // always assume we haven't overflowed
+  current_proc->status = KB_WAIT;
+  // dispatch
+  asm volatile ("int  %0" : : "N" (INT_VEC_TIMER) : "cc", "memory");
 
   // need a better way to do this, after all we're
   // (trying) to write an OS here.
@@ -117,5 +121,6 @@ static void kb_scancode(uint8_t code)
 static void kb_handler(int vector, int code)
 {
   kb_scancode( __inb(KEYBOARD_DATA) );
+  set_kb_ready();
   __outb( PIC_MASTER_CMD_PORT, PIC_EOI );
 }
