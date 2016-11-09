@@ -100,6 +100,7 @@ void kmain()
     //start_timer(t);
     //printf(".");
     //remove_timer(t);
+    asm volatile ("hlt");
   }
 }
 
