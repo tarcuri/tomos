@@ -94,12 +94,8 @@ void kmain()
 
   create_process(0, "tomsh", command_loop);
 
-  struct timer *t = (struct timer *) kmalloc(sizeof(struct timer));
+  // this is the idle process loop
   while (1) {
-    //t->delay = 50;
-    //start_timer(t);
-    //printf(".");
-    //remove_timer(t);
     asm volatile ("hlt");
   }
 }

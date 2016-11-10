@@ -3,6 +3,7 @@
 int proc_kb_ready = 0;
 
 int schedule(pcb_t *p)
+
 {
         if (p->status == READY) {
                 push_q(&ready_queue, p);
@@ -24,7 +25,6 @@ int schedule(pcb_t *p)
                         }
                 }
 
-                kfree(p->context);
                 kfree(p->stack);
                 kfree(p);
 
@@ -48,9 +48,10 @@ void dispatch(void)
 
         if (n) {
                 p = current_proc;
-                //c_printf("dispatching proc %d\n", n->pid);
                 current_proc = n;
-                schedule(p);
+                if (p) {
+                        schedule(p);
+                }
         }
 }
 

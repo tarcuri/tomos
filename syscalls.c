@@ -39,8 +39,9 @@ void syscall_init()
 // kernel system call implementations
 int32_t sys_exit(context_t *c, uint32_t *args)
 {
-  c_printf("unimplemented call exit\n");
-  c->eax = -1;
+  kill_process(current_proc->pid);
+  current_proc = NULL;
+  dispatch();
 }
 
 int32_t sys_close(context_t *c, uint32_t *args)

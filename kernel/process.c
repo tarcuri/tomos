@@ -3,7 +3,7 @@
 #include "scheduler.h"
 #include "dev/console.h"
 
-#include <unistd.h>     // for _exit call
+extern void exit(int status);
 
 void proc_init()
 {
@@ -108,7 +108,7 @@ int create_process(uint16_t owner_uid, char *cmd, int (*proc)(void))
         // to the exit system call; however, we probably need our own exit call
         // leaves a longword at the bottom of stack containing 0
         ret = ((uint32_t *)(pcb->stack + 1)) - 2;
-        *ret = (uint32_t) _exit;
+        *ret = (uint32_t) exit;
 
         pcb->context = ((context_t *) ret) - 1;
 

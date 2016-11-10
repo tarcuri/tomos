@@ -39,12 +39,10 @@ int test_proc_1(void)
 
 int test_proc_2(void)
 {
-        struct timer *t = (struct timer *) kmalloc(sizeof(struct timer));
-        for (;;) {
-                t->delay = 50;
-                start_timer(t);
-                snprintf(tp2_output, 128, "test_proc_2 (%d)\n", get_time());
-                remove_timer(t);
+        int i;
+
+        for (i = 0; i < 1000; ++i) {
+                snprintf(tp2_output, 128, "test_proc_2 (%d)\n", i);
         }
 
         return 0;
