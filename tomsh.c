@@ -27,6 +27,7 @@ char tp3_output[128];
 int test_proc_1(void)
 {
         struct timer *t = (struct timer *) kmalloc(sizeof(struct timer));
+
         for (;;) {
                 t->delay = 50;
                 start_timer(t);
@@ -218,6 +219,10 @@ void command_loop()
       printf("%s\n", tp1_output);
     } else if (strncmp(command_line, "get tp2", 7) == 0) {
       printf("%s\n", tp2_output);
+    } else if (strncmp(command_line, "log", 3) == 0) {
+      asm volatile("cli");
+      print_log();
+      asm volatile("sti");
     } else if (strncmp(command_line, "help", 4) == 0) {
       c_printf("tomsh commands:\n");
       c_printf("\tdispheap\n");
