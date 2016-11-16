@@ -47,4 +47,8 @@ void kmain(void);
 
 void kernel(void *mbd, uint32_t magic, uint32_t other);
 
+void syslog(char *msg);
+
+void print_log(void);
+
 #endif

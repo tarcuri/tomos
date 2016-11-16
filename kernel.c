@@ -31,13 +31,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define KLOG_MAX        65536
+
 uint16_t next_uid;
+
+int klog_idx;
+char klog[KLOG_MAX];
 
 void test_ata();
 
 // initial kernel entry point
 void kernel(void* mbd, uint32_t magic, uint32_t other)
 {
+  klog_idx = 0;
+
   // initialize IDT, interrupts
   extern void (*_isr_stubs[256])(void);
   init_interrupts();
@@ -98,6 +105,34 @@ void kmain()
   while (1) {
     asm volatile ("hlt");
   }
+}
+
+void syslog(char *msg)
+{
+        char log_msg[1024];
+        int msg_len;
+
+        if (msg && *msg) {
+                msg_len = strlen(msg);
+
+                if (msg[msg_len - 1] != '\n') {
+                        snprintf(log_msg, 1024, "%8d: %s\n", get_time(), msg);
+                } else {
+                        snprintf(log_msg, 1024, "%8d: %s", get_time(), msg);
+                }
+
+                if (strlen(log_msg) < KLOG_MAX - klog_idx) {
+                        strncpy(&klog[klog_idx], log_msg, strlen(log_msg));
+                        klog_idx += strlen(log_msg);
+                } else {
+                        c_printf("kernel log full\n");
+                }
+        }
+}
+
+void print_log(void)
+{
+        c_printf("%s", klog);
 }
 
 void test_ata()

@@ -1,3 +1,4 @@
+#include "kernel.h"
 #include "timer.h"
 #include "scheduler.h"
 #include "interrupt.h"
@@ -13,6 +14,10 @@ uint32_t get_time(void)
 void start_timer(struct timer *t)
 {
         asm volatile ("cli");
+
+        char log_msg[1024];
+        snprintf(log_msg, 1024, "starting timer %p for %s (%d)\n", t, current_proc->cmd, current_proc->pid);
+        syslog(log_msg);
         
         t->start = system_time;
         t->next = NULL;
@@ -92,12 +97,9 @@ void timer_isr(int vector, int code)
                 }
         }
 
-                dispatch();
-                /*
-        if (system_time % 10 == 0) {
-                dispatch();
-        }
-*/
+        // esentially a time quantum of 1 clock interrupt
+        dispatch();
+
         current_proc->time_slices++;
 
         __outb(PIC_MASTER_CMD_PORT, PIC_EOI);

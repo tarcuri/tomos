@@ -1,4 +1,5 @@
 #include "scheduler.h"
+#include "kernel.h"
 
 int proc_kb_ready = 0;
 
@@ -38,6 +39,18 @@ int schedule(pcb_t *p)
 void dispatch(void)
 {
         pcb_t *p, *n;
+
+        struct q_node *q = (struct q_node *) ready_queue;
+        int i = 0;
+        char log_msg[1024];
+
+        while (q) {
+                pcb_t *qp = (pcb_t *) q->data;
+                snprintf(log_msg, 1024, "ready_queue %d: %s (%d)\n",
+                                i++, qp->cmd, qp->pid);
+                syslog(log_msg);
+                q = q->next;
+        }
 
         if (proc_kb_ready) {
                 n = (pcb_t *) pop_q(&kb_queue);
