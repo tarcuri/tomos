@@ -20,9 +20,7 @@
 #include <string.h>
 #include <unistd.h>
 
-char tp1_output[128];
-char tp2_output[128];
-char tp3_output[128];
+char tp_output[16][128];
 
 int test_proc_1(void)
 {
@@ -31,7 +29,9 @@ int test_proc_1(void)
         for (;;) {
                 t->delay = 50;
                 start_timer(t);
-                snprintf(tp1_output, 128, "test_proc_1 (%d)\n", get_time());
+                snprintf(&tp_output[current_proc->pid - 2], 128,
+                                "test_proc_1 (%d) = %d\n",
+                                current_proc->pid, get_time());
                 remove_timer(t);
         }
 
@@ -40,12 +40,10 @@ int test_proc_1(void)
 
 int test_proc_2(void)
 {
-        struct timer *t = (struct timer *) kmalloc(sizeof(struct timer));
         for (;;) {
-                t->delay = 50;
-                start_timer(t);
-                snprintf(tp2_output, 128, "test_proc_2 (%d)\n", get_time());
-                remove_timer(t);
+                snprintf(&tp_output[current_proc->pid - 2], 128,
+                                "test_proc_2 (%d) = %d\n",
+                                current_proc->pid, get_time());
         }
 
         return 0;
@@ -56,7 +54,9 @@ int test_proc_3(void)
         int i;
 
         for (i = 0; i < 1000; ++i) {
-                snprintf(tp3_output, 128, "test_proc_2 (%d)\n", i);
+                snprintf(&tp_output[current_proc->pid - 2], 128,
+                                "test_proc_3 (%d) = %d\n",
+                                current_proc->pid, get_time());
         }
 
         return 0;
@@ -215,10 +215,15 @@ void command_loop()
               printf("%2d\t %2d\t %5d\t%s\n",
                               p->pid, p->uid, p->time_slices, p->cmd);
       }
-    } else if (strncmp(command_line, "get tp1", 7) == 0) {
-      printf("%s\n", tp1_output);
-    } else if (strncmp(command_line, "get tp2", 7) == 0) {
-      printf("%s\n", tp2_output);
+    } else if (strncmp(command_line, "output", 6) == 0) {
+      strtok(command_line, " ");
+      char *pid_str = strtok(NULL, " ");
+      uint16_t pid;
+      if (pid_str && sscanf(pid_str, "%d", &pid) && pid > 2) {
+        printf("%s\n", tp_output[pid - 2]);
+      } else {
+        printf("invalid/missing pid\n");
+      }
     } else if (strncmp(command_line, "log", 3) == 0) {
       asm volatile("cli");
       print_log();

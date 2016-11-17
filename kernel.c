@@ -31,7 +31,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define KLOG_MAX        65536
+#define KLOG_MAX        1048576/2
 
 uint16_t next_uid;
 
