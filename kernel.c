@@ -97,6 +97,8 @@ void kmain()
   next_uid = 1;
   add_user("root", "root");
 
+  init_scheduler_queues();
+
   timer_init();
 
   create_process(0, "tomsh", command_loop);

@@ -4,9 +4,9 @@
 int proc_kb_ready = 0;
 
 int schedule(pcb_t *p)
-
 {
         if (p->status == READY) {
+                push_q(&user_ready_queue[p->uid], p);
                 push_q(&ready_queue, p);
         } else if (p->status == KB_WAIT) {
                 push_q(&kb_queue, p);
@@ -38,25 +38,23 @@ int schedule(pcb_t *p)
 // works IFF called from interrupt context (timer_isr)
 void dispatch(void)
 {
+        static unsigned int urq_idx = 0;
         pcb_t *p, *n;
-
-        struct q_node *q = (struct q_node *) ready_queue;
-        int i = 0;
-        char log_msg[1024];
-
-        while (q) {
-                pcb_t *qp = (pcb_t *) q->data;
-                snprintf(log_msg, 1024, "ready_queue %d: %s (%d)\n",
-                                i++, qp->cmd, qp->pid);
-                syslog(log_msg);
-                q = q->next;
-        }
 
         if (proc_kb_ready) {
                 n = (pcb_t *) pop_q(&kb_queue);
                 proc_kb_ready = 0;
         } else {
+                int i = 0;
+                while (!user_ready_queue[urq_idx]) {
+                        urq_idx = ++urq_idx % 16;
+                        ++i;
+                        if (i == 15)
+                                break;
+                }
+                n = (pcb_t *) pop_q(&user_ready_queue[urq_idx]);
                 n = (pcb_t *) pop_q(&ready_queue);
+                urq_idx = ++urq_idx % 16;
         }
 
         if (n) {
@@ -65,6 +63,18 @@ void dispatch(void)
                 if (p) {
                         schedule(p);
                 }
+        }
+        /* 
+         * if we can't get another process, we should see if the current
+         * proc is still ready. otherwise we should schedule the idle process.
+         */
+}
+
+void init_scheduler_queues(void)
+{
+        int i;
+        for (i = 1; i < 16; ++i) {
+                user_ready_queue[i] = NULL;
         }
 }
 
