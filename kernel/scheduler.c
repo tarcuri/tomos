@@ -7,7 +7,6 @@ int schedule(pcb_t *p)
 {
         if (p->status == READY) {
                 push_q(&user_ready_queue[p->uid], p);
-                push_q(&ready_queue, p);
         } else if (p->status == KB_WAIT) {
                 push_q(&kb_queue, p);
         } else if (p->status == TERMINATE) {
@@ -53,7 +52,6 @@ void dispatch(void)
                                 break;
                 }
                 n = (pcb_t *) pop_q(&user_ready_queue[urq_idx]);
-                n = (pcb_t *) pop_q(&ready_queue);
                 urq_idx = ++urq_idx % 16;
         }
 
