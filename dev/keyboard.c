@@ -120,6 +120,7 @@ static void kb_scancode(uint8_t code)
 
 static void kb_handler(int vector, int code)
 {
+  c_printf("kb_handler\n");
   kb_scancode( __inb(KEYBOARD_DATA) );
   set_kb_ready();
   __outb( PIC_MASTER_CMD_PORT, PIC_EOI );

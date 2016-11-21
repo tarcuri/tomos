@@ -66,6 +66,7 @@ void proc_init()
   kernel_pcb->time_slices = 0;
   
   ready_queue = NULL;
+  idle_proc = kernel_pcb;
 
   c_printf("[proc]    kernel process intialized\n");
 }
@@ -154,4 +155,21 @@ void kill_process(uint16_t pid)
 pcb_t *get_pcb_list(void)
 {
         return pcb_list;
+}
+
+const char *proc_status_string(int status) {
+        switch (status) {
+        case READY:
+                return "READY";
+        case SLEEP:
+                return "SLEEP";
+        case KB_WAIT:
+                return "KB_WAIT";
+        case IO_WAIT:
+                return "IO_WAIT";
+        case TERMINATE:
+                return "TERMINATE";
+        };
+
+        return "INVALID";
 }

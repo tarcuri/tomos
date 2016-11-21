@@ -8,6 +8,7 @@ int schedule(pcb_t *p)
         if (p->status == READY) {
                 push_q(&user_ready_queue[p->uid], p);
         } else if (p->status == KB_WAIT) {
+                c_printf("pushed %s to kb_queue\n", p->cmd);
                 push_q(&kb_queue, p);
         } else if (p->status == TERMINATE) {
                 uint16_t pid = p->pid;
@@ -42,6 +43,8 @@ void dispatch(void)
 
         if (proc_kb_ready) {
                 n = (pcb_t *) pop_q(&kb_queue);
+                c_printf("kb ready, popped %s (%s)\n", n->cmd,
+                        proc_status_string(p->status));
                 proc_kb_ready = 0;
         } else {
                 int i = 0;
@@ -58,14 +61,14 @@ void dispatch(void)
         if (n) {
                 p = current_proc;
                 current_proc = n;
-                if (p) {
+                if (p){ // && p != idle_proc) {
                         schedule(p);
                 }
+        } else if (current_proc->status != READY) {
+                //current_proc = idle_proc;
         }
-        /* 
-         * if we can't get another process, we should see if the current
-         * proc is still ready. otherwise we should schedule the idle process.
-         */
+        //c_printf("current: %s (%s)\n", current_proc->cmd,
+        //        proc_status_string(current_proc->status));
 }
 
 void init_scheduler_queues(void)

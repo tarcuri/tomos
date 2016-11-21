@@ -62,8 +62,9 @@ typedef struct process_control_block
 } __attribute__((__packed__)) pcb_t;
 
 
-// global data
+pcb_t *idle_proc;
 pcb_t *pcb_list;
+
 uint16_t next_pid;
 
 uint32_t *kernel_esp;
@@ -75,5 +76,6 @@ void proc_init(void);
 int create_process(uint16_t owner_uid, char *cmd, int (*proc)(void));
 void kill_process(uint16_t pid);
 pcb_t *get_pcb_list(void);
+const char *proc_status_string(int status);
 
 #endif
