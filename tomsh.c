@@ -210,10 +210,11 @@ void command_loop()
       }
     } else if (strncmp(command_line, "ps", 2) == 0) {
       pcb_t *p;
-      printf("%3s\t%3s\t%5s\t%s\n", "PID", "UID", "TIME", "COMMAND");
+      printf("%3s\t%3s\t%5s\t%5s\t%s\n", "PID", "UID", "USER", "TIME", "COMMAND");
       for (p = get_pcb_list(); p; p = p->next) {
-              printf("%2d\t %2d\t %5d\t%s\n",
-                              p->pid, p->uid, p->time_slices, p->cmd);
+              struct user *u = get_user(p->uid);
+              printf("%2d\t %2d\t %5s\t%5d\t %s\n",
+                              p->pid, p->uid, u->name, p->time_slices, p->cmd);
       }
     } else if (strncmp(command_line, "output", 6) == 0) {
       strtok(command_line, " ");
