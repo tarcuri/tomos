@@ -36,3 +36,31 @@ void *pop_q(queue **q)
 
         return data;
 }
+
+int remove_element_q(queue **q, struct q_node *qn)
+{
+        queue *head = *q;
+        struct q_node *qi = head;
+        int found = 0;
+
+        if (qi == qn) {
+                // found it at beginning of queue
+                q = qi->next;
+                return 1;
+        }
+
+        while (qi)
+                if (qi == qn) {
+                        struct q_node *qp = head;
+                        while (qp) {
+                                if (qp->next == qi) {
+                                        // qp->next is the one we 
+                                        // want to remove
+                                        qp->next = (qp->next)->next;
+                                }
+                        }
+                }
+
+                qi = qi->next;
+        }
+}

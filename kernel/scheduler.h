@@ -4,7 +4,7 @@
 #include "process.h"
 #include "queue.h"
 
-queue *user_ready_queue[16];
+queue *user_ready_queue[16][3];
 queue *ready_queue;
 queue *sleep_queue;
 queue *kb_queue;

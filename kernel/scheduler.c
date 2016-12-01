@@ -5,15 +5,15 @@ int proc_kb_ready = 0;
 
 int schedule(pcb_t *p)
 {
+        asm volatile ("cli");
+
         if (p->status == READY) {
-                push_q(&user_ready_queue[p->uid], p);
+                push_q(&user_ready_queue[p->uid][p->prio], p);
         } else if (p->status == KB_WAIT) {
                 //c_printf("pushed %s to kb_queue\n", p->cmd);
                 push_q(&kb_queue, p);
         } else if (p->status == TERMINATE) {
                 uint16_t pid = p->pid;
-
-                asm volatile ("cli");
 
                 pcb_t *pcb;
                 for (pcb = pcb_list; pcb; pcb = pcb->next) {
@@ -29,10 +29,10 @@ int schedule(pcb_t *p)
                 kfree(p->stack);
                 kfree(p);
 
-                asm volatile ("sti");
-
                 printf("\nterminated process (%d)\n", pid);
         }
+
+        asm volatile ("sti");
 }
 
 // works IFF called from interrupt context (timer_isr)
@@ -71,15 +71,30 @@ void dispatch(void)
         } else if (current_proc->status != READY) {
                 //current_proc = idle_proc;
         }
-        //c_printf("current: %s (%s)\n", current_proc->cmd,
-        //        proc_status_string(current_proc->status));
+
+        // update priority queues
+        int i, j;
+        for (i = 0; i < 16; ++i) {
+                queue *q = user_process_queue[i];
+                for (j = 0; j < 3; ++j) {
+                        struct q_node *qn = user_process_queue[i][j];
+                        while (qn) {
+                                pcb_t *qp = (pcb_t *) qn->data;
+                                qp->wait_t++;
+                                qn = qn->next;
+                        }
+                }
+        }
+
 }
 
 void init_scheduler_queues(void)
 {
         int i;
         for (i = 1; i < 16; ++i) {
-                user_ready_queue[i] = NULL;
+                user_ready_queue[i][LOW] = NULL;
+                user_ready_queue[i][MED] = NULL;
+                user_ready_queue[i][HIGH] = NULL;
         }
 }
 

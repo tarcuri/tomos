@@ -7,6 +7,8 @@
 
 enum process_status {READY, SLEEP, KB_WAIT, IO_WAIT, TERMINATE};
 
+enum process_priority {LOW, MEDIUM, HIGH};
+
 // adapted from RIT CS project
 // order must be consistent with isr_stubs.S
 typedef struct context {
@@ -54,9 +56,13 @@ typedef struct process_control_block
   // parent process id
   uint16_t	ppid;
   // process owner user id
-  uint16_t  uid;
+  uint16_t      uid;
   // process state
-  uint16_t  status;
+  uint16_t      status;
+  // base priority
+  uint16_t      prio;
+  // wait time (time spent sitting in sched. queue)
+  uint16_t      wait_t;
 
   uint32_t time_slices;
 } __attribute__((__packed__)) pcb_t;
@@ -73,7 +79,8 @@ pcb_t *current_proc;
 
 void proc_init(void);
 
-int create_process(uint16_t owner_uid, char *cmd, int (*proc)(void));
+int create_process(uint16_t owner_uid, char *cmd,
+                int (*proc)(void), uint16_t prio);
 void kill_process(uint16_t pid);
 pcb_t *get_pcb_list(void);
 const char *proc_status_string(int status);

@@ -171,11 +171,20 @@ void command_loop()
       strtok(command_line, " ");
       char *proc_owner = strtok(NULL,  " ");
       char *proc_name = strtok(NULL, " ");
+      char *proc_prio = strtok(NULL, " ");
+      uint16_t prio = LOW;
+      if (proc_prio) {
+        int p = atoi(proc_prio);
+        if (p <= HIGH && p >= LOW) {
+          prio = p;
+        } 
+      }
+
       if (proc_owner && proc_name) {
         if (strncmp(proc_name, "test_proc_1", 11) == 0) {
           uint16_t uid;
           if (!get_uid(proc_owner, &uid)) {
-            int pid = create_process(uid, "test_proc_1", test_proc_1);
+            int pid = create_process(uid, "test_proc_1", test_proc_1, prio);
             printf("spawned %s (%d)\n", proc_name, pid);
           } else {
             printf("couldn't lookup uid for %s\n", proc_owner);
@@ -183,7 +192,7 @@ void command_loop()
         } else if (strncmp(proc_name, "test_proc_2", 11) == 0) {
           uint16_t uid;
           if (!get_uid(proc_owner, &uid)) {
-            int pid = create_process(uid, "test_proc_2", test_proc_2);
+            int pid = create_process(uid, "test_proc_2", test_proc_2, prio);
             printf("spawned %s (%d)\n", proc_name, pid);
           } else {
             printf("couldn't lookup uid for %s\n", proc_owner);
@@ -191,7 +200,7 @@ void command_loop()
         } else if (strncmp(proc_name, "test_proc_3", 11) == 0) {
           uint16_t uid;
           if (!get_uid(proc_owner, &uid)) {
-            int pid = create_process(uid, "test_proc_3", test_proc_3);
+            int pid = create_process(uid, "test_proc_3", test_proc_3, prio);
             printf("spawned %s (%d)\n", proc_name, pid);
           } else {
             printf("couldn't lookup uid for %s\n", proc_owner);

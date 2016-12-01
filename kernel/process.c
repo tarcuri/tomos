@@ -71,7 +71,8 @@ void proc_init()
   c_printf("[proc]    kernel process intialized\n");
 }
 
-int create_process(uint16_t owner_uid, char *cmd, int (*proc)(void))
+int create_process(uint16_t owner_uid, char *cmd,
+                int (*proc)(void), uint16_t prio)
 {
         context_t *context;
         uint32_t *ret;
@@ -132,6 +133,9 @@ int create_process(uint16_t owner_uid, char *cmd, int (*proc)(void))
         pcb->context->eip = (uint32_t) proc;
   
         pcb->status = READY;
+
+        pcb->prio = prio;
+        pcb->wait_t = 0;
 
         pcb->time_slices = 0;
 
