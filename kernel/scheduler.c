@@ -48,13 +48,34 @@ void dispatch(void)
                 proc_kb_ready = 0;
         } else {
                 int i = 0;
-                while (!user_ready_queue[urq_idx]) {
+                int found_proc = 0;
+                uint16_t prio = HIGH;
+                // check priorities from high to low
+                while (!found_proc) {
+                        if (user_ready_queue[urq_idx][HIGH]) {
+                                found_proc = 1;
+                                n = (pcb_t *) pop_q(&user_ready_queue[urq_idx][HIGH]);
+                                break;
+                        } else if (user_ready_queue[urq_idx][MEDIUM]) {
+                                found_proc = 1;
+                                n = (pcb_t *) pop_q(&user_ready_queue[urq_idx][MEDIUM]);
+                                break;
+                        } else if (user_ready_queue[urq_idx][LOW]) {
+                                found_proc = 1;
+                                n = (pcb_t *) pop_q(&user_ready_queue[urq_idx][LOW]);
+                                break;
+                        }
+
                         urq_idx = ++urq_idx % 16;
-                        ++i;
+                        i++;
                         if (i == 15)
                                 break;
                 }
-                n = (pcb_t *) pop_q(&user_ready_queue[urq_idx]);
+
+                if (!found_proc) {
+                        syslog("couldn't find a process\n");
+                }
+
                 urq_idx = ++urq_idx % 16;
         }
 
@@ -72,19 +93,21 @@ void dispatch(void)
                 //current_proc = idle_proc;
         }
 
+                /*
         // update priority queues
         int i, j;
         for (i = 0; i < 16; ++i) {
-                queue *q = user_process_queue[i];
                 for (j = 0; j < 3; ++j) {
-                        struct q_node *qn = user_process_queue[i][j];
+                        struct q_node *qn = user_ready_queue[i][j];
                         while (qn) {
                                 pcb_t *qp = (pcb_t *) qn->data;
                                 qp->wait_t++;
+                                remove_element_q(qn->data);
                                 qn = qn->next;
                         }
                 }
         }
+        */
 
 }
 
@@ -93,7 +116,7 @@ void init_scheduler_queues(void)
         int i;
         for (i = 1; i < 16; ++i) {
                 user_ready_queue[i][LOW] = NULL;
-                user_ready_queue[i][MED] = NULL;
+                user_ready_queue[i][MEDIUM] = NULL;
                 user_ready_queue[i][HIGH] = NULL;
         }
 }

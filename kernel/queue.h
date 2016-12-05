@@ -11,6 +11,10 @@ typedef struct q_node queue;
 void push_q(queue **q, void *data);
 void *pop_q(queue **q);
 
-int remove_element_q(queue **q, struct q_node *qn);
+int remove_element_q(queue **q, void *data);
+
+void print_q(queue *q);
+
+int size_q(queue *q);
 
 #endif

@@ -99,9 +99,46 @@ void kmain()
 
   init_scheduler_queues();
 
+  queue *q;
+  char *i1 = "item1";
+  char *i2 = "item2";
+  char *i3 = "item3";
+  char *i4 = "item4";
+  char *i5 = "item5";
+
+  push_q(&q, i1);
+  push_q(&q, i2);
+  push_q(&q, i3);
+  push_q(&q, i4);
+  push_q(&q, i5);
+  c_printf("qsize: %d\n", size_q(q));
+
+  queue *qp = q;
+  c_printf("queue before remove:\n");
+  while (qp) {
+        char *item = (char *) qp->data;
+        c_printf("%s\n", item);
+        qp = qp->next;
+  }
+
+  remove_element_q(&q, i3);
+  c_printf("2 qsize: %d\n", size_q(q));
+
+  qp = q;
+  c_printf("queue after remove:\n");
+  while (qp) {
+        char *item = (char *) qp->data;
+        c_printf("%s\n", item);
+        qp = qp->next;
+  }
+
+  panic("hlt");
+
   timer_init();
 
-  create_process(0, "tomsh", command_loop);
+
+
+  create_process(0, "tomsh", command_loop, LOW);
 
   // this is the idle process loop
   while (1) {
