@@ -48,7 +48,7 @@ int remove_element_q(queue **q, void *data)
         if (qi->data == data) {
                 // found it at beginning of queue
                 *q = qi->next;
-                kfree(qi);
+                //kfree(qi);
                 return 1;
         }
 
@@ -60,7 +60,7 @@ int remove_element_q(queue **q, void *data)
                                         // qp->next is the one we 
                                         // want to remove
                                         qp->next = (qp->next)->next;
-                                        kfree(qp);
+                                        //kfree(qp);
                                         break;
                                 }
                                 qp = qp->next;

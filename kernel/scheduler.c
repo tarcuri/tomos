@@ -100,7 +100,7 @@ void dispatch(void)
                         panic("");
                 */
                 if (!found_proc) {
-                        syslog("couldn't find a process\n");
+                        //syslog("couldn't find a process\n");
                 }
 
                 urq_idx = ++urq_idx % 16;
@@ -109,10 +109,10 @@ void dispatch(void)
         if (n) {
                 p = current_proc;
                 current_proc = n;
-                char msg[512];
-                snprintf(msg, 512, "dispatching %s [%d]\n",
-                                current_proc->cmd, current_proc->pid);
-                syslog(msg);
+                //char msg[512];
+                //snprintf(msg, 512, "dispatching %s [%d]\n",
+                //                current_proc->cmd, current_proc->pid);
+                //syslog(msg);
                 current_proc->wait_t = 0;
                 /*
                 c_printf(msg);
@@ -139,8 +139,10 @@ void dispatch(void)
                 while (qn) {
                         pcb_t *qp = (pcb_t *) qn->data;
                         qp->wait_t++;
-                        remove_element_q(&user_ready_queue[i][MEDIUM], qn->data);
-                        push_q(&user_ready_queue[i][HIGH], qp);
+                        if (qp->wait_t >= 3) {
+                                remove_element_q(&user_ready_queue[i][MEDIUM], qn->data);
+                                push_q(&user_ready_queue[i][HIGH], qp);
+                        }
                         qn = qn->next;
                 }
 
@@ -148,8 +150,10 @@ void dispatch(void)
                 while (qn) {
                         pcb_t *qp = (pcb_t *) qn->data;
                         qp->wait_t++;
-                        remove_element_q(&user_ready_queue[i][LOW], qn->data);
-                        push_q(&user_ready_queue[i][MEDIUM], qp);
+                        if (qp->wait_t >= 6) {
+                                remove_element_q(&user_ready_queue[i][LOW], qn->data);
+                                push_q(&user_ready_queue[i][MEDIUM], qp);
+                        }
                         qn = qn->next;
                 }
         }
