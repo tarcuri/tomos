@@ -1,6 +1,7 @@
 #include "queue.h"
 #include "heap.h"
 
+#include "process.h"
 void push_q(queue **q, void *data)
 {
         if (!q)
@@ -77,7 +78,16 @@ int remove_element_q(queue **q, void *data)
 
 void print_q(queue *q)
 {
-
+        char msg[512];
+        snprintf(msg, 512, "queue: %p (size: %d)\n", q, size_q(q));
+        c_printf(msg);
+        queue *qi = q;
+        int i = 0;
+        while (qi) {
+                snprintf(msg, 512, "\t%d: %s\n", i++, ((pcb_t *)qi->data)->cmd);
+                c_printf(msg);
+                qi = qi->next;
+        }
 }
 
 int size_q(queue *q)

@@ -6,9 +6,16 @@ int proc_kb_ready = 0;
 int schedule(pcb_t *p)
 {
         asm volatile ("cli");
+        
+        if (p->prio > HIGH || p->prio < LOW) {
+                c_printf("invalid prio for %s (%d)\n", p->cmd, p->prio);
+                panic("");
+        }
 
         if (p->status == READY) {
                 push_q(&user_ready_queue[p->uid][p->prio], p);
+                //c_printf("scheduled %s (prio: %d)\n", p->cmd, p->prio);
+                //print_q(user_ready_queue[p->uid][p->prio]);
         } else if (p->status == KB_WAIT) {
                 //c_printf("pushed %s to kb_queue\n", p->cmd);
                 push_q(&kb_queue, p);
@@ -41,6 +48,9 @@ void dispatch(void)
         static unsigned int urq_idx = 0;
         pcb_t *p, *n;
 
+        p = NULL;
+        n = NULL;
+
         if (proc_kb_ready) {
                 n = (pcb_t *) pop_q(&kb_queue);
                 //c_printf("kb ready, popped %s (%s)\n", n->cmd,
@@ -51,27 +61,44 @@ void dispatch(void)
                 int found_proc = 0;
                 uint16_t prio = HIGH;
                 // check priorities from high to low
+                //c_printf("urq_idx: %d\n", urq_idx);
                 while (!found_proc) {
-                        if (user_ready_queue[urq_idx][HIGH]) {
+                        if (size_q(user_ready_queue[urq_idx][HIGH])) {
                                 found_proc = 1;
                                 n = (pcb_t *) pop_q(&user_ready_queue[urq_idx][HIGH]);
                                 break;
-                        } else if (user_ready_queue[urq_idx][MEDIUM]) {
+                        } else if (size_q(user_ready_queue[urq_idx][MEDIUM])) {
                                 found_proc = 1;
                                 n = (pcb_t *) pop_q(&user_ready_queue[urq_idx][MEDIUM]);
                                 break;
-                        } else if (user_ready_queue[urq_idx][LOW]) {
+                        } else if (size_q(user_ready_queue[urq_idx][LOW])) {
                                 found_proc = 1;
+                                //print_q(user_ready_queue[urq_idx][LOW]);
                                 n = (pcb_t *) pop_q(&user_ready_queue[urq_idx][LOW]);
                                 break;
                         }
 
                         urq_idx = ++urq_idx % 16;
                         i++;
-                        if (i == 15)
+                        if (i == 16)
                                 break;
                 }
 
+                /*
+                c_printf("i: %d\n", i);
+                if (n == NULL)
+                        c_printf("couldn't find a proc\n");
+                else
+                c_printf("got process %s\n", n->cmd);
+                c_printf("current_proc: %s\n", current_proc->cmd);
+
+                print_q(user_ready_queue[urq_idx][HIGH]);
+                print_q(user_ready_queue[urq_idx][MEDIUM]);
+                print_q(user_ready_queue[urq_idx][LOW]);
+
+                if ((strcmp(current_proc->cmd, "tomsh") == 0))
+                        panic("");
+                */
                 if (!found_proc) {
                         syslog("couldn't find a process\n");
                 }
@@ -86,9 +113,18 @@ void dispatch(void)
                 snprintf(msg, 512, "dispatching %s [%d]\n",
                                 current_proc->cmd, current_proc->pid);
                 syslog(msg);
+                /*
+                c_printf(msg);
+                if (strcmp(current_proc->cmd, "idle") == 0)
+                        panic("");
+                if ((strcmp(p->cmd, "tomsh") == 0) &&
+                                strcmp(current_proc->cmd, "idle") == 0)
+                        panic("");
+                */
                 if (p){ // && p != idle_proc) {
                         schedule(p);
                 }
+
         } else if (current_proc->status != READY) {
                 //current_proc = idle_proc;
         }
@@ -108,6 +144,7 @@ void dispatch(void)
                 }
         }
         */
+        //c_printf("exit dispatch\n");
 
 }
 

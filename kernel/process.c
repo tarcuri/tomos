@@ -62,6 +62,8 @@ void proc_init()
   current_proc = kernel_pcb;
   
   kernel_pcb->status = READY;
+  kernel_pcb->wait_t = 0;
+  kernel_pcb->prio = LOW;
 
   kernel_pcb->time_slices = 0;
   

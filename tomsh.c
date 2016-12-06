@@ -180,6 +180,16 @@ void command_loop()
         } 
       }
 
+      if (prio == LOW) {
+        c_printf("[LOW]    ");
+      } else if (prio == MEDIUM) {
+        c_printf("[MEDIUM] ");
+      } else if (prio == HIGH) {
+        c_printf("[HIGH]   ");
+      } else {
+        c_printf("INVALID");
+      }
+
       if (proc_owner && proc_name) {
         if (strncmp(proc_name, "test_proc_1", 11) == 0) {
           uint16_t uid;
@@ -218,12 +228,21 @@ void command_loop()
         kill_process(pid);
       }
     } else if (strncmp(command_line, "ps", 2) == 0) {
+      strtok(command_line, " ");
+      char *option = strtok(NULL, " ");
+      int all = 0;
+      if (option && strncmp(option, "a", 1) == 0)
+              all = 1;
       pcb_t *p;
-      printf("%3s\t%3s\t%5s\t%5s\t%s\n", "PID", "UID", "USER", "TIME", "COMMAND");
+      printf("%3s\t%3s\t%5s\t%5s\t%5s\t%s\n",
+                      "PID", "UID", "USER", "TIME", "PRIO", "COMMAND");
       for (p = get_pcb_list(); p; p = p->next) {
+              if (p->pid < 2 && !all)
+                      continue;
               struct user *u = get_user(p->uid);
-              printf("%2d\t %2d\t %5s\t%5d\t %s\n",
-                              p->pid, p->uid, u->name, p->time_slices, p->cmd);
+              printf("%2d\t %2d\t %5s\t%5d\t%4d\t %s\n",
+                              p->pid, p->uid, u->name,
+                              p->time_slices, p->prio, p->cmd);
       }
     } else if (strncmp(command_line, "output", 6) == 0) {
       strtok(command_line, " ");
