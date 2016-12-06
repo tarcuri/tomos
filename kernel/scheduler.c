@@ -113,6 +113,7 @@ void dispatch(void)
                 snprintf(msg, 512, "dispatching %s [%d]\n",
                                 current_proc->cmd, current_proc->pid);
                 syslog(msg);
+                current_proc->wait_t = 0;
                 /*
                 c_printf(msg);
                 if (strcmp(current_proc->cmd, "idle") == 0)
@@ -129,21 +130,29 @@ void dispatch(void)
                 //current_proc = idle_proc;
         }
 
-                /*
         // update priority queues
         int i, j;
         for (i = 0; i < 16; ++i) {
-                for (j = 0; j < 3; ++j) {
-                        struct q_node *qn = user_ready_queue[i][j];
-                        while (qn) {
-                                pcb_t *qp = (pcb_t *) qn->data;
-                                qp->wait_t++;
-                                remove_element_q(qn->data);
-                                qn = qn->next;
-                        }
+                // check MED and LOW priority queues,
+                // no need to update HIGH priority
+                struct q_node *qn = user_ready_queue[i][MEDIUM];
+                while (qn) {
+                        pcb_t *qp = (pcb_t *) qn->data;
+                        qp->wait_t++;
+                        remove_element_q(&user_ready_queue[i][MEDIUM], qn->data);
+                        push_q(&user_ready_queue[i][HIGH], qp);
+                        qn = qn->next;
+                }
+
+                qn = user_ready_queue[i][LOW];
+                while (qn) {
+                        pcb_t *qp = (pcb_t *) qn->data;
+                        qp->wait_t++;
+                        remove_element_q(&user_ready_queue[i][LOW], qn->data);
+                        push_q(&user_ready_queue[i][MEDIUM], qp);
+                        qn = qn->next;
                 }
         }
-        */
         //c_printf("exit dispatch\n");
 
 }
