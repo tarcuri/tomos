@@ -257,6 +257,15 @@ void command_loop()
       asm volatile("cli");
       print_log();
       asm volatile("sti");
+    } else if (strncmp(command_line, "l3", 2) == 0) {
+      strtok(command_line,  " ");
+      char *user = strtok(NULL, " ");
+      uint16_t uid = 0;
+      if (user && !get_uid(user, &uid)) {
+        create_process(uid, "test_proc_2", test_proc_2, 0);
+        create_process(uid, "test_proc_2", test_proc_2, 1);
+        create_process(uid, "test_proc_2", test_proc_2, 2);
+      }
     } else if (strncmp(command_line, "help", 4) == 0) {
       c_printf("tomsh commands:\n");
       c_printf("\tdispheap\n");
