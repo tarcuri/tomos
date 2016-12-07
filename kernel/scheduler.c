@@ -14,10 +14,7 @@ int schedule(pcb_t *p)
 
         if (p->status == READY) {
                 push_q(&user_ready_queue[p->uid][p->prio], p);
-                //c_printf("scheduled %s (prio: %d)\n", p->cmd, p->prio);
-                //print_q(user_ready_queue[p->uid][p->prio]);
         } else if (p->status == KB_WAIT) {
-                //c_printf("pushed %s to kb_queue\n", p->cmd);
                 push_q(&kb_queue, p);
         } else if (p->status == TERMINATE) {
                 uint16_t pid = p->pid;
@@ -53,15 +50,12 @@ void dispatch(void)
 
         if (proc_kb_ready) {
                 n = (pcb_t *) pop_q(&kb_queue);
-                //c_printf("kb ready, popped %s (%s)\n", n->cmd,
-                //        proc_status_string(p->status));
                 proc_kb_ready = 0;
         } else {
                 int i = 0;
                 int found_proc = 0;
                 uint16_t prio = HIGH;
                 // check priorities from high to low
-                //c_printf("urq_idx: %d\n", urq_idx);
                 while (!found_proc) {
                         if (size_q(user_ready_queue[urq_idx][HIGH])) {
                                 found_proc = 1;
@@ -84,21 +78,6 @@ void dispatch(void)
                                 break;
                 }
 
-                /*
-                c_printf("i: %d\n", i);
-                if (n == NULL)
-                        c_printf("couldn't find a proc\n");
-                else
-                c_printf("got process %s\n", n->cmd);
-                c_printf("current_proc: %s\n", current_proc->cmd);
-
-                print_q(user_ready_queue[urq_idx][HIGH]);
-                print_q(user_ready_queue[urq_idx][MEDIUM]);
-                print_q(user_ready_queue[urq_idx][LOW]);
-
-                if ((strcmp(current_proc->cmd, "tomsh") == 0))
-                        panic("");
-                */
                 if (!found_proc) {
                         //syslog("couldn't find a process\n");
                 }
@@ -109,19 +88,7 @@ void dispatch(void)
         if (n) {
                 p = current_proc;
                 current_proc = n;
-                //char msg[512];
-                //snprintf(msg, 512, "dispatching %s [%d]\n",
-                //                current_proc->cmd, current_proc->pid);
-                //syslog(msg);
                 current_proc->wait_t = 0;
-                /*
-                c_printf(msg);
-                if (strcmp(current_proc->cmd, "idle") == 0)
-                        panic("");
-                if ((strcmp(p->cmd, "tomsh") == 0) &&
-                                strcmp(current_proc->cmd, "idle") == 0)
-                        panic("");
-                */
                 if (p){ // && p != idle_proc) {
                         schedule(p);
                 }
