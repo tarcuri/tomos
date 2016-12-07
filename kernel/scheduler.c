@@ -5,7 +5,7 @@ int proc_kb_ready = 0;
 
 int schedule(pcb_t *p)
 {
-        asm volatile ("cli");
+        //asm volatile ("cli");
         
         if (p->prio > HIGH || p->prio < LOW) {
                 c_printf("invalid prio for %s (%d)\n", p->cmd, p->prio);
@@ -39,7 +39,7 @@ int schedule(pcb_t *p)
                 printf("\nterminated process (%d)\n", pid);
         }
 
-        asm volatile ("sti");
+        //asm volatile ("sti");
 }
 
 // works IFF called from interrupt context (timer_isr)
